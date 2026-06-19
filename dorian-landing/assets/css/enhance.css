@@ -48,3 +48,52 @@
     display: none;
   }
 }
+
+/* ----- Real assets ------------------------------------------------------ */
+/* Hero portrait (image already carries its gold frame + blue seal) */
+.hero__frame {
+  aspect-ratio: auto;
+  width: clamp(260px, 30vw, 380px);
+}
+.hero__portrait-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 24px 48px rgba(60, 40, 0, 0.4));
+}
+
+/* Preloader + footer use the real gold seal */
+.preloader__seal,
+.footer__seal {
+  object-fit: contain;
+}
+
+/* Elevator shaft: real floor renders form the building cross-section */
+.floor-cell {
+  overflow: hidden;
+}
+.floor-cell__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.floor-cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 26, 47, 0.1),
+    rgba(10, 26, 47, 0.55)
+  );
+}
+.floor-cell__no,
+.floor-cell__name {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+}
