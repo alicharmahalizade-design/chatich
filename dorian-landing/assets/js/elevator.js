@@ -63,16 +63,21 @@ window.Dorian.initElevator = function () {
       var idx = Math.min(2, Math.floor(p * 3 + 0.0001));
       if (idx !== current) {
         current = idx;
-        setActive(idx);
-        if (window.DorianSound) window.DorianSound.play("ding");
-        if (window.gsap) {
-          var floor = FLOOR_ORDER[idx];
-          gsap.fromTo(
-            '.floor-panel[data-panel="' + floor + '"]',
-            { y: 50, opacity: 0, filter: "blur(6px)" },
-            { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }
-          );
-        }
+        var swap = function () {
+          setActive(idx);
+          if (window.DorianSound) window.DorianSound.play("ding");
+          if (window.gsap) {
+            var floor = FLOOR_ORDER[idx];
+            gsap.fromTo(
+              '.floor-panel[data-panel="' + floor + '"]',
+              { y: 50, opacity: 0, filter: "blur(6px)" },
+              { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }
+            );
+          }
+        };
+        // Brass doors wipe across as the floor changes, swapping at the shut point.
+        if (window.Dorian.elevatorDoorSweep) window.Dorian.elevatorDoorSweep(swap);
+        else swap();
       }
     },
   });

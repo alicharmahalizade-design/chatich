@@ -26,6 +26,7 @@
 
     <link rel="stylesheet" href="assets/vendor/lenis.css" />
     <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/enhance.css" />
 
     <!-- LocalBusiness / HairSalon schema -->
     <script type="application/ld+json">
@@ -62,9 +63,32 @@
       </div>
     </div>
 
+    <!-- Intro elevator doors (open after preloader to reveal the hero) -->
+    <div class="intro-doors doors" id="introDoors" aria-hidden="true">
+      <div class="door door--l"></div>
+      <div class="door door--r"></div>
+    </div>
+
     <!-- =========================== SVG DEFS ========================== -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
       <defs>
+        <filter id="liquid">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.012 0.018"
+            numOctaves="2"
+            seed="7"
+            result="n"
+          >
+            <animate
+              attributeName="baseFrequency"
+              dur="8s"
+              values="0.012 0.018;0.02 0.012;0.012 0.018"
+              repeatCount="indefinite"
+            />
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="14" />
+        </filter>
         <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#a07e16" />
           <stop offset="50%" stop-color="#e8c766" />
@@ -118,15 +142,18 @@
       <div class="container nav__bar">
         <a href="#hero" class="nav__logo" data-scroll>DORIAN</a>
         <nav class="nav__links">
-          <a href="#manifesto" data-scroll>درباره</a>
-          <a href="#elevator" data-scroll>طبقات</a>
-          <a href="#characters" data-scroll>تیم</a>
-          <a href="#giftcards" data-scroll>گیفت‌کارت</a>
-          <a href="#reserve" data-scroll>رزرو</a>
+          <a href="#manifesto" data-scroll data-en="About">درباره</a>
+          <a href="#elevator" data-scroll data-en="Floors">طبقات</a>
+          <a href="#characters" data-scroll data-en="Team">تیم</a>
+          <a href="#giftcards" data-scroll data-en="Gift Cards">گیفت‌کارت</a>
+          <a href="#reserve" data-scroll data-en="Reserve">رزرو</a>
         </nav>
-        <a href="#reserve" class="btn btn--gold btn--shimmer" data-scroll data-cursor="enter">
-          <span>رزرو نوبت</span>
-        </a>
+        <div class="nav__right">
+          <button class="lang-toggle" id="langToggle" data-cursor="explore" aria-label="Switch language">EN</button>
+          <a href="#reserve" class="btn btn--gold btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.3">
+            <span data-en="Book Now">رزرو نوبت</span>
+          </a>
+        </div>
       </div>
     </header>
 
@@ -134,6 +161,7 @@
       <!-- ============================ 01 HERO ======================= -->
       <section class="hero" id="hero" data-cursor="scroll">
         <div class="hero__rays" aria-hidden="true"></div>
+        <div class="hero__spotlight" aria-hidden="true"></div>
         <div class="hero__inner">
           <p class="hero__tagline" data-hero="tagline">Let us enchant you, in a good way</p>
 
@@ -168,11 +196,11 @@
           </svg>
 
           <div class="hero__cta" data-hero="cta">
-            <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter">
-              <span>رزرو نوبت</span>
+            <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.4">
+              <span data-en="Book Now">رزرو نوبت</span>
             </a>
-            <a href="#giftcards" class="btn btn--gold" data-scroll data-cursor="enter">
-              <span>گیفت‌کارت</span>
+            <a href="#giftcards" class="btn btn--gold" data-scroll data-cursor="enter" data-magnetic="0.4">
+              <span data-en="Gift Cards">گیفت‌کارت</span>
             </a>
           </div>
         </div>
@@ -187,7 +215,7 @@
       <section class="section manifesto" id="manifesto">
         <div class="container">
           <div class="section__label">
-            <span class="eyebrow">02 — مانیفست</span>
+            <span class="eyebrow" data-en="02 — Manifesto">۰۲ — مانیفست</span>
             <span class="line"></span>
           </div>
           <div class="manifesto__grid">
@@ -275,7 +303,7 @@
             <!-- Underground -->
             <article class="floor-panel" data-panel="0">
               <span class="floor-panel__no">00 — UNDERGROUND</span>
-              <h3 class="floor-panel__title">زیرزمین — فضای اجتماعی</h3>
+              <h3 class="floor-panel__title" data-en="Underground — The Social Floor">زیرزمین — فضای اجتماعی</h3>
               <p class="floor-panel__desc">
                 زیرین‌ترین بخش مجموعه؛ فضایی چندمنظوره و گرم برای گفت‌وگو،
                 پذیرایی و آماده‌سازی داماد. جایی برای ماندن، نه فقط گذشتن.
@@ -303,7 +331,7 @@
             <!-- First -->
             <article class="floor-panel" data-panel="1">
               <span class="floor-panel__no">01 — FIRST FLOOR</span>
-              <h3 class="floor-panel__title">طبقه اول — قلب مجموعه</h3>
+              <h3 class="floor-panel__title" data-en="First Floor — The Heart">طبقه اول — قلب مجموعه</h3>
               <p class="floor-panel__desc">
                 قلب اصلی دوریان؛ پذیرش، اصلاح تخصصی مو و صورت و سرشور تخصصی.
                 جایی که هنر آرایش مردانه با دقتی اشرافی اجرا می‌شود.
@@ -331,7 +359,7 @@
             <!-- Second -->
             <article class="floor-panel" data-panel="2">
               <span class="floor-panel__no">02 — SECOND FLOOR</span>
-              <h3 class="floor-panel__title">طبقه دوم — حریم خصوصی</h3>
+              <h3 class="floor-panel__title" data-en="Second Floor — The Private Sanctuary">طبقه دوم — حریم خصوصی</h3>
               <p class="floor-panel__desc">
                 بالاترین سطح تجربه؛ حریم خصوصی و خدمات لاکچری. ماساژ، فیشیال،
                 مانیکور و پدیکور و حمام اختصاصی، در آرامشی کامل.
@@ -355,18 +383,24 @@
                 </div>
               </div>
             </article>
+
+            <div class="elev-doors doors" id="elevDoors" aria-hidden="true">
+              <div class="door door--l"></div>
+              <div class="door door--r"></div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- ======================= 06 CHARACTERS ====================== -->
       <section class="section characters" id="characters">
+        <canvas class="webgl-layer" data-webgl aria-hidden="true"></canvas>
         <div class="container">
           <div class="section__label">
-            <span class="eyebrow">06 — کاراکترها</span>
+            <span class="eyebrow" data-en="06 — Characters">۰۶ — کاراکترها</span>
             <span class="line"></span>
           </div>
-          <h2 class="font-display" data-reveal style="font-size: clamp(2rem,4vw,3.2rem); margin-bottom: var(--2xl); letter-spacing:0.04em;">
+          <h2 class="font-display" data-split data-en="The Masters of Dorian" style="font-size: clamp(2rem,4vw,3.2rem); margin-bottom: var(--2xl); letter-spacing:0.04em;">
             استادانِ دوریان
           </h2>
 
@@ -447,7 +481,64 @@
               </div>
             </div>
           </div>
-          <p class="char-card__hint">روی هر کارت نگه دارید تا تخصص‌ها آشکار شود</p>
+          <p class="char-card__hint" data-en="Hover a card to reveal the specialties">روی هر کارت نگه دارید تا تخصص‌ها آشکار شود</p>
+        </div>
+      </section>
+
+      <!-- ===================== TRANSFORM (B/A) ====================== -->
+      <section class="section transform" id="transform">
+        <div class="container">
+          <div class="section__label">
+            <span class="eyebrow" data-en="The Transformation">دگرگونی</span>
+            <span class="line"></span>
+          </div>
+          <h2 class="font-display" data-split data-en="Before, and after." style="font-size: clamp(2rem,4vw,3.2rem); margin-bottom: var(--xl); letter-spacing:0.04em; text-align:center;">
+            پیش از این، و پس از این.
+          </h2>
+          <div class="ba" id="ba" data-reveal data-cursor="explore" role="slider" aria-label="مقایسه قبل و بعد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <div class="ba__img ba__before"><span data-en="Before">قبل</span></div>
+            <div class="ba__img ba__after"><span data-en="After">بعد</span></div>
+            <div class="ba__handle"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== TESTIMONIALS ========================= -->
+      <section class="section testimonials" id="testimonials">
+        <div class="container">
+          <div class="section__label">
+            <span class="eyebrow" data-en="In their words">از زبان مهمان‌ها</span>
+            <span class="line"></span>
+          </div>
+          <div class="tst" id="tst">
+            <p class="tst__quote"></p>
+            <p class="tst__who"></p>
+            <p class="tst__role"></p>
+            <div class="tst__dots"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== INSTAGRAM ============================ -->
+      <section class="section insta" id="insta">
+        <div class="container">
+          <div class="section__label">
+            <span class="eyebrow" data-en="On Instagram">در اینستاگرام</span>
+            <span class="line"></span>
+          </div>
+          <h2 class="font-display" data-reveal data-en="@dorian.studio" style="font-size: clamp(1.6rem,3vw,2.4rem); margin-bottom: var(--xl);">
+            @dorian.studio
+          </h2>
+          <div class="insta__grid">
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
+          </div>
         </div>
       </section>
 
@@ -455,33 +546,33 @@
       <section class="section giftcards" id="giftcards">
         <div class="container">
           <div class="section__label">
-            <span class="eyebrow">07 — گیفت‌کارت</span>
+            <span class="eyebrow" data-en="07 — Gift Cards">۰۷ — گیفت‌کارت</span>
             <span class="line"></span>
           </div>
-          <h2 data-reveal style="font-family: var(--font-fa); font-weight:700; font-size: clamp(2rem,4.5vw,3.4rem); color: var(--ink); margin-bottom: var(--md);">
+          <h2 data-reveal data-en="A gift worthy of a gentleman" style="font-family: var(--font-fa); font-weight:700; font-size: clamp(2rem,4.5vw,3.4rem); color: var(--ink); margin-bottom: var(--md);">
             هدیه‌ای در شأن یک نجیب‌زاده
           </h2>
-          <p data-reveal style="color: var(--text-muted-dark); max-width: 48ch; margin-bottom: var(--2xl);">
+          <p data-reveal data-en="Gift the Dorian experience. Four tiers, for every measure of generosity." style="color: var(--text-muted-dark); max-width: 48ch; margin-bottom: var(--2xl);">
             تجربه‌ی دوریان را هدیه دهید. چهار سطح، برای هر اندازه از سخاوت.
           </p>
 
           <div class="gift-grid">
-            <div class="gift-card" data-tier="gentle" data-reveal data-cursor="open">
+            <div class="gift-card liquid-hover" data-tier="gentle" data-reveal data-cursor="open">
               <div class="gift-card__glow"></div>
               <div class="gift-card__rank">GENTLE</div>
               <div class="gift-card__amount">۱ <small>میلیون تومان</small></div>
             </div>
-            <div class="gift-card" data-tier="duke" data-reveal data-cursor="open">
+            <div class="gift-card liquid-hover" data-tier="duke" data-reveal data-cursor="open">
               <div class="gift-card__glow"></div>
               <div class="gift-card__rank">DUKE</div>
               <div class="gift-card__amount">۲ <small>میلیون تومان</small></div>
             </div>
-            <div class="gift-card" data-tier="noble" data-reveal data-cursor="open">
+            <div class="gift-card liquid-hover" data-tier="noble" data-reveal data-cursor="open">
               <div class="gift-card__glow"></div>
               <div class="gift-card__rank">NOBLE</div>
               <div class="gift-card__amount">۵ <small>میلیون تومان</small></div>
             </div>
-            <div class="gift-card" data-tier="royal" data-reveal data-cursor="open">
+            <div class="gift-card liquid-hover" data-tier="royal" data-reveal data-cursor="open">
               <div class="gift-card__glow"></div>
               <div class="gift-card__rank">ROYAL</div>
               <div class="gift-card__amount">۱۰ <small>میلیون تومان</small></div>
@@ -489,8 +580,8 @@
           </div>
 
           <div class="gift-cta">
-            <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter">
-              <span>هدیه بدهید</span>
+            <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.35">
+              <span data-en="Give a Gift">هدیه بدهید</span>
             </a>
           </div>
         </div>
@@ -500,7 +591,7 @@
       <section class="section reserve" id="reserve">
         <div class="container">
           <div class="section__label">
-            <span class="eyebrow">08 — رزرو</span>
+            <span class="eyebrow" data-en="08 — Reserve">۰۸ — رزرو</span>
             <span class="line"></span>
           </div>
           <div class="reserve__grid">
@@ -549,7 +640,7 @@
                   <div class="control"><textarea id="r-note" name="note"></textarea></div>
                 </div>
                 <button type="submit" class="btn btn--gold btn--shimmer" style="width:100%" data-cursor="enter">
-                  <span>ثبت درخواست رزرو</span>
+                  <span data-en="Submit Reservation">ثبت درخواست رزرو</span>
                 </button>
               </form>
 
@@ -566,13 +657,25 @@
         </div>
       </section>
 
+      <!-- ===================== CLOSING SCENE ======================== -->
+      <section class="closing" id="closing">
+        <div class="closing__center">
+          <div class="closing__logo">DORIAN</div>
+          <p class="closing__line" data-en="Designed to be remembered.">ساخته شده تا به یاد بماند.</p>
+        </div>
+        <div class="doors" aria-hidden="true">
+          <div class="door door--l"></div>
+          <div class="door door--r"></div>
+        </div>
+      </section>
+
       <!-- ========================== 09 FOOTER ======================= -->
       <footer class="footer" id="footer">
         <div class="container">
           <div class="footer__top">
             <div>
               <div class="footer__brand">DORIAN</div>
-              <p class="footer__tag">
+              <p class="footer__tag" data-en="An aristocratic experience for gentlemen — where every detail honours you.">
                 تجربه‌ای اشرافی برای آقایان — جایی که هر جزئیات، شأن شماست.
               </p>
               <div class="footer__socials">
@@ -619,6 +722,12 @@
     <script src="assets/js/characters.js"></script>
     <script src="assets/js/giftcards.js"></script>
     <script src="assets/js/reserve.js"></script>
+    <script src="assets/js/doors.js"></script>
+    <script src="assets/js/interactions.js"></script>
+    <script src="assets/js/webgl.js"></script>
+    <script src="assets/js/beforeafter.js"></script>
+    <script src="assets/js/testimonials.js"></script>
+    <script src="assets/js/i18n.js"></script>
     <script src="assets/js/main.js"></script>
   </body>
 </html>
