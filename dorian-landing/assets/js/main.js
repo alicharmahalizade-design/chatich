@@ -100,41 +100,31 @@
   /* ---- Boot sequence ---- */
   function boot() {
     if (D.initCursor) D.initCursor();
-    if (D.initDoors) D.initDoors(); // shut the intro doors behind the preloader
-    if (D.initI18n) D.initI18n();
 
     var start = D.runPreloader ? D.runPreloader() : Promise.resolve();
-    start
-      .then(function () {
-        // Reveal the hero through the opening elevator doors.
-        return D.openIntroDoors ? D.openIntroDoors() : Promise.resolve();
-      })
-      .then(function () {
-        if (lenis) lenis.start();
-        document.body.classList.add("is-ready");
+    start.then(function () {
+      if (lenis) lenis.start();
+      document.body.classList.add("is-ready");
 
-        if (D.initHero) D.initHero();
-        if (D.initElevator) D.initElevator();
-        if (D.initCharacters) D.initCharacters();
-        if (D.initGiftcards) D.initGiftcards();
-        if (D.initReserve) D.initReserve();
-        if (D.initInteractions) D.initInteractions();
-        if (D.initWebGL) D.initWebGL();
-        if (D.initBeforeAfter) D.initBeforeAfter();
-        if (D.initTestimonials) D.initTestimonials();
-        if (D.initClosing) D.initClosing();
-        initReveals();
+      if (D.initHero) D.initHero();
+      if (D.initElevator) D.initElevator();
+      if (D.initCharacters) D.initCharacters();
+      if (D.initGiftcards) D.initGiftcards();
+      if (D.initReserve) D.initReserve();
+      if (D.initInteractions) D.initInteractions();
+      if (D.initWebGL) D.initWebGL();
+      initReveals();
 
-        if (window.ScrollTrigger) {
+      if (window.ScrollTrigger) {
+        ScrollTrigger.refresh();
+        window.addEventListener("load", function () {
           ScrollTrigger.refresh();
-          window.addEventListener("load", function () {
-            ScrollTrigger.refresh();
-          });
-          setTimeout(function () {
-            ScrollTrigger.refresh();
-          }, 600);
-        }
-      });
+        });
+        setTimeout(function () {
+          ScrollTrigger.refresh();
+        }, 600);
+      }
+    });
   }
 
   if (document.readyState === "loading") {

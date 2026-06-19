@@ -63,12 +63,6 @@
       </div>
     </div>
 
-    <!-- Intro elevator doors (open after preloader to reveal the hero) -->
-    <div class="intro-doors doors" id="introDoors" aria-hidden="true">
-      <div class="door door--l"></div>
-      <div class="door door--r"></div>
-    </div>
-
     <!-- =========================== SVG DEFS ========================== -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
       <defs>
@@ -148,12 +142,9 @@
           <a href="#giftcards" data-scroll data-en="Gift Cards">گیفت‌کارت</a>
           <a href="#reserve" data-scroll data-en="Reserve">رزرو</a>
         </nav>
-        <div class="nav__right">
-          <button class="lang-toggle" id="langToggle" data-cursor="explore" aria-label="Switch language">EN</button>
-          <a href="#reserve" class="btn btn--gold btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.3">
-            <span data-en="Book Now">رزرو نوبت</span>
-          </a>
-        </div>
+        <a href="#reserve" class="btn btn--gold btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.3">
+          <span>رزرو نوبت</span>
+        </a>
       </div>
     </header>
 
@@ -383,11 +374,6 @@
                 </div>
               </div>
             </article>
-
-            <div class="elev-doors doors" id="elevDoors" aria-hidden="true">
-              <div class="door door--l"></div>
-              <div class="door door--r"></div>
-            </div>
           </div>
         </div>
       </section>
@@ -482,63 +468,6 @@
             </div>
           </div>
           <p class="char-card__hint" data-en="Hover a card to reveal the specialties">روی هر کارت نگه دارید تا تخصص‌ها آشکار شود</p>
-        </div>
-      </section>
-
-      <!-- ===================== TRANSFORM (B/A) ====================== -->
-      <section class="section transform" id="transform">
-        <div class="container">
-          <div class="section__label">
-            <span class="eyebrow" data-en="The Transformation">دگرگونی</span>
-            <span class="line"></span>
-          </div>
-          <h2 class="font-display" data-split data-en="Before, and after." style="font-size: clamp(2rem,4vw,3.2rem); margin-bottom: var(--xl); letter-spacing:0.04em; text-align:center;">
-            پیش از این، و پس از این.
-          </h2>
-          <div class="ba" id="ba" data-reveal data-cursor="explore" role="slider" aria-label="مقایسه قبل و بعد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-            <div class="ba__img ba__before"><span data-en="Before">قبل</span></div>
-            <div class="ba__img ba__after"><span data-en="After">بعد</span></div>
-            <div class="ba__handle"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================== TESTIMONIALS ========================= -->
-      <section class="section testimonials" id="testimonials">
-        <div class="container">
-          <div class="section__label">
-            <span class="eyebrow" data-en="In their words">از زبان مهمان‌ها</span>
-            <span class="line"></span>
-          </div>
-          <div class="tst" id="tst">
-            <p class="tst__quote"></p>
-            <p class="tst__who"></p>
-            <p class="tst__role"></p>
-            <div class="tst__dots"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================== INSTAGRAM ============================ -->
-      <section class="section insta" id="insta">
-        <div class="container">
-          <div class="section__label">
-            <span class="eyebrow" data-en="On Instagram">در اینستاگرام</span>
-            <span class="line"></span>
-          </div>
-          <h2 class="font-display" data-reveal data-en="@dorian.studio" style="font-size: clamp(1.6rem,3vw,2.4rem); margin-bottom: var(--xl);">
-            @dorian.studio
-          </h2>
-          <div class="insta__grid">
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-            <a class="insta__cell" href="#" data-cursor="open" aria-label="Instagram"></a>
-          </div>
         </div>
       </section>
 
@@ -657,18 +586,6 @@
         </div>
       </section>
 
-      <!-- ===================== CLOSING SCENE ======================== -->
-      <section class="closing" id="closing">
-        <div class="closing__center">
-          <div class="closing__logo">DORIAN</div>
-          <p class="closing__line" data-en="Designed to be remembered.">ساخته شده تا به یاد بماند.</p>
-        </div>
-        <div class="doors" aria-hidden="true">
-          <div class="door door--l"></div>
-          <div class="door door--r"></div>
-        </div>
-      </section>
-
       <!-- ========================== 09 FOOTER ======================= -->
       <footer class="footer" id="footer">
         <div class="container">
@@ -722,12 +639,8 @@
     <script src="assets/js/characters.js"></script>
     <script src="assets/js/giftcards.js"></script>
     <script src="assets/js/reserve.js"></script>
-    <script src="assets/js/doors.js"></script>
     <script src="assets/js/interactions.js"></script>
     <script src="assets/js/webgl.js"></script>
-    <script src="assets/js/beforeafter.js"></script>
-    <script src="assets/js/testimonials.js"></script>
-    <script src="assets/js/i18n.js"></script>
     <script src="assets/js/main.js"></script>
   </body>
 </html>
