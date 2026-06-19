@@ -1,68 +1,91 @@
-# DORIAN — Beyond Luxury
+# DORIAN — Gentlemen's Studio
 
-A cinematic, interactive luxury web experience. The visitor steps into a
-private building and ascends floor by floor — each scroll a new chapter of the
-brand. Built to produce a *wow* in the first seconds and to feel like a
-multi-million-euro production.
+صفحه‌ی فرود سینمایی و اشرافی برای **دوریان**، مجموعه‌ی لاکچری دامادسرا و
+آرایشگاه تخصصی مردانه در سه طبقه. کاربر مثل ورود به یک ساختمان VIP، طبقه‌به‌طبقه
+تجربه را کشف می‌کند: اسکرول = حرکت آسانسور بین طبقات.
 
-## Experience map
+> A cinematic, RTL (Persian) luxury landing experience. Scroll = an elevator
+> ascending through a three-floor building.
 
-| Floor | Section | Highlights |
-|-------|---------|-----------|
-| — | **Preloader** | Drawn monogram, gold hairline, loading counter (≤ 2s) |
-| — | **Hero** | 4-scene cinematic intro, 3D gold monolith, "Beyond Luxury" reveal |
-| 01 | **Brand Story** | Pinned parallax, word-by-word text reveal, drawn architecture |
-| 02 | **Services** | 3D tilt glass cards with moving reflections |
-| 03 | **Projects** | Full-screen horizontal scroll (GSAP pin) + luxury case-study modal |
-| — | **Statistics** | Animated counters |
-| — | **Testimonials** | Editorial magazine layout |
-| 04 | **Innovation** | Interactive WebGL light field that follows the cursor |
-| 05 | **Contact** | Glowing inputs, smart validation, success animation |
-| — | **Footer** | Magnetic back-to-top |
+## ساختار تجربه (Section map)
 
-A persistent **Elevator HUD** tracks the active floor — animating the floor
-number, shifting the cabin light tint, and playing a soft *ding* on each
-change.
+| #  | سکشن | جزئیات |
+|----|------|--------|
+| 00 | **Preloader** | مهر موم آبی «D» که stamp می‌شود + سوییپ طلایی + شمارنده (≤ ۲ ثانیه) |
+| 01 | **Hero** | قاب بیضی طلایی (draw-on) + پرتره، شعار اسکریپت، لوگو، مهر موم، پارالاکس |
+| 02 | **Manifesto / 360°** | «خدمات ۳۶۰ درجه در سه طبقه» + برش معماری ساختمان |
+| 03–05 | **Elevator** (pinned) | آسانسور بین Underground / First / Second؛ طبقهٔ فعال روشن، بقیه کم‌نور، شمارندهٔ طبقه + ding |
+| 06 | **Characters** | تیم در قالب کارت‌های اشرافی (Royal/Noble/Duke/Gentle) با tilt و flip |
+| 07 | **Gift Cards** | چهار سطح ۱/۲/۵/۱۰ میلیون تومان با tilt و درخشش طلایی |
+| 08 | **Reservation** | فرم لاکچری با گلوی طلایی، اعتبارسنجی هوشمند و انیمیشن موفقیت |
+| 09 | **Footer** | لوگو، شبکه‌های اجتماعی، مهر طلایی «New Experiences» |
 
-## Global craft
+## ویژگی‌های سراسری
 
-- **Smooth scroll** — Lenis inertia, synced to GSAP ScrollTrigger.
-- **Dynamic cursor** — dot + trailing ring with contextual modes (Explore,
-  Enter, Scroll, Open, View Project).
-- **Magnetic elements** — buttons and links are gently pulled toward the cursor.
-- **Ambient motion** — floating sparkles, light rays, grain overlay, vignette.
-- **Sound design** — synthesised (no audio files) elevator ding, hover ticks
-  and transition swells; fully mutable via the floating toggle.
-- **Accessibility & motion** — honours `prefers-reduced-motion`, semantic
-  markup, keyboard-focusable controls.
+- **اسکرول نرم:** Lenis، هماهنگ با GSAP ScrollTrigger.
+- **کرسور اختصاصی:** نقطه + حلقهٔ دنبال‌کننده با حالت‌های Explore/Enter/Scroll/Open/View.
+- **موشن سینمایی:** منحنی `cubic-bezier(0.22, 1, 0.36, 1)`، draw-on SVG، reveal خطی.
+- **صدا (اختیاری):** ding آسانسور، tick و whoosh — کاملاً قابل خاموش‌کردن.
+- **اتمسفر:** grain، vignette، light rays طلایی.
+- **RTL کامل** و احترام به `prefers-reduced-motion`.
 
-## Tech stack
+## پالت برند
 
-- [Next.js 14](https://nextjs.org/) (App Router) + TypeScript
-- [GSAP](https://gsap.com/) + ScrollTrigger
-- [Lenis](https://lenis.darkroom.engineering/) smooth scroll
-- [Framer Motion](https://www.framer.com/motion/)
-- [Three.js](https://threejs.org/) + [React Three Fiber](https://r3f.docs.pmnd.rs/) + drei
-- [Tailwind CSS](https://tailwindcss.com/)
+| نقش | کد |
+|-----|-----|
+| کرمی کاغذی | `#ECDEC9` |
+| آبی برند | `#0066B3` |
+| سرمه‌ای عمیق | `#0A1A2F` |
+| طلایی | `#C9A227` → `#E8C766` |
+| مشکی پارچه‌ای | `#111315` |
 
-3D scenes are dynamically imported (`ssr: false`) and disabled or reduced on
-mobile to keep the experience light.
+## تکنولوژی
 
-## Getting started
+سایت **استاتیک، بدون فریم‌ورک سنگین** است (طبق توصیهٔ PRD برای انتقال آسان به
+Page Template وردپرس). کتابخانه‌ها در `assets/vendor/` به‌صورت محلی قرار دارند:
 
-```bash
-npm install
-npm run dev      # http://localhost:3000
-```
+- GSAP + ScrollTrigger + DrawSVGPlugin
+- Lenis smooth scroll
+- فونت‌ها: Cinzel (نمایشی)، Pinyon Script (شعار)، Vazirmatn (فارسی) از Google Fonts
+
+## اجرا / پیش‌نمایش
+
+چون استاتیک است، فقط کافی است با یک سرور ساده اجرا شود (به‌خاطر مسیرهای نسبی):
 
 ```bash
-npm run build    # production build
-npm start        # serve the production build
+cd dorian-landing
+python3 -m http.server 8000
+# سپس باز کنید: http://localhost:8000
 ```
 
-## Performance notes
+یا با هر سرور استاتیک دیگری (`npx serve`, افزونهٔ Live Server و …).
 
-- 3D is lazy-loaded and excluded from the initial bundle.
-- Heavy effects (horizontal scroll, innovation field) are gated to desktop.
-- Fonts use `next/font` with `display: swap`; images prefer AVIF/WebP.
-- All scroll-driven work runs through a single GSAP/Lenis RAF loop.
+## ساختار فایل
+
+```
+dorian-landing/
+├─ index.html
+└─ assets/
+   ├─ css/main.css
+   ├─ js/        # sound, cursor, preloader, hero, elevator,
+   │             # characters, giftcards, reserve, main
+   ├─ vendor/    # gsap, ScrollTrigger, DrawSVGPlugin, lenis
+   ├─ img/  svg/  fonts/
+```
+
+## جای‌گذاری دارایی‌های واقعی (Placeholders)
+
+این نسخه با جای‌گزین‌های باکیفیت CSS/SVG ساخته شده تا قبل از دریافت فایل‌های
+نهایی قابل مشاهده باشد. برای نسخهٔ نهایی این‌ها را جایگزین کنید:
+
+- **پرترهٔ دوریان** داخل `.hero__portrait` (الان silhouette با CSS است).
+- **پرتره‌های تیم** در کارت‌های `.char-card .portrait`.
+- **لوگوی SVG**، **مهر موم** و **مهر طلایی** (الان SVG درون‌خطی‌اند).
+- **رندر طبقات** و **برش ساختمان** با کیفیت بالا.
+- متن‌های نهایی، اطلاعات تماس واقعی و لینک سیستم رزرو.
+
+## مسیر وردپرس (فاز بعد)
+
+این نسخهٔ استاتیک عمداً ساده نگه داشته شده تا به‌سادگی به یک **Custom Page
+Template** تبدیل شود: انتقال `index.html` به `template-dorian.php` و لود اسکریپت/
+استایل‌ها با `wp_enqueue_*`.
