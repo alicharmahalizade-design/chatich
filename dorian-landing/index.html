@@ -1,691 +1,350 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>دوریان | تجربه‌ای اشرافی برای آقایان — Dorian Gentlemen's Studio</title>
-    <meta
-      name="description"
-      content="دوریان، مجموعه‌ی لاکچری دامادسرا و آرایشگاه تخصصی مردانه در سه طبقه. تجربه‌ای سینمایی و اشرافی؛ از در ورودی تا رزرو نوبت و گیفت‌کارت."
-    />
-    <meta name="theme-color" content="#0a1a2f" />
-    <meta property="og:title" content="دوریان | Dorian Gentlemen's Studio" />
-    <meta
-      property="og:description"
-      content="تجربه‌ای اشرافی برای آقایان — خدمات ۳۶۰ درجه در سه طبقه."
-    />
-    <meta property="og:type" content="website" />
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<script>document.documentElement.classList.add('js')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>دوریان | دامادسرا و آرایشگاه تخصصی آقایان</title>
+<meta name="description" content="دوریان؛ مجموعه‌ی لاکچری دامادسرا و آرایشگاه تخصصی آقایان در اهواز. سه طبقه خدمات حرفه‌ای پوست، مو، ماساژ و مراقبت شخصی.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Mr+Dafoe&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Pinyon+Script&family=Vazirmatn:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+<!-- PRELOADER (elevator doors + counter) -->
+<div id="pre">
+  <div class="door door--t"></div>
+  <div class="door door--b"></div>
+  <div class="pcore">
+    <img class="seal" src="assets/img/badge.png" alt="Dorian">
+    <div class="pcount"><span id="pcount">0</span><small>%</small></div>
+    <div class="ptag">Dorian</div>
+    <div class="pbar"><i id="pbar"></i></div>
+  </div>
+</div>
 
-    <link rel="stylesheet" href="assets/vendor/lenis.css" />
-    <link rel="stylesheet" href="assets/css/main.css" />
-    <link rel="stylesheet" href="assets/css/enhance.css" />
+<!-- ATMOSPHERE -->
+<div id="tone"></div>
+<div id="fx"></div>
+<div class="dust" id="dust"></div>
+<div class="cursor__ring" id="curRing"></div>
+<div class="cursor__dot" id="curDot"></div>
 
-    <!-- LocalBusiness / HairSalon schema -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "HairSalon",
-        "name": "Dorian Gentlemen's Studio",
-        "description": "مجموعه‌ی لاکچری دامادسرا و آرایشگاه تخصصی مردانه در سه طبقه.",
-        "url": "https://dorianstudio.ir",
-        "image": "https://dorianstudio.ir/assets/img/hero.jpg",
-        "priceRange": "$$$",
-        "telephone": "+98-916-792-1710",
-        "address": {
-          "@type": "PostalAddress",
-          "addressCountry": "IR",
-          "streetAddress": "خیابان وهابی، نبش خیابان سوم، کیان‌آباد"
-        },
-        "openingHours": "Sa-Th 10:00-22:00"
-      }
-    </script>
-  </head>
-  <body>
-    <!-- ============================ PRELOADER ======================== -->
-    <div class="preloader" id="preloader" aria-hidden="true">
-      <div class="preloader__inner">
-        <img class="preloader__seal" id="seal-pre" src="assets/img/seal-gold.png" alt="" />
-        <div class="preloader__bar"><i id="pre-bar"></i></div>
-        <div class="preloader__meta">
-          <span>DORIAN</span>
-          <b id="pre-count">۰</b>
+<!-- HEADER -->
+<header class="head" id="head">
+  <a href="#hero" data-go="0" aria-label="دوریان"><img class="head__logo" src="assets/img/logo.png" alt="Dorian Gentlemen's Studio"></a>
+  <nav class="nav" id="nav">
+    <a href="#story" data-go="1">مجموعه</a>
+    <a href="#floors" data-go="2">طبقات</a>
+    <a href="#services" data-go="3">خدمات</a>
+    <a href="#team" data-go="4">تیم</a>
+    <a href="#gift" data-go="5">گیفت‌کارت</a>
+    <a class="btn btn--gold head__cta" href="#reserve" data-go="6">رزرو نوبت</a>
+  </nav>
+  <button class="burger" id="burger" aria-label="منو"><span></span><span></span><span></span></button>
+</header>
+
+<!-- DOT NAV -->
+<div class="dots" id="dots"></div>
+
+<!-- MOVING ELEVATOR (interactive call panel) -->
+<div class="lift" id="lift" data-active="2">
+  <ul class="lift__floors">
+    <li><button class="lift__btn" data-go-floor="0" aria-label="طبقه دوم"><span class="lat">2</span></button></li>
+    <li><button class="lift__btn" data-go-floor="1" aria-label="طبقه اول"><span class="lat">1</span></button></li>
+    <li><button class="lift__btn" data-go-floor="2" aria-label="زیرزمین"><span class="lat">B</span></button></li>
+  </ul>
+  <div class="lift__track"><span class="lift__tick"></span><span class="lift__car"></span></div>
+</div>
+
+<main class="snap" id="snap">
+
+  <!-- HERO -->
+  <section class="screen hero" id="hero" data-theme="light" data-name="خانه">
+    <div class="embers" id="embers"></div>
+    <div class="hero__wm lat">DORIAN</div>
+    <div class="hero__frame"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></div>
+    <div class="hero__inner wrap">
+      <p class="eyebrow c hero__eyebrow anim" style="--i:0">Gentlemen's Studio · Ahvaz</p>
+      <h1 class="hero__tag anim" style="--i:1">Let us enchant you,<br>in a good way</h1>
+      <div class="hero__portrait anim scale" style="--i:2"><img src="assets/img/portrait.png" alt="پرتره‌ی دوریان"></div>
+      <div class="hero__base anim" style="--i:3"><i></i><em></em><i></i></div>
+      <img class="hero__logo anim" style="--i:3" src="assets/img/logo.png" alt="Dorian">
+      <p class="hero__sub anim" style="--i:4">دامادسرا و آرایشگاه تخصصی آقایان</p>
+      <div class="hero__ctas anim" style="--i:5">
+        <a class="btn btn--blue" href="#reserve" data-go="6">رزرو نوبت</a>
+        <a class="btn btn--ghost" href="#floors" data-go="2" style="color:var(--blue);border-color:var(--blue)">گشتی در مجموعه</a>
+      </div>
+    </div>
+    <div class="cue"><span>SCROLL</span><i></i></div>
+  </section>
+
+  <!-- STORY -->
+  <section class="screen story" id="story" data-theme="light" data-name="مجموعه">
+    <div class="story__grid wrap">
+      <div class="story__copy">
+        <span class="eyebrow anim" style="--i:0">The Story</span>
+        <h2 class="anim" style="--i:1">دوریان؛ هنرِ <span class="serif">ماندگاری</span></h2>
+        <p class="story__q anim" style="--i:2">«بگذارید مسحورتان کنیم، آن‌هم به بهترین شکل.»</p>
+        <p class="anim" style="--i:3">نام «دوریان» از قوم باستانی یونان برگرفته شده؛ مردمانی که به نظم، انضباط و سبک زندگی متمایزشان شناخته می‌شدند و یادآور رمان «دوریان گری»؛ روایتِ جوانی که زمان بر چهره‌اش اثری نمی‌گذاشت.</p>
+        <p class="anim" style="--i:4">مجموعه‌ی تخصصی دوریان در بهمن‌ماه ۱۴۰۴ در اهواز افتتاح شد؛ فضایی آرام و دور از هیاهوی روزمره، در بیش از ۳۰۰ متر مربع و سه طبقه‌ی مجزا که هرکدام با رویکردی هدفمند طراحی شده‌اند.</p>
+        <div class="story__stats">
+          <div class="stat anim" style="--i:5"><div class="n lat">1404</div><div class="l">سال تأسیس</div></div>
+          <div class="stat anim" style="--i:6"><div class="n lat">300m²</div><div class="l">فضای مجموعه</div></div>
+          <div class="stat anim" style="--i:7"><div class="n lat">3</div><div class="l">طبقه‌ی تخصصی</div></div>
+        </div>
+      </div>
+      <div class="story__visual anim scale" style="--i:3">
+        <div class="bld">
+          <span class="bld__glow"></span>
+          <img src="assets/img/building.jpg" alt="نمای برشی سه طبقه‌ی دوریان">
+          <span class="bld__seal">سه طبقه، یک تجربه</span>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- =========================== SVG DEFS ========================== -->
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-      <defs>
-        <filter id="liquid">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.012 0.018"
-            numOctaves="2"
-            seed="7"
-            result="n"
-          >
-            <animate
-              attributeName="baseFrequency"
-              dur="8s"
-              values="0.012 0.018;0.02 0.012;0.012 0.018"
-              repeatCount="indefinite"
-            />
-          </feTurbulence>
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="14" />
-        </filter>
-        <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#a07e16" />
-          <stop offset="50%" stop-color="#e8c766" />
-          <stop offset="100%" stop-color="#a07e16" />
-        </linearGradient>
+  <!-- ELEVATOR SHAFT · three floors pinned, camera descends through a fixed window -->
+  <section class="screen shaft" id="floors" data-theme="dark" data-name="طبقات">
+    <div class="shaft__viewport">
+      <div class="shaft__rail">
 
-        <!-- Wax seal (blue body, gold rim, D) -->
-        <g id="wax-seal">
-          <circle cx="60" cy="60" r="44" fill="#0066b3" />
-          <circle
-            cx="60"
-            cy="60"
-            r="44"
-            fill="none"
-            stroke="url(#goldGrad)"
-            stroke-width="2.5"
-          />
-          <circle
-            cx="60"
-            cy="60"
-            r="36"
-            fill="none"
-            stroke="rgba(255,255,255,0.25)"
-            stroke-width="1"
-            stroke-dasharray="2 4"
-          />
-          <text
-            x="60"
-            y="76"
-            text-anchor="middle"
-            font-family="Cinzel, serif"
-            font-size="42"
-            fill="#e8c766"
-          >
-            D
-          </text>
-        </g>
+        <!-- STOP · SECOND -->
+        <div class="floorstop floor" data-floor="2" data-theme="dark">
+          <div class="floor__ghost lat">02</div>
+          <div class="floor__grid wrap">
+            <div class="floor__head">
+              <span class="floor__tier anim" style="--i:0">Level Two · <span class="fa">بالاترین طبقه</span></span>
+              <span class="floor__en foil anim" style="--i:1">Second Floor<small>طبقه دوم</small></span>
+              <h3 class="floor__fa anim" style="--i:2">حریم خصوصی و خدمات لوکس</h3>
+              <p class="floor__desc anim" style="--i:3">بالاترین طبقه، با تمرکز بر آرامش ذهنی و خلوتِ شخصی؛ محیطی دنج برای مراقبت و تجدید انرژی. شامل اتاق‌های ماساژ مجزا، پاکسازی و فیشیال تخصصی، مانیکور و پدیکور ویژه‌ی آقایان و حمام اختصاصی.</p>
+              <div class="chips anim" style="--i:4">
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 14c4-6 12-6 16 0"/><circle cx="12" cy="9" r="2"/></svg>ماساژ تخصصی</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 12h6"/></svg>فیشیال و پاکسازی</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M6 18l12-12M8 6h10v10"/></svg>مانیکور و پدیکور</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 12h16M6 12V8a6 6 0 0112 0v4"/></svg>حمام اختصاصی</span>
+              </div>
+            </div>
+            <div class="render" style="--i:3">
+              <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+              <div class="render__inner"><img src="assets/img/floor-second.jpg" alt="رندر طبقه دوم"><span class="render__cap">Second Floor · Spa & Facial</span></div>
+            </div>
+          </div>
+        </div>
 
-        <!-- Gold "New Experiences" badge -->
-        <g id="gold-badge">
-          <circle cx="60" cy="60" r="46" fill="none" stroke="url(#goldGrad)" stroke-width="2" />
-          <circle cx="60" cy="60" r="38" fill="none" stroke="url(#goldGrad)" stroke-width="1" />
-          <text x="60" y="58" text-anchor="middle" font-family="Cinzel, serif" font-size="13" letter-spacing="1" fill="#e8c766">NEW</text>
-          <text x="60" y="76" text-anchor="middle" font-family="Cinzel, serif" font-size="11" letter-spacing="0.5" fill="#e8c766">EXPERIENCES</text>
-        </g>
-      </defs>
-    </svg>
+        <!-- STOP · FIRST -->
+        <div class="floorstop floor" data-floor="1" data-theme="dark">
+          <div class="floor__ghost lat">01</div>
+          <div class="floor__grid wrap">
+            <div class="floor__head">
+              <span class="floor__tier anim" style="--i:0">Level One · <span class="fa">قلب مجموعه</span></span>
+              <span class="floor__en foil anim" style="--i:1">First Floor<small>طبقه اول</small></span>
+              <h3 class="floor__fa anim" style="--i:2">قلب اصلی مجموعه</h3>
+              <p class="floor__desc anim" style="--i:3">مرکز خدمات آرایشگاهی؛ جایی برای ارائه‌ی خدماتی دقیق، سریع و حرفه‌ای در محیطی مدرن. شامل پذیرش، فضای تخصصی اصلاح مو و صورت و سرشورهای تخصصی.</p>
+              <div class="chips anim" style="--i:4">
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M5 19l7-7 7 7M8 8l8 8"/></svg>اصلاح مو</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>اصلاح صورت</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21c1-5 13-5 14 0"/></svg>پذیرش</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M7 4v8a5 5 0 0010 0V4M5 21h14"/></svg>سرشور تخصصی</span>
+              </div>
+            </div>
+            <div class="render" style="--i:3">
+              <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+              <div class="render__inner"><img src="assets/img/floor-first.jpg" alt="رندر طبقه اول"><span class="render__cap">First Floor · Barber & Wash</span></div>
+            </div>
+          </div>
+        </div>
 
-    <!-- ============================== NAV ============================ -->
-    <header class="nav" id="nav">
-      <div class="container nav__bar">
-        <a href="#hero" class="nav__logo" data-scroll aria-label="Dorian Gentlemen's Studio">
-          <img src="assets/img/logo.png" alt="Dorian Gentlemen's Studio" />
-        </a>
-        <nav class="nav__links">
-          <a href="#manifesto" data-scroll>مجموعه</a>
-          <a href="#elevator" data-scroll>طبقات</a>
-          <a href="#characters" data-scroll>تیم</a>
-          <a href="#elevator" data-scroll>خدمات</a>
-          <a href="#giftcards" data-scroll>گیفت‌کارت</a>
-          <a href="#reserve" data-scroll>رزرو</a>
-        </nav>
-        <a href="#reserve" class="btn btn--gold-soft btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.3">
-          <span>رزرو نوبت</span>
-        </a>
+        <!-- STOP · UNDERGROUND -->
+        <div class="floorstop floor" data-floor="B" data-theme="dark">
+          <div class="floor__ghost lat">B</div>
+          <div class="floor__grid wrap">
+            <div class="floor__head">
+              <span class="floor__tier anim" style="--i:0">Lower Level · <span class="fa">ورودی عموم</span></span>
+              <span class="floor__en foil anim" style="--i:1">Underground<small>طبقه زیرزمین</small></span>
+              <h3 class="floor__fa anim" style="--i:2">فضای اجتماعی و چندمنظوره</h3>
+              <p class="floor__desc anim" style="--i:3">زیرین‌ترین بخش مجموعه و ورودی آزاد برای عموم؛ فضایی برای گفت‌وگو و آرامش. شامل کافه و سالن نشیمن، اتاق گریم داماد، فضای خصوصی اصلاح و بخش بازی و سرگرمی.</p>
+              <div class="chips anim" style="--i:4">
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 8h13v5a4 4 0 01-4 4H8a4 4 0 01-4-4zM17 9h2a2 2 0 010 4h-2"/></svg>کافه</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 18v-6a4 4 0 014-4h8a4 4 0 014 4v6M4 18h16"/></svg>سالن نشیمن</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 10h.01M15 10h.01M9 15c1.5 1 4.5 1 6 0"/></svg>گریم داماد</span>
+                <span class="chip"><svg viewBox="0 0 24 24"><path d="M6 12h4M8 10v4M15 11h.01M17 13h.01M5 8h14l1 8H4z"/></svg>بازی و سرگرمی</span>
+              </div>
+            </div>
+            <div class="render" style="--i:3">
+              <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+              <div class="render__inner"><img src="assets/img/floor-underground.jpg" alt="رندر طبقه زیرزمین"><span class="render__cap">Underground · Café & Lounge</span></div>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </header>
+      <!-- per-floor light wash + door light edges -->
+      <div class="shaft__tint" aria-hidden="true"></div>
+      <div class="shaft__edges" aria-hidden="true"></div>
+    </div>
+  </section>
 
-    <main>
-      <!-- ============================ 01 HERO ======================= -->
-      <section class="hero" id="hero" data-cursor="scroll">
-        <canvas class="hero__particles" id="heroParticles" aria-hidden="true"></canvas>
-        <div class="hero__watermark" aria-hidden="true">DORIAN</div>
-        <div class="hero__inner">
-          <p class="hero__tagline" data-hero="tagline">
-            <span class="hero__tagline-ink">Let us enchant you, in a good way</span>
-            <i class="hero__pen" aria-hidden="true"></i>
-          </p>
-
-          <div class="hero__frame" data-hero="frame">
-            <div class="hero__smoke" aria-hidden="true"></div>
-            <img class="hero__portrait-img" data-hero="portrait" src="assets/img/portrait.png" alt="پرتره دوریان در قاب طلایی" />
-          </div>
-
-          <div class="hero__cta" data-hero="cta">
-            <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.4">
-              <span>رزرو نوبت</span>
-            </a>
-            <a href="#giftcards" class="btn btn--gold" data-scroll data-cursor="enter" data-magnetic="0.4">
-              <span>گیفت‌کارت</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="hero__scrollcue" aria-hidden="true">
-          <span class="mouse"></span>
-          <span>اسکرول کنید</span>
-        </div>
-      </section>
-
-      <!-- ================== 02 SERVICES 360 (scrubbed video) ======== -->
-      <section class="section manifesto" id="manifesto">
-        <div class="container">
-          <div class="section__label">
-            <span class="eyebrow" data-en="The Story">THE STORY</span>
-            <span class="line"></span>
-          </div>
-          <div class="manifesto__grid">
-            <div>
-              <h2 data-reveal>
-                دوریان؛ <b>هنرِ ماندگاری</b>
-              </h2>
-              <p data-reveal>
-                نام «دوریان» از قوم باستانی یونان برگرفته شده؛ مردمانی که به
-                نظم، انضباط و سبک زندگی متمایزشان شناخته می‌شدند. و یادآور رمان
-                «دوریان گری»؛ روایتِ جوانی که زمان بر چهره‌اش اثری نمی‌گذاشت.
-              </p>
-              <p data-reveal>
-                مجموعه‌ی تخصصی دوریان در بهمن‌ماه ۱۴۰۴ در اهواز افتتاح شد؛
-                فضایی آرام و دور از هیاهوی روزمره برای مراقبت از پوست و موی
-                آقایان. در بیش از ۳۰۰ متر مربع و سه طبقه‌ی مجزا، هر طبقه با
-                رویکردی هدفمند طراحی شده است.
-              </p>
-              <div class="manifesto__metrics" data-reveal>
-                <div class="metric">
-                  <div class="v" data-count="1404">1404</div>
-                  <div class="k">سال تأسیس</div>
-                </div>
-                <div class="metric">
-                  <div class="v" data-count="300" data-suffix="m²">300m²</div>
-                  <div class="k">فضای مجموعه</div>
-                </div>
-                <div class="metric">
-                  <div class="v" data-count="3">3</div>
-                  <div class="k">طبقه‌ی تخصصی</div>
-                </div>
-              </div>
+  <!-- SERVICES -->
+  <section class="screen services" id="services" data-theme="dark" data-name="خدمات">
+    <div class="services__inner wrap">
+      <span class="eyebrow c anim" style="--i:0">Tariffs</span>
+      <h2 class="anim" style="--i:1">تعرفه‌ی خدمات</h2>
+      <div class="ds anim" style="--i:1"><i></i><em></em><i></i></div>
+      <div class="tabs anim" style="--i:2">
+        <button class="tab active" data-tab="hair">مو <span class="lat">Hair</span></button>
+        <button class="tab" data-tab="facial">فیشیال <span class="lat">Facial</span></button>
+        <button class="tab" data-tab="massage">ماساژ <span class="lat">Massage</span></button>
+        <button class="tab" data-tab="mani">مانیکور و پدیکور <span class="lat">Mani/Pedi</span></button>
+      </div>
+      <div class="anim" style="--i:3">
+        <div class="panel active" data-panel="hair">
+          <div class="tcard-wrap">
+            <div class="matrix">
+              <table>
+                <thead><tr><th>خدمت / آرایشگر</th><th>آرمان</th><th>اشکان</th><th>حسین</th><th>احمد</th></tr></thead>
+                <tbody>
+                  <tr><td class="svc">اصلاح موی سر</td><td><span class="lat">650K</span></td><td><span class="lat">550K</span></td><td><span class="lat">550K</span></td><td><span class="lat">550K</span></td></tr>
+                  <tr><td class="svc">سشوار و حالت</td><td><span class="lat">300K</span></td><td><span class="lat">300K</span></td><td><span class="lat">300K</span></td><td><span class="lat">300K</span></td></tr>
+                  <tr><td class="svc">اصلاح ریش</td><td><span class="lat">400K</span></td><td><span class="lat">400K</span></td><td><span class="lat">400K</span></td><td><span class="lat">400K</span></td></tr>
+                  <tr><td class="svc">پکیج مو + ریش</td><td><span class="lat">950K</span></td><td><span class="lat">800K</span></td><td><span class="lat">800K</span></td><td><span class="lat">800K</span></td></tr>
+                  <tr><td class="svc">پکیج ریش + سشوار</td><td><span class="lat">500K</span></td><td><span class="lat">500K</span></td><td><span class="lat">500K</span></td><td><span class="lat">500K</span></td></tr>
+                </tbody>
+              </table>
             </div>
-
-            <!-- 360° video (scrubbed by scroll while the section is pinned) -->
-            <div class="mv-frame" data-reveal>
-              <video
-                id="servicesVideo"
-                class="mv-video"
-                muted
-                playsinline
-                preload="auto"
-                poster="assets/video/services-360-poster.jpg"
-                aria-label="خدمات ۳۶۰ درجه دوریان"
-              >
-                <source src="assets/video/services-360.mp4" type="video/mp4" />
-              </video>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ====================== 03-05 ELEVATOR ====================== -->
-      <section class="elevator" id="elevator">
-        <div class="elevator__pin" id="elevatorPin">
-          <div class="elevator__counter" id="floorCounter" aria-hidden="true">۰۱</div>
-
-          <!-- building shaft (pinned visual) -->
-          <div class="elevator__shaft">
-            <div class="shaft__rail">
-              <span class="shaft__cabin" id="cabin"></span>
-            </div>
-            <div class="shaft__building">
-              <div class="floor-cell" data-tone="second" data-cell="2">
-                <img class="floor-cell__bg" src="assets/img/floor-second.png" alt="طبقه دوم — خدمات لاکچری" />
-                <span class="floor-cell__no">02</span>
-                <span class="floor-cell__name">SECOND</span>
-              </div>
-              <div class="floor-cell" data-tone="first" data-cell="1">
-                <img class="floor-cell__bg" src="assets/img/floor-first.png" alt="طبقه اول — قلب مجموعه" />
-                <span class="floor-cell__no">01</span>
-                <span class="floor-cell__name">FIRST</span>
-              </div>
-              <div class="floor-cell" data-tone="under" data-cell="0">
-                <img class="floor-cell__bg" src="assets/img/floor-underground.png" alt="زیرزمین — فضای اجتماعی" />
-                <span class="floor-cell__no">00</span>
-                <span class="floor-cell__name">UNDERGROUND</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- content (changes per floor) -->
-          <div class="elevator__content" id="floorPanels">
-            <!-- Underground -->
-            <article class="floor-panel" data-panel="0">
-              <span class="floor-panel__no">00 — UNDERGROUND</span>
-              <h3 class="floor-panel__title" data-en="Underground — The Social Floor">زیرزمین — فضای اجتماعی</h3>
-              <p class="floor-panel__desc">
-                زیرین‌ترین بخش مجموعه؛ فضایی چندمنظوره و گرم برای گفت‌وگو،
-                پذیرایی و آماده‌سازی داماد. جایی برای ماندن، نه فقط گذشتن.
-              </p>
-              <div class="floor-services">
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 18v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6M4 18h16M7 10V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"/></svg>
-                  <span>نشیمن و لانژ</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 8h13a3 3 0 0 1 0 6h-1M4 8v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M8 4v2M11 4v2"/></svg>
-                  <span>کافه اختصاصی</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 12h3M8.5 10.5v3M15 11h.01M17 13h.01"/></svg>
-                  <span>بازی و سرگرمی</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
-                  <span>گریم داماد</span>
-                </div>
-              </div>
-            </article>
-
-            <!-- First -->
-            <article class="floor-panel" data-panel="1">
-              <span class="floor-panel__no">01 — FIRST FLOOR</span>
-              <h3 class="floor-panel__title" data-en="First Floor — The Heart">طبقه اول — قلب مجموعه</h3>
-              <p class="floor-panel__desc">
-                قلب اصلی دوریان؛ پذیرش، اصلاح تخصصی مو و صورت و سرشور تخصصی.
-                جایی که هنر آرایش مردانه با دقتی اشرافی اجرا می‌شود.
-              </p>
-              <div class="floor-services">
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M6 4l8 8M6 12l8-8M14 14l6 6M14 20l6-6"/><circle cx="5" cy="6" r="2"/><circle cx="5" cy="14" r="2"/></svg>
-                  <span>اصلاح تخصصی مو</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M8 3v7a4 4 0 0 0 8 0V3M6 21h12"/><path d="M12 14v7"/></svg>
-                  <span>اصلاح صورت و ریش</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 12a8 8 0 0 1 16 0M6 12v3a6 6 0 0 0 12 0v-3M12 12v8"/></svg>
-                  <span>سرشور تخصصی</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16M4 9h5"/></svg>
-                  <span>پذیرش و مشاوره</span>
-                </div>
-              </div>
-            </article>
-
-            <!-- Second -->
-            <article class="floor-panel" data-panel="2">
-              <span class="floor-panel__no">02 — SECOND FLOOR</span>
-              <h3 class="floor-panel__title" data-en="Second Floor — The Private Sanctuary">طبقه دوم — حریم خصوصی</h3>
-              <p class="floor-panel__desc">
-                بالاترین سطح تجربه؛ حریم خصوصی و خدمات لاکچری. ماساژ، فیشیال،
-                مانیکور و پدیکور و حمام اختصاصی، در آرامشی کامل.
-              </p>
-              <div class="floor-services">
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 14c4-3 14-3 18 0M5 18c3-2 11-2 14 0M8 10c2-1 6-1 8 0"/></svg>
-                  <span>ماساژ تخصصی</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><path d="M9 10h.01M15 10h.01M9 15c1.5 1.5 4.5 1.5 6 0"/></svg>
-                  <span>فیشیال صورت</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M7 11V5a2 2 0 0 1 4 0v6M11 11V7a2 2 0 0 1 4 0v4M15 11V9a2 2 0 0 1 3 0v5a6 6 0 0 1-12 0v-3"/></svg>
-                  <span>مانیکور و پدیکور</span>
-                </div>
-                <div class="floor-service" data-cursor="explore">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3zM7 12V6a2 2 0 0 1 4 0"/><path d="M19 19l1 2M5 19l-1 2"/></svg>
-                  <span>حمام اختصاصی</span>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======================= 06 CHARACTERS ====================== -->
-      <section class="section characters" id="characters">
-        <canvas class="webgl-layer" data-webgl aria-hidden="true"></canvas>
-        <div class="container">
-          <div class="team-head">
-            <div class="team-head__text">
-              <div class="section__label">
-                <span class="eyebrow">THE GENTLEMEN</span>
-                <span class="line"></span>
-              </div>
-              <h2 class="team-title">شخصیت‌های دوریان</h2>
-              <p class="team-sub">تیمی از بهترین متخصصان مو، پوست و آرامش؛ هر چهره، یک کاراکتر.</p>
-            </div>
-            <div class="team-nav">
-              <button class="team-arrow" data-dir="prev" aria-label="قبلی" data-cursor="explore">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M15 5l-7 7 7 7"/></svg>
-              </button>
-              <button class="team-arrow" data-dir="next" aria-label="بعدی" data-cursor="explore">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 5l7 7-7 7"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="team-viewport" id="teamViewport">
-          <div class="team-track" id="teamTrack">
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-1.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">HAIR ARTIST</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>کوتاهی و فید کلاسیک</li><li>فرم‌دهی ریش</li><li>مشاوره‌ی مو</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-2.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">HAIR ARTIST</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>سشوار و استایل مو</li><li>کوتاهی مدرن</li><li>حالت‌دهی مو</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-3.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">HAIR ARTIST</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>کوتاهی و رنگ مو</li><li>استایل داماد</li><li>مشاوره‌ی چهره</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-4.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">HAIR MASTER</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>اکستنشن طبیعی مو</li><li>پروتز مو</li><li>کراتین مو</li><li>گریم تخصصی داماد</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-5.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">GROOMING</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>گریم داماد</li><li>آماده‌سازی ظاهر</li><li>استایل و هماهنگی</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-6.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">COLOR SPECIALIST</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>رنگ و هایلایت مو</li><li>اصلاح رنگ</li><li>مشاوره‌ی رنگ</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-7.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">BARBER</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>فید و کوتاهی کلاسیک</li><li>شیو سنتی با تیغ</li><li>فرم‌دهی ریش</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-8.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">SKIN SPECIALIST</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>پاک‌سازی پوست</li><li>فیشیال تخصصی</li><li>آبرسانی و طراوت</li></ul>
-                </div>
-              </div>
-            </article>
-
-            <article class="team-card" data-cursor="view">
-              <div class="team-card__inner">
-                <img class="team-card__photo" src="assets/img/team-9.png" alt="عضو تیم دوریان" loading="lazy" draggable="false" />
-                <span class="team-card__role">HAIR ARTIST</span>
-                <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
-                <div class="team-card__spec">
-                  <h4>SPECIALTIES</h4>
-                  <ul><li>کوتاهی مدرن</li><li>استایل و آماده‌سازی</li><li>مشاوره‌ی ظاهر</li></ul>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-        <p class="team-hint">DRAG · SWIPE</p>
-      </section>
-
-      <!-- ======================= 07 GIFT CARDS ====================== -->
-      <section class="section giftcards" id="giftcards">
-        <div class="container">
-          <div class="section__label">
-            <span class="eyebrow" data-en="07 — Gift Cards">۰۷ — گیفت‌کارت</span>
-            <span class="line"></span>
-          </div>
-          <h2 data-reveal data-en="A gift worthy of a gentleman" style="font-family: var(--font-fa); font-weight:700; font-size: clamp(2rem,4.5vw,3.4rem); color: var(--ink); margin-bottom: var(--md);">
-            هدیه‌ای در شأن یک نجیب‌زاده
-          </h2>
-          <p data-reveal data-en="Gift the Dorian experience. Four tiers, for every measure of generosity." style="color: var(--text-muted-dark); max-width: 48ch; margin-bottom: var(--2xl);">
-            تجربه‌ی دوریان را هدیه دهید. چهار سطح، برای هر اندازه از سخاوت.
-          </p>
-
-          <div class="gift-grid">
-            <div class="giftcard" data-reveal data-cursor="view">
-              <div class="giftcard__inner">
-                <div class="giftcard__face giftcard__front">
-                  <img src="assets/img/gift-gentle-front.jpg" alt="گیفت‌کارت GENTLE — یک میلیون تومان" loading="lazy" />
-                </div>
-                <div class="giftcard__face giftcard__back">
-                  <img src="assets/img/gift-gentle-back.jpg" alt="پشت گیفت‌کارت یک میلیون تومان" loading="lazy" />
-                </div>
-              </div>
-            </div>
-            <div class="giftcard" data-reveal data-cursor="view">
-              <div class="giftcard__inner">
-                <div class="giftcard__face giftcard__front">
-                  <img src="assets/img/gift-duke-front.jpg" alt="گیفت‌کارت DUKE — دو میلیون تومان" loading="lazy" />
-                </div>
-                <div class="giftcard__face giftcard__back">
-                  <img src="assets/img/gift-duke-back.jpg" alt="پشت گیفت‌کارت دو میلیون تومان" loading="lazy" />
-                </div>
-              </div>
-            </div>
-            <div class="giftcard" data-reveal data-cursor="view">
-              <div class="giftcard__inner">
-                <div class="giftcard__face giftcard__front">
-                  <img src="assets/img/gift-noble-front.jpg" alt="گیفت‌کارت NOBLE — پنج میلیون تومان" loading="lazy" />
-                </div>
-                <div class="giftcard__face giftcard__back">
-                  <img src="assets/img/gift-noble-back.jpg" alt="پشت گیفت‌کارت پنج میلیون تومان" loading="lazy" />
-                </div>
-              </div>
-            </div>
-            <div class="giftcard" data-reveal data-cursor="view">
-              <div class="giftcard__inner">
-                <div class="giftcard__face giftcard__front">
-                  <img src="assets/img/gift-royal-front.jpg" alt="گیفت‌کارت ROYAL — ده میلیون تومان" loading="lazy" />
-                </div>
-                <div class="giftcard__face giftcard__back">
-                  <img src="assets/img/gift-royal-back.jpg" alt="پشت گیفت‌کارت ده میلیون تومان" loading="lazy" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="gift-cta">
-            <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.35">
-              <span data-en="Give a Gift">هدیه بدهید</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- ====================== 08 RESERVATION ====================== -->
-      <section class="section reserve" id="reserve">
-        <div class="container">
-          <div class="section__label">
-            <span class="eyebrow" data-en="08 — Reserve">۰۸ — رزرو</span>
-            <span class="line"></span>
-          </div>
-          <div class="reserve__grid">
-            <div>
-              <h2 data-reveal>آغازِ یک<br />تجربه‌ی خصوصی.</h2>
-              <p data-reveal style="margin-top: var(--lg); max-width: 40ch; color: var(--text-muted-light);">
-                فرم را تکمیل کنید؛ تیم پذیرش دوریان در کمتر از یک روز کاری با
-                شما تماس می‌گیرد.
-              </p>
-              <div class="reserve__info">
-                <div data-reveal><span class="k">تلفن</span><a class="v text-gold" dir="ltr" href="tel:+989167921710" data-cursor="explore">۰۹۱۶ ۷۹۲ ۱۷۱۰</a></div>
-                <div data-reveal><span class="k">نشانی</span><span class="v">کیان‌آباد، خیابان وهابی، نبش خیابان سوم</span></div>
-                <div data-reveal><span class="k">وب‌سایت</span><a class="v text-gold" dir="ltr" href="https://dorianstudio.ir" data-cursor="explore">dorianstudio.ir</a></div>
-                <div data-reveal><span class="k">ساعات کاری</span><span class="v">شنبه تا پنجشنبه، ۱۰ تا ۲۲</span></div>
-              </div>
-            </div>
-
-            <div>
-              <form id="reserveForm" novalidate>
-                <div class="field">
-                  <label for="r-name">نام و نام خانوادگی</label>
-                  <div class="control"><input id="r-name" name="name" type="text" autocomplete="name" /></div>
-                  <div class="error" data-error="name"></div>
-                </div>
-                <div class="field">
-                  <label for="r-phone">شماره تماس</label>
-                  <div class="control"><input id="r-phone" name="phone" type="tel" inputmode="tel" dir="ltr" /></div>
-                  <div class="error" data-error="phone"></div>
-                </div>
-                <div class="field">
-                  <label for="r-service">خدمت موردنظر</label>
-                  <div class="control">
-                    <select id="r-service" name="service">
-                      <option value="">انتخاب کنید…</option>
-                      <option>اصلاح و آرایش مو</option>
-                      <option>اصلاح صورت و ریش</option>
-                      <option>ماساژ و فیشیال</option>
-                      <option>آماده‌سازی داماد</option>
-                      <option>مشاوره‌ی کامل</option>
-                    </select>
-                  </div>
-                  <div class="error" data-error="service"></div>
-                </div>
-                <div class="field">
-                  <label for="r-note">توضیحات (اختیاری)</label>
-                  <div class="control"><textarea id="r-note" name="note"></textarea></div>
-                </div>
-                <button type="submit" class="btn btn--gold btn--shimmer" style="width:100%" data-cursor="enter">
-                  <span data-en="Submit Reservation">ثبت درخواست رزرو</span>
-                </button>
-              </form>
-
-              <div class="reserve__success" id="reserveSuccess">
-                <svg width="72" height="72" viewBox="0 0 72 72" id="successMark">
-                  <circle cx="36" cy="36" r="33" fill="none" stroke="#c9a227" stroke-width="1.5"/>
-                  <path d="M22 37 L32 47 L51 26" fill="none" stroke="#e8c766" stroke-width="2.5"/>
-                </svg>
-                <h3 class="font-display" style="font-size:1.6rem; color: var(--text-light);">درخواست شما ثبت شد</h3>
-                <p style="color: var(--text-muted-light);">تیم دوریان به‌زودی با شما تماس می‌گیرد.</p>
+            <p class="svc-note">نرخ کوتاهی آرمان بر اساس حجم یا مدل مو تا ۷۵۰٬۰۰۰ تومان متغیر است · قیمت‌ها به تومان</p>
+            <div class="hair-extra">
+              <span class="ttl">خدمات تکمیلی مو</span>
+              <div class="menu-cols two">
+                <div class="m-item"><span class="name">ویتامین مو (حمام زیت)</span><span class="lead"></span><span class="cost">۹۵۰٬۰۰۰</span></div>
+                <div class="m-item"><span class="name">رنگ مو</span><span class="lead"></span><span class="cost">۵۵۰٬۰۰۰</span></div>
+                <div class="m-item"><span class="name">رنگ ریش</span><span class="lead"></span><span class="cost">۳۰۰٬۰۰۰</span></div>
+                <div class="m-item"><span class="name">کراتین و احیا</span><span class="lead"></span><span class="cost">استعلام</span></div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- ========================== 09 FOOTER ======================= -->
-      <footer class="footer" id="footer">
-        <div class="container">
-          <div class="footer__top">
-            <div>
-              <div class="footer__brand">
-                <img src="assets/img/logo.png" alt="Dorian Gentlemen's Studio" />
-              </div>
-              <p class="footer__tag" data-en="An aristocratic experience for gentlemen — where every detail honours you.">
-                تجربه‌ای اشرافی برای آقایان — جایی که هر جزئیات، شأن شماست.
-              </p>
-              <div class="footer__socials">
-                <a href="https://instagram.com/" target="_blank" rel="noopener" data-cursor="explore">Instagram</a>
-                <a href="https://wa.me/989167921710" target="_blank" rel="noopener" data-cursor="explore">WhatsApp</a>
-                <a href="https://dorianstudio.ir" target="_blank" rel="noopener" data-cursor="explore">dorianstudio.ir</a>
-              </div>
+        <div class="panel" data-panel="facial">
+          <div class="tcard-wrap">
+            <div class="menu-cols two">
+              <div class="m-item"><span class="name">پاکسازی سرد با بخار</span><span class="lead"></span><span class="cost">۹۵۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">پاکسازی لایت</span><span class="lead"></span><span class="cost">۲٬۱۰۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">پاکسازی <span class="lat">VIP</span></span><span class="lead"></span><span class="cost">۲٬۸۰۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">شمع صورت</span><span class="lead"></span><span class="cost">۳۰۰٬۰۰۰</span></div>
             </div>
-            <img class="footer__seal" src="assets/img/seal-gold.png" alt="مهر طلایی New Experiences دوریان" />
+            <p class="svc-note">قیمت‌ها به تومان</p>
           </div>
-          <div class="footer__bottom">
-            <span>© <span id="year"></span> Dorian Gentlemen's Studio — تمامی حقوق محفوظ است.</span>
-            <span class="font-script" style="font-size:1.3rem; color: var(--gold-soft)">New Experiences</span>
+        </div>
+        <div class="panel" data-panel="massage">
+          <div class="tcard-wrap">
+            <div class="menu-cols two">
+              <div class="m-item"><span class="name">ماساژ ریلکسی</span><span class="lead"></span><span class="cost">۱٬۳۵۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">ماساژ و بادکش</span><span class="lead"></span><span class="cost">۱٬۷۵۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">سنگ داغ <small>یک‌ساعته</small></span><span class="lead"></span><span class="cost">۱٬۷۵۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">ماساژ سر و صورت</span><span class="lead"></span><span class="cost">۵۸۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">ماساژ موضعی <small>۲۰ دقیقه</small></span><span class="lead"></span><span class="cost">۵۸۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">ماساژ موضعی <small>۳۰ دقیقه</small></span><span class="lead"></span><span class="cost">۸۷۰٬۰۰۰</span></div>
+            </div>
+            <p class="svc-note">قیمت‌ها به تومان</p>
           </div>
+        </div>
+        <div class="panel" data-panel="mani">
+          <div class="tcard-wrap">
+            <div class="menu-cols two">
+              <div class="m-item"><span class="name">مانیکور</span><span class="lead"></span><span class="cost">۸۰۰٬۰۰۰</span></div>
+              <div class="m-item"><span class="name">پدیکور</span><span class="lead"></span><span class="cost">۱٬۰۰۰٬۰۰۰ <small>تا ۲٬۰۰۰٬۰۰۰</small></span></div>
+              <div class="m-item"><span class="name">سم‌زدایی</span><span class="lead"></span><span class="cost">۸۰۰٬۰۰۰</span></div>
+            </div>
+            <p class="svc-note">قیمت‌ها به تومان</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="screen team" id="team" data-theme="dark" data-name="تیم">
+    <div class="team__inner wrap">
+      <div class="team__head">
+        <div>
+          <span class="eyebrow anim" style="--i:0">The Gentlemen</span>
+          <h2 class="anim" style="--i:1">شخصیت‌های دوریان</h2>
+          <p class="lead-fa anim" style="--i:2">تیمی از بهترین متخصصان مو، پوست و آرامش؛ هر چهره، یک کاراکتر.</p>
+        </div>
+        <div class="team__nav anim" style="--i:2">
+          <button id="teamPrev" aria-label="قبلی"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button id="teamNext" aria-label="بعدی"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+      </div>
+      <div class="rail anim" style="--i:3" id="teamRail">
+        <article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Master</span><div class="tcard__photo"><img src="assets/img/team-01.jpg" alt="آرمان کاراگاه" loading="lazy"></div><div class="tcard__name"><div class="fa">آرمان کاراگاه</div><div class="en lat">Arman Karagah</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>اکستنشن طبیعی مو</li><li>پروتز مو</li><li>کراتین مو</li><li>گریم تخصصی داماد</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="assets/img/team-02.jpg" alt="احسان حسن‌یاری" loading="lazy"></div><div class="tcard__name"><div class="fa">احسان حسن‌یاری</div><div class="en lat">Ehsan Hasanyari</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li><li>مانیکور و پدیکور</li><li>گریم داماد</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="assets/img/team-03.jpg" alt="ارسلان پورفضل" loading="lazy"></div><div class="tcard__name"><div class="fa">ارسلان پورفضل</div><div class="en lat">Arsalan Pourfazl</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="assets/img/team-04.jpg" alt="اشکان محمدی" loading="lazy"></div><div class="tcard__name"><div class="fa">اشکان محمدی</div><div class="en lat">Ashkan Mohammadi</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>ماسک صورت</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="assets/img/team-05.jpg" alt="حسین لویمی" loading="lazy"></div><div class="tcard__name"><div class="fa">حسین لویمی</div><div class="en lat">Hossein Loyami</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="assets/img/team-06.jpg" alt="مجتبی میراحمدی" loading="lazy"></div><div class="tcard__name"><div class="fa">مجتبی میراحمدی</div><div class="en lat">Mojtaba Mirahmadi</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="assets/img/team-07.jpg" alt="احمد سرخه" loading="lazy"></div><div class="tcard__name"><div class="fa">احمد سرخه</div><div class="en lat">Ahmad Sorkheh</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li><li>رنگ مو</li><li>کراتین مو</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Massage</span><div class="tcard__photo"><img src="assets/img/team-08.jpg" alt="احمدرضا جلالی" loading="lazy"></div><div class="tcard__name"><div class="fa">احمدرضا جلالی</div><div class="en lat">Ahmadreza Jalali</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>ماساژ درمانی</li><li>ماساژ ریلکسی</li></ul></div></div></article>
+<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Facial</span><div class="tcard__photo"><img src="assets/img/team-09.jpg" alt="حمید جوهری" loading="lazy"></div><div class="tcard__name"><div class="fa">حمید جوهری</div><div class="en lat">Hamid Johari</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>پاکسازی تخصصی</li><li>رنگ مو و ریش</li><li>ویتامینه مو</li><li>مانیکور و پدیکور</li><li>شمع صورت</li></ul></div></div></article>
+      </div>
+      <div class="team__progress" aria-hidden="true"><i id="teamProg"></i></div>
+      <p class="team__hint">DRAG · SWIPE</p>
+    </div>
+  </section>
+
+  <!-- GIFT -->
+  <section class="screen gift" id="gift" data-theme="light" data-name="گیفت‌کارت">
+    <div class="gift__inner wrap">
+      <span class="eyebrow c anim" style="--i:0">Gift Cards</span>
+      <h2 class="anim" style="--i:1">هدیه‌ای در شأن یک نجیب‌زاده</h2>
+      <p class="anim" style="--i:2">چهار کارت هدیه‌ی دوریان؛ تجربه‌ای کامل از مراقبت و آرامش را به عزیزانتان هدیه دهید.</p>
+      <div class="gift__row anim" style="--i:3">
+        <div class="gcard"><div class="gcard__inner"><img src="assets/img/gift-gentle.png" alt="Gentle Card"></div><div class="gcard__meta"><div class="v">۱ میلیون تومان</div><div class="t lat">Gentle Card</div></div></div>
+        <div class="gcard"><div class="gcard__inner"><img src="assets/img/gift-duke.png" alt="Duke Card"></div><div class="gcard__meta"><div class="v">۲ میلیون تومان</div><div class="t lat">Duke Card</div></div></div>
+        <div class="gcard"><div class="gcard__inner"><img src="assets/img/gift-noble.png" alt="Noble Card"></div><div class="gcard__meta"><div class="v">۵ میلیون تومان</div><div class="t lat">Noble Card</div></div></div>
+        <div class="gcard"><div class="gcard__inner"><img src="assets/img/gift-royal.png" alt="Royal Card"></div><div class="gcard__meta"><div class="v">۱۰ میلیون تومان</div><div class="t lat">Royal Card</div></div></div>
+      </div>
+      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="#reserve" data-go="6">هدیه بدهید</a></div>
+    </div>
+  </section>
+
+  <!-- RESERVE + FOOTER -->
+  <section class="screen reserve" id="reserve" data-theme="dark" data-name="رزرو">
+    <div class="reserve__inner wrap">
+      <img class="reserve__seal anim scale" style="--i:0" src="assets/img/badge.png" alt="New Experiences">
+      <span class="eyebrow c anim" style="--i:1">Reservation</span>
+      <h2 class="anim" style="--i:1">نوبت خود را رزرو کنید</h2>
+      <p class="anim" style="--i:2">برای رزرو نوبت یا مشاوره‌ی تخصصی داماد با ما در تماس باشید.</p>
+      <div class="reserve__phones anim" style="--i:3">
+        <a class="phone" href="tel:09167921710"><span class="k">تماس</span><span class="v">0916 792 1710</span></a>
+        <a class="phone" href="tel:09167921310"><span class="k">تماس</span><span class="v">0916 792 1310</span></a>
+        <a class="phone" href="tel:09165555532"><span class="k">مشاوره داماد</span><span class="v">0916 555 5532</span></a>
+      </div>
+      <div class="reserve__addr anim" style="--i:4"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>اهواز، کیان‌آباد، نبش خیابان سوم، وهابی</div>
+      <!-- TODO: لینک رزرو را به صفحه‌ی نوبت‌دهی تغییر بده -->
+      <div class="reserve__cta anim" style="--i:4"><a class="btn btn--gold" href="#">رزرو آنلاین</a></div>
+
+      <footer class="foot">
+        <div class="wrap">
+          <img class="foot__logo" src="assets/img/logo.png" alt="Dorian">
+          <div class="foot__soc">
+            <a href="https://instagram.com/dorianstudio.ir" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.4-.5.2-.9.4-1.3.8-.4.4-.6.8-.8 1.3-.2.4-.3 1-.4 2.1C2.6 9.9 2.6 10.3 2.6 12s0 2.1.1 3.3c.1 1.1.2 1.7.4 2.1.2.5.4.9.8 1.3.4.4.8.6 1.3.8.4.2 1 .3 2.1.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.4.5-.2.9-.4 1.3-.8.4-.4.6-.8.8-1.3.2-.4.3-1 .4-2.1.1-1.2.1-1.6.1-3.3s0-2.1-.1-3.3c-.1-1.1-.2-1.7-.4-2.1-.2-.5-.4-.9-.8-1.3-.4-.4-.8-.6-1.3-.8-.4-.2-1-.3-2.1-.4-1.2-.1-1.6-.1-4.7-.1zM12 7.1A4.9 4.9 0 1017 12a4.9 4.9 0 00-5-4.9zm0 8.1A3.2 3.2 0 1112 8.8a3.2 3.2 0 010 6.4zm6.3-8.3a1.15 1.15 0 11-1.15-1.15 1.15 1.15 0 011.15 1.15z"/></svg></a>
+            <a href="https://dorianstudio.ir" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 1.8c1.3 0 3.1 2.3 3.6 6.4H8.4C8.9 6.1 10.7 3.8 12 3.8zM4 12c0-.7.1-1.4.2-2h3.3c-.1.6-.1 1.3-.1 2s0 1.4.1 2H4.2c-.1-.6-.2-1.3-.2-2zm.9 4h2.9c.4 2 .9 3.5 1.5 4.4A8.2 8.2 0 014.9 16zM7.8 8H4.9a8.2 8.2 0 014.4-4.4C8.7 4.5 8.2 6 7.8 8zm4.2 12.2c-1.3 0-3.1-2.3-3.6-6.2h7.2c-.5 3.9-2.3 6.2-3.6 6.2zM9.3 12c0-.7 0-1.4.1-2h5.2c.1.6.1 1.3.1 2s0 1.4-.1 2H9.4c-.1-.6-.1-1.3-.1-2zm6.9 8.4c.6-.9 1.1-2.4 1.5-4.4h2.9a8.2 8.2 0 01-4.4 4.4zM16.2 8c-.4-2-.9-3.5-1.5-4.4A8.2 8.2 0 0119.1 8zm.4 6c.1-.6.1-1.3.1-2s0-1.4-.1-2h3.3c.1.6.2 1.3.2 2s-.1 1.4-.2 2z"/></svg></a>
+          </div>
+          <p class="foot__copy"><span class="lat">© 1404 Dorian — Gentlemen's Studio</span> · همه‌ی حقوق محفوظ است</p>
         </div>
       </footer>
-    </main>
+    </div>
+  </section>
 
-    <!-- Sound toggle -->
-    <button class="sound-toggle" id="soundToggle" aria-pressed="false" data-cursor="explore">
-      <span class="bars"><i></i><i></i><i></i><i></i></span>
-      <span id="soundLabel">صدا خاموش</span>
-    </button>
+</main>
 
-    <!-- Custom cursor -->
-    <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
-    <div class="cursor-ring" id="cursorRing" aria-hidden="true"><span id="cursorLabel"></span></div>
-
-    <div class="vignette" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
-
-    <!-- Scripts -->
-    <script src="assets/vendor/lenis.min.js"></script>
-    <script src="assets/vendor/gsap.min.js"></script>
-    <script src="assets/vendor/ScrollTrigger.min.js"></script>
-    <script src="assets/vendor/DrawSVGPlugin.min.js"></script>
-    <script src="assets/js/sound.js"></script>
-    <script src="assets/js/cursor.js"></script>
-    <script src="assets/js/preloader.js"></script>
-    <script src="assets/js/hero.js"></script>
-    <script src="assets/js/elevator.js"></script>
-    <script src="assets/js/characters.js"></script>
-    <script src="assets/js/giftcards.js"></script>
-    <script src="assets/js/reserve.js"></script>
-    <script src="assets/js/interactions.js"></script>
-    <script src="assets/js/webgl.js"></script>
-    <script src="assets/js/services.js"></script>
-    <script src="assets/js/hero-particles.js"></script>
-    <script src="assets/js/main.js"></script>
-  </body>
+<!-- cinematic engine (CDN; falls back gracefully when offline) -->
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="assets/vendor/ScrollTrigger.min.js"></script>
+<script src="assets/vendor/lenis.min.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
 </html>
