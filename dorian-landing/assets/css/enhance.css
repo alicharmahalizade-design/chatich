@@ -76,6 +76,43 @@
   pointer-events: none;
 }
 
+/* ----- 02 Services 360 — scroll-scrubbed pinned video ------------------ */
+.manifesto-video {
+  position: relative;
+  height: 100svh;
+  background: radial-gradient(120% 90% at 50% 45%, var(--paper), var(--cream) 72%);
+  overflow: hidden;
+  color: var(--text-dark);
+}
+.mv-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.mv-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.mv-label {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92%, 760px);
+  text-align: center;
+  pointer-events: none;
+}
+.mv-label h2 {
+  font-family: var(--font-fa-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  line-height: 1.25;
+  color: var(--ink);
+  margin-top: var(--md);
+}
+
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
 .hero__spotlight {
   position: absolute;
