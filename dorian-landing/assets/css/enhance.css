@@ -76,16 +76,44 @@
   pointer-events: none;
 }
 
-/* ----- 02 Services 360 — video sits in the left column (pinned + scrub) - */
+/* ----- 02 Services 360 — floating video (pinned + scrub) --------------- */
+/* Warm light gradient that blends with the video's own light backdrop. */
+.manifesto {
+  background: linear-gradient(100deg, #ded7ca 0%, #e8dfcf 46%, #ecdec9 74%);
+}
 .mv-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
   width: 100%;
-  border-radius: var(--r-md);
-  overflow: hidden;
+}
+/* 360° gold ring behind the building (shows through the feathered edges) */
+.mv-frame::before {
+  content: "";
+  position: absolute;
+  width: min(82%, 520px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  box-shadow: inset 0 0 80px rgba(201, 162, 39, 0.06);
+  pointer-events: none;
 }
 .mv-video {
-  width: 100%;
+  position: relative;
+  z-index: 1;
+  width: 70%;
   height: auto;
   display: block;
+  /* Feather all four edges so the rectangular video box dissolves into the
+     section and the building appears to float. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
+    linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
+    linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
 }
 
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
