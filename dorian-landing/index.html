@@ -184,22 +184,52 @@
       </section>
 
       <!-- ================== 02 SERVICES 360 (scrubbed video) ======== -->
-      <section class="manifesto-video" id="manifesto">
-        <div class="mv-stage">
-          <video
-            id="servicesVideo"
-            class="mv-video"
-            muted
-            playsinline
-            preload="auto"
-            poster="assets/video/services-360-poster.jpg"
-            aria-label="خدمات ۳۶۰ درجه دوریان"
-          >
-            <source src="assets/video/services-360.mp4" type="video/mp4" />
-          </video>
-          <div class="mv-label" id="mvLabel">
+      <section class="section manifesto" id="manifesto">
+        <div class="container">
+          <div class="section__label">
             <span class="eyebrow" data-en="02 — 360° Services">۰۲ — خدمات ۳۶۰ درجه</span>
-            <h2>خدمات ۳۶۰ درجه برای آقایان،<br />در سه طبقه.</h2>
+            <span class="line"></span>
+          </div>
+          <div class="manifesto__grid">
+            <div>
+              <h2 data-reveal>
+                خدمات <b>۳۶۰ درجه</b> برای آقایان،<br />در سه طبقه.
+              </h2>
+              <p data-reveal>
+                دوریان فقط یک آرایشگاه نیست؛ یک ساختمان است که هر طبقه‌اش فصلی
+                از یک تجربه‌ی اشرافی را روایت می‌کند. از فضای اجتماعی تا حریم
+                خصوصی، همه‌چیز برای آقایانی طراحی شده که جزئیات را می‌فهمند.
+              </p>
+              <div class="manifesto__metrics">
+                <div data-reveal>
+                  <div class="v">۳</div>
+                  <div class="k">طبقه‌ی اختصاصی</div>
+                </div>
+                <div data-reveal>
+                  <div class="v">۱۲+</div>
+                  <div class="k">خدمت تخصصی</div>
+                </div>
+                <div data-reveal>
+                  <div class="v">۳۶۰°</div>
+                  <div class="k">تجربه‌ی کامل</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 360° video (scrubbed by scroll while the section is pinned) -->
+            <div class="mv-frame" data-reveal>
+              <video
+                id="servicesVideo"
+                class="mv-video"
+                muted
+                playsinline
+                preload="auto"
+                poster="assets/video/services-360-poster.jpg"
+                aria-label="خدمات ۳۶۰ درجه دوریان"
+              >
+                <source src="assets/video/services-360.mp4" type="video/mp4" />
+              </video>
+            </div>
           </div>
         </div>
       </section>
