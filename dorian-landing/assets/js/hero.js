@@ -19,8 +19,16 @@ window.Dorian.initHero = function () {
     duration: 1.5,
   });
 
-  // 2. script tagline writes in
-  tl.from('[data-hero="tagline"]', { opacity: 0, y: 24, duration: 1 }, "-=1.0");
+  // 2. script tagline "writes" itself left-to-right, like a pen stroke
+  gsap.set('[data-hero="tagline"]', {
+    clipPath: "inset(0 100% 0 0)",
+    opacity: 1,
+  });
+  tl.to(
+    '[data-hero="tagline"]',
+    { clipPath: "inset(0 0% 0 0)", duration: 1.9, ease: "power1.inOut" },
+    "-=1.0"
+  );
 
   // 3. wordmark
   tl.from(

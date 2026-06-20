@@ -65,8 +65,13 @@ window.Dorian.initElevator = function () {
         current = idx;
         setActive(idx);
         if (window.DorianSound) window.DorianSound.play("ding");
+        var floor = FLOOR_ORDER[idx];
         if (window.gsap) {
-          var floor = FLOOR_ORDER[idx];
+          // Hide every other panel instantly — clears any leftover inline
+          // opacity from a previous tween so floor texts never overlap.
+          panels.forEach(function (p) {
+            if (+p.dataset.panel !== floor) gsap.set(p, { opacity: 0 });
+          });
           gsap.fromTo(
             '.floor-panel[data-panel="' + floor + '"]',
             { y: 50, opacity: 0, filter: "blur(6px)" },
