@@ -1,26 +1,23 @@
-/* Dorian — gift cards: subtle 3D tilt + cursor-tracked gold reflection. */
+/* Dorian — gift cards: flip to reveal the back (QR + contact).
+   Hover to flip on desktop, tap to flip on touch. */
 window.Dorian = window.Dorian || {};
 window.Dorian.initGiftcards = function () {
-  var cards = document.querySelectorAll(".gift-card");
+  var cards = document.querySelectorAll(".giftcard");
   var fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  if (!fine) return;
 
   cards.forEach(function (card) {
-    card.addEventListener("mousemove", function (e) {
-      var r = card.getBoundingClientRect();
-      var px = (e.clientX - r.left) / r.width;
-      var py = (e.clientY - r.top) / r.height;
-      card.style.transform =
-        "perspective(800px) rotateX(" +
-        (py - 0.5) * -8 +
-        "deg) rotateY(" +
-        (px - 0.5) * 10 +
-        "deg) translateY(-6px)";
-      card.style.setProperty("--mx", px * 100 + "%");
-      card.style.setProperty("--my", py * 100 + "%");
-    });
-    card.addEventListener("mouseleave", function () {
-      card.style.transform = "";
-    });
+    if (fine) {
+      card.addEventListener("mouseenter", function () {
+        card.classList.add("is-flipped");
+        if (window.DorianSound) window.DorianSound.play("tick");
+      });
+      card.addEventListener("mouseleave", function () {
+        card.classList.remove("is-flipped");
+      });
+    } else {
+      card.addEventListener("click", function () {
+        card.classList.toggle("is-flipped");
+      });
+    }
   });
 };
