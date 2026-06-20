@@ -6,8 +6,6 @@ window.Dorian.initHero = function () {
 
   if (reduced) {
     gsap.set("[data-hero]", { opacity: 1, y: 0, scale: 1, clearProps: "all" });
-    var ti = document.querySelector('[data-hero="tagline"] img');
-    if (ti && ti.dataset.src) ti.src = ti.dataset.src;
     return;
   }
 
@@ -21,19 +19,28 @@ window.Dorian.initHero = function () {
     duration: 1.5,
   });
 
-  // 2. handwriting GIF starts writing exactly as the hero reveals
-  var taglineImg = document.querySelector('[data-hero="tagline"] img');
-  tl.add(function () {
-    if (taglineImg && !taglineImg.src && taglineImg.dataset.src) {
-      taglineImg.src = taglineImg.dataset.src;
+  // 2. tagline is "written": a pen travels left to right while the script
+  //    text is revealed behind it, like a handwriting animation.
+  var ink = document.querySelector(".hero__tagline-ink");
+  var pen = document.querySelector(".hero__pen");
+  if (ink) {
+    gsap.set('[data-hero="tagline"]', { opacity: 1 });
+    gsap.set(ink, { clipPath: "inset(0 100% 0 0)" });
+    tl.to(
+      ink,
+      { clipPath: "inset(0 0% 0 0)", duration: 2.4, ease: "none" },
+      "-=1.0"
+    );
+    if (pen) {
+      tl.fromTo(
+        pen,
+        { left: "1%", opacity: 1 },
+        { left: "100%", duration: 2.4, ease: "none" },
+        "<"
+      );
+      tl.to(pen, { opacity: 0, duration: 0.4 }, ">-0.15");
     }
-  }, "-=1.0");
-  tl.fromTo(
-    '[data-hero="tagline"]',
-    { opacity: 0 },
-    { opacity: 1, duration: 0.8 },
-    "<"
-  );
+  }
 
   // 3. wordmark
   tl.from(

@@ -54,17 +54,26 @@
   filter: brightness(0) invert(1); /* footer is dark */
 }
 
-/* ----- Hero handwriting GIF -------------------------------------------- */
+/* ----- Hero handwriting tagline (pen reveal) --------------------------- */
 .hero__tagline {
-  line-height: 0;
-  margin-bottom: calc(-1 * var(--lg)); /* trim the gif's empty canvas below */
+  position: relative;
+  display: inline-block;
 }
-.hero__tagline-gif {
-  width: clamp(280px, 42vw, 560px);
-  height: auto;
-  margin-inline: auto;
-  /* the gif is blue ink on white — multiply drops the white onto the cream */
-  mix-blend-mode: multiply;
+.hero__tagline-ink {
+  display: inline-block;
+}
+.hero__pen {
+  position: absolute;
+  top: 52%;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 12px 2px rgba(0, 102, 179, 0.55);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
