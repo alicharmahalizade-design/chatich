@@ -103,6 +103,7 @@
   color: var(--text-light);
 }
 .elevator__pin {
+  position: relative;       /* anchor the absolute counter + give the FIXED pin its own bg */
   height: 100svh;
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
@@ -110,6 +111,7 @@
   gap: var(--3xl);
   padding-inline: clamp(20px, 5vw, 64px);
   overflow: hidden;
+  background: var(--navy);  /* must be opaque: when pinned (position:fixed) this is what covers the page */
 }
 .elevator__shaft {
   position: relative;
