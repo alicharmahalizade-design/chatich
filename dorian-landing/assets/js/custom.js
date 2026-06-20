@@ -66,23 +66,29 @@
     }
     try { video.pause(); } catch (e) {}
     var lastT = -1;
-    function build() {
-      var dur = video.duration && isFinite(video.duration) ? video.duration : 4.1;
-      ScrollTrigger.create({
-        trigger: section, start: "top top",
-        end: function () { return "+=" + Math.round(dur * 340); },
-        pin: true, scrub: 0.35, anticipatePin: 1, invalidateOnRefresh: true,
-        onUpdate: function (self) {
-          var t = self.progress * (dur - 0.05);
-          if (isFinite(t) && t >= 0 && Math.abs(t - lastT) > 0.012) {
-            lastT = t; try { video.currentTime = t; } catch (e) {}
-          }
-        },
-      });
-      try { video.currentTime = 0.01; } catch (e) {}
-    }
-    if (video.readyState >= 1 && video.duration) build();
-    else video.addEventListener("loadedmetadata", build, { once: true });
+    function dur() { return (video.duration && isFinite(video.duration)) ? video.duration : 4.1; }
+    // Create the pin SYNCHRONOUSLY so its spacer exists before the first refresh.
+    // A function-based end + invalidateOnRefresh lets the length self-correct once
+    // the real duration is known — without shoving the page around after the fact.
+    ScrollTrigger.create({
+      trigger: section, start: "top top",
+      end: function () { return "+=" + Math.round(dur() * 340); },
+      pin: true, scrub: 0.35, anticipatePin: 1, invalidateOnRefresh: true,
+      onUpdate: function (self) {
+        if (video.readyState < 1) return;
+        var t = self.progress * (dur() - 0.05);
+        if (isFinite(t) && t >= 0 && Math.abs(t - lastT) > 0.012) {
+          lastT = t; try { video.currentTime = t; } catch (e) {}
+        }
+      },
+    });
+    try { video.currentTime = 0.01; } catch (e) {}
+    // recompute the pin length (and every trigger below it) once frames are ready
+    var refreshed = false;
+    function reflow() { if (refreshed) return; refreshed = true; if (window.ScrollTrigger) ScrollTrigger.refresh(); }
+    if (video.readyState >= 1 && video.duration) { /* already known */ }
+    else { video.addEventListener("loadedmetadata", reflow, { once: true }); }
+    video.addEventListener("canplay", function () { if (window.ScrollTrigger) ScrollTrigger.refresh(); }, { once: true });
   }
 
   /* ---------------- GIFT · front/back flip ---------------- */
