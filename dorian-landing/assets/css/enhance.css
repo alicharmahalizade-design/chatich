@@ -25,6 +25,35 @@
   font-weight: 600;
 }
 
+/* ----- Real logo (blue on light, white on dark) ------------------------ */
+.nav__logo img {
+  height: 32px;
+  width: auto;
+  display: block;
+  transition: filter 0.4s ease, height 0.4s ease;
+}
+/* At the top the nav is transparent over the cream hero -> keep brand blue.
+   Once scrolled the nav has a dark gradient -> flip the logo to white. */
+.nav.is-scrolled .nav__logo img {
+  filter: brightness(0) invert(1);
+  height: 28px;
+}
+.hero__wordmark {
+  line-height: 0;
+}
+.hero__wordmark img {
+  width: clamp(220px, 30vw, 360px);
+  height: auto;
+  display: block;
+  margin-inline: auto;
+}
+.footer__brand img {
+  width: clamp(200px, 28vw, 320px);
+  height: auto;
+  display: block;
+  filter: brightness(0) invert(1); /* footer is dark */
+}
+
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
 .hero__spotlight {
   position: absolute;
