@@ -67,15 +67,25 @@ window.Dorian.initElevator = function () {
         if (window.DorianSound) window.DorianSound.play("ding");
         var floor = FLOOR_ORDER[idx];
         if (window.gsap) {
-          // Hide every other panel instantly — clears any leftover inline
-          // opacity from a previous tween so floor texts never overlap.
+          // Kill any in-flight panel tweens first — otherwise a still-running
+          // fade-in from the previous floor overrides the hide below and the
+          // two floor texts overlap during fast scrolling.
+          gsap.killTweensOf(panels);
           panels.forEach(function (p) {
-            if (+p.dataset.panel !== floor) gsap.set(p, { opacity: 0 });
+            // Active = fully shown instantly, everyone else = hard hidden.
+            gsap.set(p, { opacity: +p.dataset.panel === floor ? 1 : 0 });
           });
+          // Animate only the active panel's rise + unblur (opacity stays 1).
           gsap.fromTo(
             '.floor-panel[data-panel="' + floor + '"]',
-            { y: 50, opacity: 0, filter: "blur(6px)" },
-            { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }
+            { y: 40, filter: "blur(6px)" },
+            {
+              y: 0,
+              filter: "blur(0px)",
+              duration: 0.6,
+              ease: "power3.out",
+              overwrite: true,
+            }
           );
         }
       }
