@@ -423,23 +423,6 @@
   display: block;
 }
 
-/* ----- Flying logo (hero wordmark -> header on scroll) ----------------- */
-.logo-fly {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 95;
-  pointer-events: none;
-  transform-origin: center center;
-  will-change: transform, opacity;
-  opacity: 0;
-}
-.logo-fly img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
 /* Preloader + footer use the real gold seal */
 .preloader__seal,
 .footer__seal {
