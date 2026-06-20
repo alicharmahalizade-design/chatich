@@ -77,6 +77,10 @@
 }
 
 /* ----- 02 Services 360 — floating video (pinned + scrub) --------------- */
+/* Story metrics in brand blue (per reference). */
+.manifesto__metrics .v {
+  color: var(--blue);
+}
 /* Warm light gradient that blends with the video's own light backdrop. */
 .manifesto {
   background: linear-gradient(100deg, #ded7ca 0%, #e8dfcf 46%, #ecdec9 74%);
