@@ -113,6 +113,7 @@
       if (D.initReserve) D.initReserve();
       if (D.initInteractions) D.initInteractions();
       if (D.initWebGL) D.initWebGL();
+      if (D.initLogoFlight) D.initLogoFlight();
       initReveals();
 
       if (window.ScrollTrigger) {
