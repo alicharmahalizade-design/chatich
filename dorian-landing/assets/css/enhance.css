@@ -416,11 +416,34 @@
   aspect-ratio: auto;
   width: clamp(260px, 30vw, 380px);
 }
+.hero__frame {
+  position: relative;
+}
+/* Soft oval shadow behind the portrait — a radial gradient (no CSS filter),
+   so it never clips to a box while the frame is moved during scroll. */
+.hero__frame::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 86%;
+  height: 82%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at 50% 55%,
+    rgba(86, 62, 18, 0.38) 0%,
+    rgba(86, 62, 18, 0.14) 42%,
+    transparent 70%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
 .hero__portrait-img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 24px 48px rgba(60, 40, 0, 0.4));
 }
 
 /* Preloader + footer use the real gold seal */
