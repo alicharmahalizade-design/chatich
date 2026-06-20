@@ -1,7 +1,29 @@
 /* =========================================================================
    DORIAN — Enhancements
-   Hero spotlight · WebGL caustics · liquid hover
+   Hero spotlight · WebGL caustics · liquid hover · Pinar display font
    ========================================================================= */
+
+/* ----- Pinar variable display font (Persian + Latin) ------------------- */
+@font-face {
+  font-family: "Pinar-VF";
+  src: url("../fonts/PinarVF.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+}
+:root {
+  --font-fa-display: "Pinar-VF", "Vazirmatn", sans-serif;
+}
+/* Apply Pinar to the Persian display headings (beats inline font-family) */
+.manifesto h2,
+.floor-panel__title,
+.reserve h2,
+.giftcards h2,
+.characters h2 {
+  font-family: var(--font-fa-display) !important;
+}
+.characters h2 {
+  font-weight: 600;
+}
 
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
 .hero__spotlight {
