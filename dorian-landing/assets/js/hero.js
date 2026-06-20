@@ -6,6 +6,8 @@ window.Dorian.initHero = function () {
 
   if (reduced) {
     gsap.set("[data-hero]", { opacity: 1, y: 0, scale: 1, clearProps: "all" });
+    var ti = document.querySelector('[data-hero="tagline"] img');
+    if (ti && ti.dataset.src) ti.src = ti.dataset.src;
     return;
   }
 
@@ -19,15 +21,18 @@ window.Dorian.initHero = function () {
     duration: 1.5,
   });
 
-  // 2. script tagline "writes" itself left-to-right, like a pen stroke
-  gsap.set('[data-hero="tagline"]', {
-    clipPath: "inset(0 100% 0 0)",
-    opacity: 1,
-  });
-  tl.to(
+  // 2. handwriting GIF starts writing exactly as the hero reveals
+  var taglineImg = document.querySelector('[data-hero="tagline"] img');
+  tl.add(function () {
+    if (taglineImg && !taglineImg.src && taglineImg.dataset.src) {
+      taglineImg.src = taglineImg.dataset.src;
+    }
+  }, "-=1.0");
+  tl.fromTo(
     '[data-hero="tagline"]',
-    { clipPath: "inset(0 0% 0 0)", duration: 1.9, ease: "power1.inOut" },
-    "-=1.0"
+    { opacity: 0 },
+    { opacity: 1, duration: 0.8 },
+    "<"
   );
 
   // 3. wordmark

@@ -54,6 +54,19 @@
   filter: brightness(0) invert(1); /* footer is dark */
 }
 
+/* ----- Hero handwriting GIF -------------------------------------------- */
+.hero__tagline {
+  line-height: 0;
+  margin-bottom: calc(-1 * var(--lg)); /* trim the gif's empty canvas below */
+}
+.hero__tagline-gif {
+  width: clamp(280px, 42vw, 560px);
+  height: auto;
+  margin-inline: auto;
+  /* the gif is blue ink on white — multiply drops the white onto the cream */
+  mix-blend-mode: multiply;
+}
+
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
 .hero__spotlight {
   position: absolute;
