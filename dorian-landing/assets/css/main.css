@@ -611,7 +611,7 @@ html.lenis body {
 }
 .manifesto p {
   margin-top: var(--xl);
-  max-width: 42ch;
+  max-width: 100%;
   font-size: 1.1rem;
   color: var(--text-muted-dark);
 }

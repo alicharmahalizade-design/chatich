@@ -69,4 +69,28 @@ window.Dorian.initInteractions = function () {
       scrollTrigger: { trigger: el, start: "top 88%" },
     });
   });
+
+  /* ---- Count-up for [data-count] stats ---- */
+  document.querySelectorAll("[data-count]").forEach(function (el) {
+    var target = parseFloat(el.getAttribute("data-count"));
+    var suffix = el.getAttribute("data-suffix") || "";
+    if (isNaN(target)) return;
+    if (reduced || !window.gsap) {
+      el.textContent = target + suffix;
+      return;
+    }
+    var obj = { n: 0 };
+    gsap.to(obj, {
+      n: target,
+      duration: 1.7,
+      ease: "power2.out",
+      scrollTrigger: { trigger: el, start: "top 92%", once: true },
+      onUpdate: function () {
+        el.textContent = Math.round(obj.n) + suffix;
+      },
+      onComplete: function () {
+        el.textContent = target + suffix;
+      },
+    });
+  });
 };
