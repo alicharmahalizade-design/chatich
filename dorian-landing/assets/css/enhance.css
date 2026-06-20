@@ -235,11 +235,17 @@
   cursor: grabbing;
   scroll-behavior: auto;
 }
+/* Pinned mode: page scroll drives the horizontal motion via transform,
+   so disable native scrolling. */
+.team-viewport.is-pinned {
+  overflow: hidden;
+}
 .team-track {
   display: flex;
   gap: var(--lg);
   width: max-content;
   padding-block: var(--md);
+  will-change: transform;
 }
 
 .team-card {
