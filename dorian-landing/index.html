@@ -136,13 +136,14 @@
           <img src="assets/img/logo.png" alt="Dorian Gentlemen's Studio" />
         </a>
         <nav class="nav__links">
-          <a href="#manifesto" data-scroll data-en="About">درباره</a>
-          <a href="#elevator" data-scroll data-en="Floors">طبقات</a>
-          <a href="#characters" data-scroll data-en="Team">تیم</a>
-          <a href="#giftcards" data-scroll data-en="Gift Cards">گیفت‌کارت</a>
-          <a href="#reserve" data-scroll data-en="Reserve">رزرو</a>
+          <a href="#manifesto" data-scroll>مجموعه</a>
+          <a href="#elevator" data-scroll>طبقات</a>
+          <a href="#characters" data-scroll>تیم</a>
+          <a href="#elevator" data-scroll>خدمات</a>
+          <a href="#giftcards" data-scroll>گیفت‌کارت</a>
+          <a href="#reserve" data-scroll>رزرو</a>
         </nav>
-        <a href="#reserve" class="btn btn--gold btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.3">
+        <a href="#reserve" class="btn btn--gold-soft btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.3">
           <span>رزرو نوبت</span>
         </a>
       </div>
@@ -151,8 +152,8 @@
     <main>
       <!-- ============================ 01 HERO ======================= -->
       <section class="hero" id="hero" data-cursor="scroll">
-        <div class="hero__rays" aria-hidden="true"></div>
-        <div class="hero__spotlight" aria-hidden="true"></div>
+        <canvas class="hero__particles" id="heroParticles" aria-hidden="true"></canvas>
+        <div class="hero__watermark" aria-hidden="true">DORIAN</div>
         <div class="hero__inner">
           <p class="hero__tagline" data-hero="tagline">
             <span class="hero__tagline-ink">Let us enchant you, in a good way</span>
@@ -160,19 +161,16 @@
           </p>
 
           <div class="hero__frame" data-hero="frame">
+            <div class="hero__smoke" aria-hidden="true"></div>
             <img class="hero__portrait-img" data-hero="portrait" src="assets/img/portrait.png" alt="پرتره دوریان در قاب طلایی" />
           </div>
 
-          <h1 class="hero__wordmark" data-hero="wordmark">
-            <img src="assets/img/logo.png" alt="Dorian Gentlemen's Studio" />
-          </h1>
-
           <div class="hero__cta" data-hero="cta">
             <a href="#reserve" class="btn btn--primary btn--shimmer" data-scroll data-cursor="enter" data-magnetic="0.4">
-              <span data-en="Book Now">رزرو نوبت</span>
+              <span>رزرو نوبت</span>
             </a>
             <a href="#giftcards" class="btn btn--gold" data-scroll data-cursor="enter" data-magnetic="0.4">
-              <span data-en="Gift Cards">گیفت‌کارت</span>
+              <span>گیفت‌کارت</span>
             </a>
           </div>
         </div>
@@ -687,6 +685,7 @@
     <script src="assets/js/interactions.js"></script>
     <script src="assets/js/webgl.js"></script>
     <script src="assets/js/services.js"></script>
+    <script src="assets/js/hero-particles.js"></script>
     <script src="assets/js/main.js"></script>
   </body>
 </html>

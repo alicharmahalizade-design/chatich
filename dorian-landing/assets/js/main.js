@@ -107,6 +107,7 @@
       document.body.classList.add("is-ready");
 
       if (D.initHero) D.initHero();
+      if (D.initHeroParticles) D.initHeroParticles();
       if (D.initServices) D.initServices();
       if (D.initElevator) D.initElevator();
       if (D.initCharacters) D.initCharacters();

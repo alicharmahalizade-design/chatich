@@ -167,6 +167,76 @@
   mask-composite: intersect;
 }
 
+/* ----- Soft-gold filled nav button (per reference) --------------------- */
+.btn--gold-soft {
+  background: linear-gradient(135deg, #ecd9a4, #d9bd72 60%, #cdab57);
+  color: var(--ink);
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  box-shadow: 0 8px 22px -12px rgba(160, 126, 22, 0.6);
+}
+.btn--gold-soft:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -12px rgba(160, 126, 22, 0.75);
+}
+
+/* ----- Hero background: watermark + floating particles + frame --------- */
+.hero__particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.hero__watermark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(7rem, 26vw, 24rem);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(40, 30, 15, 0.05);
+  user-select: none;
+}
+/* thin luxury frame around the hero section */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  z-index: 4;
+  pointer-events: none;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+}
+/* smoky shadow behind the portrait (radial, no filter box) */
+.hero__smoke {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 130%;
+  height: 115%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 40% at 50% 52%, rgba(40, 28, 10, 0.32), transparent 62%),
+    radial-gradient(ellipse 30% 26% at 38% 60%, rgba(30, 22, 8, 0.18), transparent 60%),
+    radial-gradient(ellipse 28% 24% at 64% 46%, rgba(30, 22, 8, 0.16), transparent 60%);
+  filter: blur(26px);
+  animation: smokeDrift 9s ease-in-out infinite alternate;
+}
+@keyframes smokeDrift {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(-50%, -52%) scale(1.06);
+  }
+}
+
 /* ----- Hero spotlight (follows the cursor) ----------------------------- */
 .hero__spotlight {
   position: absolute;
