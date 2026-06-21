@@ -27,6 +27,35 @@
 /* v1's interactive call-panel isn't used with our shaft */
 .lift { display: none !important; }
 
+/* ============== HERO · handwriting tagline (our previous pen reveal) ====== */
+.hero__tag.hero__tagline {
+  font-family: "Pinyon Script", cursive;
+  font-weight: 400;
+  color: var(--blue, #0066b3);
+  font-size: clamp(2.2rem, 5.4vw, 3.8rem);
+  line-height: 1.1;
+  position: relative;
+  display: inline-block;
+  direction: ltr;
+  /* let the pen-writing be the entrance; no v1 fade needed */
+  opacity: 1;
+  filter: none;
+}
+.hero__tagline-ink { display: inline-block; }
+.hero__pen {
+  position: absolute;
+  top: 52%;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--blue, #0066b3);
+  box-shadow: 0 0 12px 2px rgba(0, 102, 179, 0.55);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ======================= STORY · scrub video ========================== */
 .mv-frame {
   position: relative;

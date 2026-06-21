@@ -49,6 +49,35 @@
   };
   window.DorianSound = Sound;
 
+  /* ---------------- HERO · handwriting tagline (pen reveal) ---------------- */
+  function initHeroTagline() {
+    var ink = document.querySelector(".hero__tagline-ink");
+    var pen = document.querySelector(".hero__pen");
+    if (!ink || !window.gsap) return;                       // no GSAP → leave full text visible
+    if (matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+
+    // clip immediately (hidden behind the preloader, so no flash)
+    gsap.set(ink, { clipPath: "inset(0 100% 0 0)" });
+    var played = false;
+    function run() {
+      if (played) return; played = true;
+      var tl = gsap.timeline();
+      tl.to(ink, { clipPath: "inset(0 0% 0 0)", duration: 2.4, ease: "none" });
+      if (pen) {
+        tl.fromTo(pen, { left: "1%", opacity: 1 }, { left: "100%", duration: 2.4, ease: "none" }, "<");
+        tl.to(pen, { opacity: 0, duration: 0.4 }, ">-0.15");
+      }
+    }
+    // start once the preloader has parted (app.js adds html.loaded), with a safety net
+    var root = document.documentElement;
+    if (root.classList.contains("loaded")) { setTimeout(run, 400); return; }
+    var obs = new MutationObserver(function () {
+      if (root.classList.contains("loaded")) { obs.disconnect(); setTimeout(run, 400); }
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    setTimeout(function () { obs.disconnect(); run(); }, 6000);
+  }
+
   /* ---------------- STORY · scroll-scrubbed video ---------------- */
   function initStoryVideo() {
     var section = document.getElementById("story");
@@ -174,6 +203,7 @@
   }
 
   function boot() {
+    initHeroTagline();
     initStoryVideo();
     initGift();
     initElevator();
