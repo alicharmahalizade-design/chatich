@@ -46,4 +46,24 @@ add_action('wp_enqueue_scripts', function () {
     wp_enqueue_script('dorian-lenis', $uri . '/assets/vendor/lenis.min.js', array(), $v('/assets/vendor/lenis.min.js'), true);
     wp_enqueue_script('dorian-app', $uri . '/assets/js/app.js', array('dorian-gsap', 'dorian-st', 'dorian-lenis'), $v('/assets/js/app.js'), true);
     wp_enqueue_script('dorian-custom', $uri . '/assets/js/custom.js', array('dorian-app'), $v('/assets/js/custom.js'), true);
+
+    /* WooCommerce AJAX add-to-cart + live cart fragments for the products section.
+       (this template is standalone, so Woo's scripts aren't auto-enqueued here) */
+    if (class_exists('WooCommerce')) {
+        wp_enqueue_script('wc-add-to-cart');
+        wp_enqueue_script('wc-cart-fragments');
+    }
 }, 20);
+
+/**
+ * Keep the floating cart's count in sync after an AJAX add-to-cart.
+ * (registered whenever WooCommerce is active, since fragment refreshes are AJAX)
+ */
+add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
+    if (function_exists('WC') && WC()->cart) {
+        ob_start();
+        echo '<span class="dorian-cart__count">' . esc_html(WC()->cart->get_cart_contents_count()) . '</span>';
+        $fragments['span.dorian-cart__count'] = ob_get_clean();
+    }
+    return $fragments;
+});

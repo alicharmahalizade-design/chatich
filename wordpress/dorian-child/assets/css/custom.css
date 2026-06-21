@@ -427,6 +427,83 @@
   .snd.is-on .snd__bars i { animation: none; }
 }
 
+/* ===================== Shop · WooCommerce products =================== */
+.shop__inner { width: 100%; text-align: center; }
+.shop__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--lg);
+  margin-top: var(--2xl);
+  text-align: start;
+}
+.shopcard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(12, 33, 56, 0.6), rgba(8, 23, 38, 0.6));
+  transition: transform 0.5s var(--ease-luxe), border-color 0.5s, box-shadow 0.5s;
+}
+.shopcard:hover {
+  transform: translateY(-6px);
+  border-color: rgba(201, 162, 39, 0.5);
+  box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.75);
+}
+.shopcard__media { display: block; aspect-ratio: 1; overflow: hidden; background: #0c2138; }
+.shopcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s var(--ease-luxe); }
+.shopcard:hover .shopcard__media img { transform: scale(1.07); }
+.shopcard__body { display: flex; flex-direction: column; gap: 10px; padding: var(--md); flex: 1; }
+.shopcard__name { font-family: var(--font-fa); font-weight: 700; font-size: 1.02rem; line-height: 1.5; margin: 0; }
+.shopcard__name a { color: var(--text-light); transition: color 0.3s; }
+.shopcard__name a:hover { color: var(--gold-soft); }
+.shopcard__price { color: var(--gold-soft); font-size: 1.05rem; margin-top: auto; }
+.shopcard__price del { color: rgba(245, 239, 226, 0.4); font-size: 0.85em; margin-inline-end: 0.4em; }
+.shopcard__price ins { text-decoration: none; }
+.shopcard__add { justify-content: center; margin-top: 6px; font-size: 0.9rem; padding: 0.8em 1.4em; }
+.shop__cta { margin-top: var(--2xl); }
+
+/* floating cart (opposite corner from the sound toggle) */
+.dorian-cart {
+  position: fixed;
+  inset-inline-start: clamp(16px, 3vw, 30px);
+  bottom: clamp(16px, 3vw, 30px);
+  z-index: 120;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--gold);
+  background: radial-gradient(125% 125% at 50% 0%, rgba(12, 33, 56, 0.88), rgba(8, 23, 38, 0.94));
+  border: 1px solid rgba(201, 162, 39, 0.32);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.75);
+  transition: transform 0.45s var(--ease-luxe), border-color 0.4s;
+}
+.dorian-cart:hover { transform: translateY(-3px); border-color: rgba(201, 162, 39, 0.7); }
+.dorian-cart svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.dorian-cart__count {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--gold-grad);
+  color: #241803;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 880px) {
+  .shop__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* =========================================================================
    POLISH LAYER — Persian typography, cinematic bg depth, link hovers, scrollbar
    ========================================================================= */

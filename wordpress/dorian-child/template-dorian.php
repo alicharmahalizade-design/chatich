@@ -322,6 +322,57 @@ $tpl_uri = get_stylesheet_directory_uri();
     </div>
   </section>
 
+  <!-- SHOP · dynamic WooCommerce products (latest) -->
+  <?php
+  if ( class_exists( 'WooCommerce' ) ) :
+      $dorian_products = wc_get_products( array(
+          'status'     => 'publish',
+          'limit'      => 8,
+          'orderby'    => 'date',
+          'order'      => 'DESC',
+          'visibility' => 'visible',
+      ) );
+      if ( ! empty( $dorian_products ) ) : ?>
+  <section class="screen shop" id="shop" data-theme="dark" data-name="فروشگاه">
+    <div class="shop__inner wrap">
+      <span class="eyebrow c anim" style="--i:0">Boutique</span>
+      <h2 class="anim" style="--i:1">محصولات دوریان</h2>
+      <p class="anim" style="--i:2">جدیدترین محصولات مراقبتی و حرفه‌ای، مستقیم از بوتیک دوریان.</p>
+      <div class="shop__grid anim" style="--i:3">
+        <?php foreach ( $dorian_products as $product ) :
+            $pid   = $product->get_id();
+            $img   = $product->get_image_id()
+                ? wp_get_attachment_image_url( $product->get_image_id(), 'woocommerce_thumbnail' )
+                : wc_placeholder_img_src( 'woocommerce_thumbnail' );
+            $link  = get_permalink( $pid );
+            $buyable = $product->is_purchasable() && $product->is_in_stock() && ! $product->is_type( 'variable' );
+            ?>
+        <article class="shopcard">
+          <a class="shopcard__media" href="<?php echo esc_url( $link ); ?>">
+            <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $product->get_name() ); ?>" loading="lazy">
+          </a>
+          <div class="shopcard__body">
+            <h3 class="shopcard__name"><a href="<?php echo esc_url( $link ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h3>
+            <div class="shopcard__price"><?php echo wp_kses_post( $product->get_price_html() ); ?></div>
+            <?php if ( $buyable ) : ?>
+            <a href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"
+               class="btn btn--gold shopcard__add ajax_add_to_cart add_to_cart_button product_type_<?php echo esc_attr( $product->get_type() ); ?>"
+               data-product_id="<?php echo esc_attr( $pid ); ?>" data-quantity="1" rel="nofollow">افزودن به سبد</a>
+            <?php else : ?>
+            <a href="<?php echo esc_url( $link ); ?>" class="btn btn--ghost shopcard__add">مشاهدهٔ محصول</a>
+            <?php endif; ?>
+          </div>
+        </article>
+        <?php endforeach; ?>
+      </div>
+      <div class="shop__cta anim" style="--i:4">
+        <a class="btn btn--blue" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">مشاهدهٔ فروشگاه</a>
+      </div>
+    </div>
+  </section>
+  <?php endif;
+  endif; ?>
+
   <!-- RESERVE + FOOTER -->
   <section class="screen reserve" id="reserve" data-theme="dark" data-name="رزرو">
     <div class="reserve__inner wrap">
@@ -359,6 +410,14 @@ $tpl_uri = get_stylesheet_directory_uri();
   <span class="snd__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
   <span class="snd__label" id="soundLabel">صدا خاموش</span>
 </button>
+
+<?php if ( class_exists( 'WooCommerce' ) && function_exists( 'WC' ) && WC()->cart ) : ?>
+<!-- floating cart (live count via WooCommerce fragments) -->
+<a class="dorian-cart" href="<?php echo esc_url( wc_get_cart_url() ); ?>" aria-label="سبد خرید">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12zM6 6L5 3H2M9 20a1 1 0 100 2 1 1 0 000-2zm9 0a1 1 0 100 2 1 1 0 000-2z"/></svg>
+  <span class="dorian-cart__count"><?php echo esc_html( WC()->cart->get_cart_contents_count() ); ?></span>
+</a>
+<?php endif; ?>
 
 <?php wp_footer(); ?>
 </body>
