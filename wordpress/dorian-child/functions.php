@@ -64,6 +64,13 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
         ob_start();
         echo '<span class="dorian-cart__count">' . esc_html(WC()->cart->get_cart_contents_count()) . '</span>';
         $fragments['span.dorian-cart__count'] = ob_get_clean();
+
+        // refresh the mini-cart drawer contents too
+        ob_start();
+        echo '<div class="widget_shopping_cart_content">';
+        woocommerce_mini_cart();
+        echo '</div>';
+        $fragments['div.widget_shopping_cart_content'] = ob_get_clean();
     }
     return $fragments;
 });

@@ -413,10 +413,18 @@ $tpl_uri = get_stylesheet_directory_uri();
 
 <?php if ( class_exists( 'WooCommerce' ) && function_exists( 'WC' ) && WC()->cart ) : ?>
 <!-- floating cart (live count via WooCommerce fragments) -->
-<a class="dorian-cart" href="<?php echo esc_url( wc_get_cart_url() ); ?>" aria-label="سبد خرید">
+<a class="dorian-cart" id="dorianCart" href="<?php echo esc_url( wc_get_cart_url() ); ?>" aria-label="سبد خرید" aria-expanded="false" aria-controls="dorianMiniCart">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12zM6 6L5 3H2M9 20a1 1 0 100 2 1 1 0 000-2zm9 0a1 1 0 100 2 1 1 0 000-2z"/></svg>
   <span class="dorian-cart__count"><?php echo esc_html( WC()->cart->get_cart_contents_count() ); ?></span>
 </a>
+<!-- minimal mini-cart (auto-refreshes via WooCommerce fragments) -->
+<div class="dorian-minicart" id="dorianMiniCart" aria-hidden="true">
+  <div class="dorian-minicart__head">
+    <span>سبد خرید</span>
+    <button class="dorian-minicart__close" id="dorianMiniCartClose" type="button" aria-label="بستن">&times;</button>
+  </div>
+  <div class="widget_shopping_cart_content"><?php woocommerce_mini_cart(); ?></div>
+</div>
 <?php endif; ?>
 
 <?php wp_footer(); ?>

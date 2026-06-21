@@ -202,12 +202,40 @@
     });
   }
 
+  /* ---------------- mini-cart drawer (WooCommerce) ---------------- */
+  function initMiniCart() {
+    var trigger = document.getElementById("dorianCart");
+    var panel = document.getElementById("dorianMiniCart");
+    if (!trigger || !panel) return;
+    var closeBtn = document.getElementById("dorianMiniCartClose");
+
+    function open() {
+      panel.classList.add("is-open");
+      panel.setAttribute("aria-hidden", "false");
+      trigger.setAttribute("aria-expanded", "true");
+    }
+    function close() {
+      panel.classList.remove("is-open");
+      panel.setAttribute("aria-hidden", "true");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+    function toggle() { panel.classList.contains("is-open") ? close() : open(); }
+
+    trigger.addEventListener("click", function (e) { e.preventDefault(); toggle(); });
+    if (closeBtn) closeBtn.addEventListener("click", close);
+    document.addEventListener("click", function (e) {
+      if (panel.classList.contains("is-open") && !panel.contains(e.target) && !trigger.contains(e.target)) close();
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  }
+
   function boot() {
     initHeroTagline();
     initStoryVideo();
     initGift();
     initElevator();
     initSoundToggle();
+    initMiniCart();
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
