@@ -10,3 +10,6 @@
 # build / temp
 /dist
 /.cache
+
+# packaged theme artifact (regenerated from wordpress/dorian-child)
+/wordpress/*.zip
