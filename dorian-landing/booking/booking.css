@@ -67,8 +67,12 @@ body{
 .subchip__name{font-weight:600;font-size:.92rem}
 .subchip__meta{margin-inline-start:auto;color:var(--muted);font-size:.74rem;white-space:nowrap}
 
-/* ---------- step 2 · providers ---------- */
-.pro-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
+/* ---------- step 2 · providers (per service) ---------- */
+.pro-list{display:grid;gap:22px}
+.pro-group{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:rgba(255,255,255,.02)}
+.pro-group__h{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700;font-size:.98rem;color:var(--gold-soft)}
+.pro-group__none{color:var(--muted);font-size:.86rem;margin:4px 0}
+.pro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
 .pro{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;border-radius:16px;
   border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--text);cursor:pointer;font-family:var(--ff);transition:.4s var(--ease)}
 .pro:hover{transform:translateY(-4px);border-color:rgba(201,162,39,.5)}
@@ -99,6 +103,12 @@ body{
 .cal__cell.is-sel{background:var(--gold-grad);color:#241803;border-color:transparent;font-weight:700}
 .when__h{font-weight:700;font-size:1rem;margin:0 0 10px}
 .when__side .when__h:not(:first-child){margin-top:22px}
+.when__hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.firstfree{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--gold);background:rgba(201,162,39,.10);color:var(--gold-soft);
+  font-family:var(--ff);font-size:.78rem;cursor:pointer;transition:.3s}
+.firstfree:hover{background:rgba(201,162,39,.2)}
+.firstfree span{font-size:.9em}
 .when__hint{color:var(--muted);font-size:.82rem;margin:0 0 12px}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;max-height:230px;overflow:auto}
 .slots__empty{grid-column:1/-1;color:var(--muted);font-size:.86rem;margin:6px 0}
@@ -124,8 +134,17 @@ body{
 .sumrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.9rem}
 .sumrow b{color:var(--text);font-weight:600}
 .sumrow--meta span{color:var(--muted)}
+.sumrow--svc{border-bottom:none;padding-bottom:2px;font-weight:700;color:var(--gold-soft)}
+.sumrow--svc em{font-style:normal;font-weight:500;color:var(--muted);font-size:.84em}
+.sumrow--sub{padding:7px 0 7px 14px;font-size:.86rem}
+.sumrow--sub span{color:var(--text)}
 .sumrow--total{border-bottom:none;margin-top:6px;padding-top:14px;border-top:1px solid var(--line);font-size:1.05rem}
-.sumrow--total b{color:var(--gold-soft);font-weight:800}
+.sumrow--total b{color:var(--text);font-weight:800}
+.sumrow--deposit{border-bottom:none;padding-top:12px;font-size:1.05rem}
+.sumrow--deposit span{color:var(--gold-soft)}
+.sumrow--deposit b{color:var(--gold-soft);font-weight:800}
+.sumrow--rest{border-bottom:none;padding-top:4px;font-size:.84rem}
+.sumrow--rest span,.sumrow--rest b{color:var(--muted);font-weight:500}
 .payform{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
 @media(max-width:560px){.payform{grid-template-columns:1fr}}
 .field{display:flex;flex-direction:column;gap:6px;font-size:.84rem;color:var(--muted)}
@@ -150,7 +169,11 @@ body{
 .bk-done__card{text-align:center;padding:40px;max-width:380px;animation:fade .5s var(--ease)}
 .bk-done__seal{width:72px;height:72px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:var(--gold-grad);color:#241803;font-size:2rem}
 .bk-done__card h3{font-size:1.4rem;margin:0 0 8px}
-.bk-done__card p{color:var(--muted);margin:0 0 22px}
+.bk-done__card p{color:var(--muted);margin:0 0 18px;font-size:.92rem}
+.bk-done__cal{display:flex;flex-direction:column;gap:8px;margin:0 0 20px}
+.bk-cal{padding:11px 16px;border-radius:11px;border:1px solid var(--line);color:var(--text);text-decoration:none;
+  font-family:var(--ff);font-size:.86rem;transition:.3s}
+.bk-cal:hover{border-color:var(--gold);background:rgba(201,162,39,.1);color:var(--gold-soft)}
 .bk-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:30;
   padding:12px 22px;border-radius:999px;background:rgba(8,23,38,.96);border:1px solid var(--gold);color:var(--text);
   font-size:.86rem;opacity:0;pointer-events:none;transition:.4s var(--ease)}

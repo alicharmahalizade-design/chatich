@@ -55,7 +55,10 @@
           <div class="cal__grid" id="calGrid"></div>
         </div>
         <div class="when__side">
-          <h3 class="when__h">ساعت نوبت</h3>
+          <div class="when__hrow">
+            <h3 class="when__h">ساعت نوبت</h3>
+            <button type="button" class="firstfree" id="firstFree"><span>⚡</span> اولین وقت خالی</button>
+          </div>
           <div class="slots" id="slots"><p class="slots__empty">ابتدا یک روز را انتخاب کنید.</p></div>
 
           <h3 class="when__h">تکرار نوبت</h3>
@@ -100,6 +103,7 @@
       <div class="bk-done__seal">✓</div>
       <h3>نوبت شما ثبت شد</h3>
       <p id="doneMsg">پیامک تأیید برای شما و متخصص ارسال خواهد شد.</p>
+      <div class="bk-done__cal" id="doneCal"></div>
       <button class="bk-btn bk-btn--gold" id="btnReset" type="button">رزرو جدید</button>
     </div>
   </div>

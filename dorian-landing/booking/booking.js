@@ -106,14 +106,16 @@
     { id: "ahmadreza", name: "احمدرضا جلالی", role: "Massage", photo: "../assets/img/team-08.jpg", services: ["massage"] }
   ];
   var HOURS = { start: 10, end: 22, step: 30 }; // 30-minute slots, 10:00–22:00
+  var DEPOSIT_RATE = 0.30;                       // بیعانه (admin-configurable in the plugin)
+  var STORE_KEY = "dorianBookingsPreview";       // stands in for the DB in this preview
 
   /* ------------------------------------------------------------------ */
   /* state                                                              */
   /* ------------------------------------------------------------------ */
   var state = {
     step: 1,
-    subs: {},            // subId -> {service, sub}
-    provider: null,
+    subs: {},            // "svc:sub" -> {service, sub}
+    providers: {},       // serviceId -> provider  (one specialist per service)
     date: null,          // {jy,jm,jd}
     time: null,          // "HH:MM"
     weeks: 0             // recurrence interval (0 = once)
@@ -121,13 +123,33 @@
   var today = (function () { var d = new Date(); return toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate()); })();
   var view = { jy: today.jy, jm: today.jm };
 
+  /* ---- "live capacity": a tiny localStorage booking store ---- */
+  function loadBookings() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; } }
+  function saveBookings(a) { try { localStorage.setItem(STORE_KEY, JSON.stringify(a)); } catch (e) {} }
+  function isBusy(provId, jdn, time) {
+    return loadBookings().some(function (b) { return b.p === provId && b.d === jdn && b.t === time; });
+  }
+  function anyChosenBusy(jdn, time) {
+    var provs = chosenProviders();
+    if (!provs.length) return false;
+    return provs.some(function (p) { return isBusy(p.id, jdn, time); });
+  }
+
   /* ------------------------------------------------------------------ */
-  /* totals                                                             */
+  /* totals / selections                                                */
   /* ------------------------------------------------------------------ */
   function chosenSubs() { return Object.keys(state.subs).map(function (k) { return state.subs[k]; }); }
   function totalPrice() { return chosenSubs().reduce(function (s, x) { return s + x.sub.price; }, 0); }
   function totalDur() { return chosenSubs().reduce(function (s, x) { return s + x.sub.dur; }, 0); }
-  function activeServiceIds() { var ids = {}; chosenSubs().forEach(function (x) { ids[x.service.id] = 1; }); return Object.keys(ids); }
+  function depositPrice() { return Math.round(totalPrice() * DEPOSIT_RATE / 1000) * 1000; }
+  /* distinct chosen services, in SERVICES order */
+  function chosenServices() {
+    var seen = {}; chosenSubs().forEach(function (x) { seen[x.service.id] = x.service; });
+    return SERVICES.filter(function (s) { return seen[s.id]; });
+  }
+  function chosenProviders() {
+    return chosenServices().map(function (s) { return state.providers[s.id]; }).filter(Boolean);
+  }
 
   function refreshTotal() {
     document.getElementById("grandTotal").textContent = money(totalPrice());
@@ -157,12 +179,9 @@
         row.addEventListener("click", function () {
           if (state.subs[key]) { delete state.subs[key]; row.classList.remove("is-on"); }
           else { state.subs[key] = { service: svc, sub: sub }; row.classList.add("is-on"); }
-          // dropping every service of the chosen provider invalidates it
-          if (state.provider) {
-            var ids = activeServiceIds();
-            var ok = ids.length && state.provider.services.some(function (s) { return ids.indexOf(s) !== -1; });
-            if (!ok) state.provider = null;
-          }
+          // if a service no longer has any chosen sub, forget its specialist
+          var live = {}; chosenServices().forEach(function (s) { live[s.id] = 1; });
+          Object.keys(state.providers).forEach(function (sid) { if (!live[sid]) delete state.providers[sid]; });
           refreshTotal();
         });
         subsWrap.appendChild(row);
@@ -173,27 +192,36 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* step 2 — providers                                                 */
+  /* step 2 — providers (one specialist PER chosen service)             */
   /* ------------------------------------------------------------------ */
   function renderProviders() {
     var wrap = document.getElementById("proList");
     wrap.innerHTML = "";
-    var ids = activeServiceIds();
-    var list = PROVIDERS.filter(function (p) { return ids.length === 0 || p.services.some(function (s) { return ids.indexOf(s) !== -1; }); });
-    if (!list.length) list = PROVIDERS;
-    list.forEach(function (p) {
-      var card = el("button", "pro" + (state.provider && state.provider.id === p.id ? " is-on" : ""));
-      card.type = "button";
-      card.innerHTML =
-        '<span class="pro__photo"><img src="' + p.photo + '" alt="' + p.name + '" loading="lazy"></span>' +
-        '<span class="pro__name">' + p.name + "</span>" +
-        '<span class="pro__role">' + p.role + "</span>";
-      card.addEventListener("click", function () {
-        state.provider = p;
-        wrap.querySelectorAll(".pro").forEach(function (c) { c.classList.remove("is-on"); });
-        card.classList.add("is-on");
+    var services = chosenServices();
+    services.forEach(function (svc) {
+      var group = el("div", "pro-group");
+      group.appendChild(el("div", "pro-group__h",
+        '<span>متخصصِ «' + svc.name + '»</span>'));
+      var grid = el("div", "pro-grid");
+      var list = PROVIDERS.filter(function (p) { return p.services.indexOf(svc.id) !== -1; });
+      if (!list.length) grid.appendChild(el("p", "pro-group__none", "برای این خدمت متخصصی ثبت نشده است."));
+      list.forEach(function (p) {
+        var chosen = state.providers[svc.id] && state.providers[svc.id].id === p.id;
+        var card = el("button", "pro" + (chosen ? " is-on" : ""));
+        card.type = "button";
+        card.innerHTML =
+          '<span class="pro__photo"><img src="' + p.photo + '" alt="' + p.name + '" loading="lazy"></span>' +
+          '<span class="pro__name">' + p.name + "</span>" +
+          '<span class="pro__role">' + p.role + "</span>";
+        card.addEventListener("click", function () {
+          state.providers[svc.id] = p;
+          grid.querySelectorAll(".pro").forEach(function (c) { c.classList.remove("is-on"); });
+          card.classList.add("is-on");
+        });
+        grid.appendChild(card);
       });
-      wrap.appendChild(card);
+      group.appendChild(grid);
+      wrap.appendChild(group);
     });
   }
 
@@ -230,29 +258,58 @@
     }
   }
 
+  function slotLabels() {
+    var out = [];
+    for (var h = HOURS.start; h < HOURS.end; h++)
+      for (var m = 0; m < 60; m += HOURS.step)
+        out.push((h < 10 ? "0" + h : h) + ":" + (m === 0 ? "00" : m));
+    return out;
+  }
+  /* a slot is free only if EVERY chosen specialist is free at that time */
+  function slotFree(jdn, time) {
+    var nowJdn = j2d(today.jy, today.jm, today.jd);
+    if (jdn < nowJdn) return false;
+    return !anyChosenBusy(jdn, time);
+  }
+
   function renderSlots() {
     var box = document.getElementById("slots");
     if (!state.date) { box.innerHTML = '<p class="slots__empty">ابتدا یک روز را انتخاب کنید.</p>'; return; }
     box.innerHTML = "";
-    // deterministic pseudo-taken slots for realism in the preview
-    var seed = (state.date.jy + state.date.jm * 31 + state.date.jd) % 7;
-    var n = 0;
-    for (var h = HOURS.start; h < HOURS.end; h++) {
-      for (var m = 0; m < 60; m += HOURS.step) {
-        var label = (h < 10 ? "0" + h : h) + ":" + (m === 0 ? "00" : m);
-        var taken = ((n * 3 + seed) % 5 === 0);
-        var b = el("button", "slot" + (taken ? " is-taken" : "") + (state.time === label ? " is-on" : ""));
-        b.type = "button"; b.textContent = toFa(label); b.disabled = taken;
-        (function (lab, btn) {
-          btn.addEventListener("click", function () {
-            state.time = lab;
-            box.querySelectorAll(".slot").forEach(function (s) { s.classList.remove("is-on"); });
-            btn.classList.add("is-on"); renderRecurNote();
-          });
-        })(label, b);
-        box.appendChild(b); n++;
+    var jdn = j2d(state.date.jy, state.date.jm, state.date.jd);
+    slotLabels().forEach(function (label) {
+      var free = slotFree(jdn, label);
+      var b = el("button", "slot" + (!free ? " is-taken" : "") + (state.time === label ? " is-on" : ""));
+      b.type = "button"; b.textContent = toFa(label); b.disabled = !free;
+      b.addEventListener("click", function () {
+        state.time = label;
+        box.querySelectorAll(".slot").forEach(function (s) { s.classList.remove("is-on"); });
+        b.classList.add("is-on"); renderRecurNote();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  /* "first available": scan forward for the earliest free, non-Friday slot */
+  function firstAvailable() {
+    if (!chosenProviders().length) { toast("ابتدا خدمت و متخصص را انتخاب کنید."); return; }
+    var labels = slotLabels();
+    var startJdn = j2d(today.jy, today.jm, today.jd);
+    for (var off = 0; off < 90; off++) {
+      var jdn = startJdn + off;
+      var jd = d2j(jdn);
+      if (jColumn(jd.jy, jd.jm, jd.jd) === 6) continue; // جمعه
+      for (var i = 0; i < labels.length; i++) {
+        if (slotFree(jdn, labels[i])) {
+          view.jy = jd.jy; view.jm = jd.jm;
+          state.date = { jy: jd.jy, jm: jd.jm, jd: jd.jd }; state.time = labels[i];
+          renderCalendar(); renderSlots(); renderRecurNote();
+          toast("اولین وقت خالی: " + jWeekday(jd.jy, jd.jm, jd.jd) + " " + toFa(jd.jd) + " " + J_MONTHS[jd.jm - 1] + " · " + toFa(labels[i]));
+          return;
+        }
       }
     }
+    toast("وقت خالی در ۹۰ روز آینده یافت نشد.");
   }
 
   function renderRecurNote() {
@@ -286,22 +343,26 @@
   function renderSummary() {
     var box = document.getElementById("summary");
     var rows = "";
-    chosenSubs().forEach(function (x) {
-      rows += '<div class="sumrow"><span>' + x.service.name + " · " + x.sub.name + "</span><b>" + money(x.sub.price) + "</b></div>";
+    chosenServices().forEach(function (svc) {
+      var p = state.providers[svc.id];
+      rows += '<div class="sumrow sumrow--svc"><span>' + svc.name +
+        (p ? ' <em>· ' + p.name + "</em>" : "") + "</span><b></b></div>";
+      chosenSubs().filter(function (x) { return x.service.id === svc.id; }).forEach(function (x) {
+        rows += '<div class="sumrow sumrow--sub"><span>' + x.sub.name + "</span><b>" + money(x.sub.price) + "</b></div>";
+      });
     });
     var dateStr = state.date ? (jWeekday(state.date.jy, state.date.jm, state.date.jd) + " " + toFa(state.date.jd) + " " + J_MONTHS[state.date.jm - 1] + " " + toFa(state.date.jy)) : "—";
     var recur = state.weeks ? (state.weeks === 1 ? "هر هفته" : "هر " + toFa(state.weeks) + " هفته") : "یک‌بار";
-    var proHtml = state.provider
-      ? '<img src="' + state.provider.photo + '" alt=""><div><b>' + state.provider.name + "</b><span>" + state.provider.role + "</span></div>"
-      : "";
+    var dep = depositPrice(), rest = totalPrice() - dep;
     box.innerHTML =
       '<div class="sumcard">' +
-      '<div class="sumcard__pro">' + proHtml + "</div>" +
       rows +
       '<div class="sumrow sumrow--meta"><span>زمان</span><b>' + dateStr + " · " + toFa(state.time || "—") + "</b></div>" +
       '<div class="sumrow sumrow--meta"><span>تکرار</span><b>' + recur + "</b></div>" +
       '<div class="sumrow sumrow--meta"><span>مدت کل</span><b>' + toFa(totalDur()) + " دقیقه</b></div>" +
       '<div class="sumrow sumrow--total"><span>جمع کل</span><b>' + money(totalPrice()) + "</b></div>" +
+      '<div class="sumrow sumrow--deposit"><span>بیعانه (' + toFa(Math.round(DEPOSIT_RATE * 100)) + "٪) — اکنون</span><b>" + money(dep) + "</b></div>" +
+      '<div class="sumrow sumrow--rest"><span>باقی‌مانده هنگام حضور</span><b>' + money(rest) + "</b></div>" +
       "</div>";
   }
 
@@ -317,7 +378,7 @@
       s.classList.toggle("is-done", i < n);
     });
     document.getElementById("btnBack").hidden = n === 1;
-    document.getElementById("btnNext").textContent = n === 4 ? "پرداخت و ثبت نوبت" : "ادامه";
+    document.getElementById("btnNext").textContent = n === 4 ? ("پرداخت بیعانه · " + money(depositPrice())) : "ادامه";
     if (n === 2) renderProviders();
     if (n === 3) { renderCalendar(); renderSlots(); renderRecurNote(); }
     if (n === 4) renderSummary();
@@ -326,7 +387,10 @@
 
   function validateStep() {
     if (state.step === 1 && chosenSubs().length === 0) { toast("حداقل یک خدمت را انتخاب کنید."); return false; }
-    if (state.step === 2 && !state.provider) { toast("یک متخصص را انتخاب کنید."); return false; }
+    if (state.step === 2) {
+      var missing = chosenServices().filter(function (s) { return !state.providers[s.id]; });
+      if (missing.length) { toast("برای «" + missing[0].name + "» یک متخصص انتخاب کنید."); return false; }
+    }
     if (state.step === 3 && (!state.date || !state.time)) { toast("روز و ساعت نوبت را انتخاب کنید."); return false; }
     if (state.step === 4) {
       var nm = document.getElementById("custName").value.trim();
@@ -344,16 +408,56 @@
     clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("is-show"); }, 2600);
   }
 
+  /* ---- add-to-calendar (Google / Apple .ics) ---- */
+  function eventTimes() {
+    var g = d2g(j2d(state.date.jy, state.date.jm, state.date.jd));
+    var hm = state.time.split(":");
+    var start = new Date(g.gy, g.gm - 1, g.gd, +hm[0], +hm[1], 0);
+    return { start: start, end: new Date(start.getTime() + totalDur() * 60000) };
+  }
+  function fmtLocal(d) { function p(n) { return (n < 10 ? "0" : "") + n; } return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "T" + p(d.getHours()) + p(d.getMinutes()) + "00"; }
+  function eventTitle() { return "نوبت دوریان — " + chosenServices().map(function (s) { return s.name; }).join("، "); }
+  function googleUrl() {
+    var t = eventTimes();
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      "&text=" + encodeURIComponent(eventTitle()) +
+      "&dates=" + fmtLocal(t.start) + "/" + fmtLocal(t.end) +
+      "&details=" + encodeURIComponent("رزرو نوبت در استودیو دوریان") +
+      "&location=" + encodeURIComponent("اهواز، کیان‌آباد، دوریان");
+  }
+  function icsUri() {
+    var t = eventTimes();
+    var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Dorian//Booking//FA", "BEGIN:VEVENT",
+      "UID:" + Date.now() + "@dorianstudio.ir", "DTSTAMP:" + fmtLocal(new Date()),
+      "DTSTART:" + fmtLocal(t.start), "DTEND:" + fmtLocal(t.end),
+      "SUMMARY:" + eventTitle(), "LOCATION:اهواز، کیان‌آباد، دوریان", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  }
+
+  /* ---- write the booking into the (local) capacity store ---- */
+  function commitBookings() {
+    var arr = loadBookings();
+    var jdn = j2d(state.date.jy, state.date.jm, state.date.jd);
+    var occ = state.weeks ? 6 : 1;   // hold the next few recurring slots too
+    chosenProviders().forEach(function (p) {
+      for (var k = 0; k < occ; k++) arr.push({ p: p.id, d: jdn + (state.weeks ? state.weeks * 7 * k : 0), t: state.time });
+    });
+    saveBookings(arr);
+  }
+
   function finish() {
-    // in the plugin: create the booking, push to WooCommerce checkout, queue FarazSMS.
-    var done = document.getElementById("bkDone");
+    // in the plugin: create the booking → WooCommerce deposit checkout → queue FarazSMS.
+    commitBookings();
+    document.getElementById("doneCal").innerHTML =
+      '<a class="bk-cal" target="_blank" rel="noopener" href="' + googleUrl() + '">افزودن به Google Calendar</a>' +
+      '<a class="bk-cal" download="dorian-booking.ics" href="' + icsUri() + '">افزودن به تقویم (Apple)</a>';
     document.getElementById("doneMsg").textContent =
-      "پیامک تأیید برای شما و متخصص ارسال می‌شود؛ یادآوری هم پیش از نوبت ارسال خواهد شد.";
-    done.hidden = false;
+      "بیعانه پرداخت شد. پیامک تأیید برای شما و متخصص ارسال می‌شود؛ یادآوری و لینک لغو/جابه‌جایی هم پیش از نوبت پیامک خواهد شد.";
+    document.getElementById("bkDone").hidden = false;
   }
 
   function reset() {
-    state.subs = {}; state.provider = null; state.date = null; state.time = null; state.weeks = 0;
+    state.subs = {}; state.providers = {}; state.date = null; state.time = null; state.weeks = 0;
     document.getElementById("custName").value = ""; document.getElementById("custPhone").value = "";
     document.querySelectorAll(".recur__opt").forEach(function (o, i) { o.classList.toggle("is-active", i === 0); });
     document.getElementById("bkDone").hidden = true;
@@ -373,6 +477,7 @@
     });
     document.getElementById("btnBack").addEventListener("click", function () { if (state.step > 1) gotoStep(state.step - 1); });
     document.getElementById("btnReset").addEventListener("click", reset);
+    document.getElementById("firstFree").addEventListener("click", firstAvailable);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();
