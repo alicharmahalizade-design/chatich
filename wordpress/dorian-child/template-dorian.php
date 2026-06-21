@@ -333,7 +333,7 @@ $tpl_uri = get_stylesheet_directory_uri();
           'visibility' => 'visible',
       ) );
       if ( ! empty( $dorian_products ) ) : ?>
-  <section class="screen shop" id="shop" data-theme="dark" data-name="فروشگاه">
+  <section class="screen shop" id="shop" data-theme="light" data-name="فروشگاه">
     <div class="shop__inner wrap">
       <span class="eyebrow c anim" style="--i:0">Boutique</span>
       <h2 class="anim" style="--i:1">محصولات دوریان</h2>
