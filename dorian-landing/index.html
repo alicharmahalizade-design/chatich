@@ -348,9 +348,10 @@
 </main>
 
 <!-- sound toggle (elevator ding / card tick) -->
-<button class="sound-toggle" id="soundToggle" aria-pressed="false">
-  <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-  <span id="soundLabel">صدا خاموش</span>
+<button class="snd" id="soundToggle" aria-pressed="false" aria-label="روشن/خاموش کردن صدا">
+  <span class="snd__ring" aria-hidden="true"></span>
+  <span class="snd__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  <span class="snd__label" id="soundLabel">صدا خاموش</span>
 </button>
 
 <!-- cinematic engine (CDN; falls back gracefully when offline) -->
