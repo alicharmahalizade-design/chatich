@@ -335,15 +335,15 @@ $tpl_uri = get_stylesheet_directory_uri();
       if ( ! empty( $dorian_products ) ) : ?>
   <section class="screen shop" id="shop" data-theme="light" data-name="فروشگاه">
     <div class="shop__inner wrap">
-      <span class="eyebrow c anim" style="--i:0">Boutique</span>
-      <h2 class="anim" style="--i:1">محصولات دوریان</h2>
-      <p class="anim" style="--i:2">جدیدترین محصولات مراقبتی و حرفه‌ای، مستقیم از بوتیک دوریان.</p>
+      <span class="eyebrow c anim" style="--i:0">The Boutique</span>
+      <h2 class="anim" style="--i:1">آیینِ آراستگی، در خلوتِ <span class="serif">خانه</span></h2>
+      <p class="anim" style="--i:2">برگزیده‌ای از بهترین محصولات مراقبت و آراستگیِ مردانه؛ همان اصالتی که در دوریان تجربه می‌کنید، اکنون در خانه‌ی شما.</p>
       <div class="shop__grid anim" style="--i:3">
         <?php foreach ( $dorian_products as $product ) :
             $pid   = $product->get_id();
             $img   = $product->get_image_id()
-                ? wp_get_attachment_image_url( $product->get_image_id(), 'woocommerce_thumbnail' )
-                : wc_placeholder_img_src( 'woocommerce_thumbnail' );
+                ? wp_get_attachment_image_url( $product->get_image_id(), 'large' )
+                : wc_placeholder_img_src( 'large' );
             $link  = get_permalink( $pid );
             $buyable = $product->is_purchasable() && $product->is_in_stock() && ! $product->is_type( 'variable' );
             ?>

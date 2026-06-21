@@ -348,7 +348,7 @@
     });
     el.classList.remove('anim'); // word spans own the reveal now
   }
-  ['.story__copy h2','.floor__fa','.services__inner h2','.team__head h2','.gift__inner h2','.reserve h2']
+  ['.story__copy h2','.floor__fa','.services__inner h2','.team__head h2','.gift__inner h2','.shop__inner h2','.reserve h2']
     .forEach(function(sel){ document.querySelectorAll(sel).forEach(splitWords); });
 
   /* boot — prefer the cinematic engine, degrade gracefully */
