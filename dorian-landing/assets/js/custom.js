@@ -73,7 +73,8 @@
     ScrollTrigger.create({
       trigger: section, start: "top top",
       end: function () { return "+=" + Math.round(dur() * 340); },
-      pin: true, scrub: 0.35, anticipatePin: 1, invalidateOnRefresh: true,
+      pin: true, scrub: 0.35, invalidateOnRefresh: true,
+      refreshPriority: 3,   // topmost pin: must compute its spacer before floors/team
       onUpdate: function (self) {
         if (video.readyState < 1) return;
         var t = self.progress * (dur() - 0.05);
@@ -83,12 +84,12 @@
       },
     });
     try { video.currentTime = 0.01; } catch (e) {}
-    // recompute the pin length (and every trigger below it) once frames are ready
-    var refreshed = false;
-    function reflow() { if (refreshed) return; refreshed = true; if (window.ScrollTrigger) ScrollTrigger.refresh(); }
-    if (video.readyState >= 1 && video.duration) { /* already known */ }
-    else { video.addEventListener("loadedmetadata", reflow, { once: true }); }
-    video.addEventListener("canplay", function () { if (window.ScrollTrigger) ScrollTrigger.refresh(); }, { once: true });
+    // metadata (duration) loads very early; one refresh then locks the pin length
+    if (!(video.readyState >= 1 && video.duration)) {
+      video.addEventListener("loadedmetadata", function () {
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+      }, { once: true });
+    }
   }
 
   /* ---------------- GIFT · front/back flip ---------------- */
@@ -136,7 +137,8 @@
     var current = 0;
     ScrollTrigger.create({
       trigger: "#floors", start: "top top", end: "+=300%",
-      pin: pin, scrub: 1, anticipatePin: 1, invalidateOnRefresh: true,
+      pin: "#floors", scrub: 1, invalidateOnRefresh: true,
+      refreshPriority: 2,   // middle pin: after story, before team
       onUpdate: function (self) {
         var p = self.progress;
         var top = CELL_CENTER[0] - p * (CELL_CENTER[0] - CELL_CENTER[2]);

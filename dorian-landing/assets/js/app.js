@@ -291,7 +291,7 @@
         if(travel()<40){ team.classList.remove('is-gallery'); return; }
         gsap.to(trail,{x:function(){return -travel();},ease:'none',
           scrollTrigger:{trigger:team,start:'top top',end:function(){return '+='+travel();},
-            pin:true,scrub:1,anticipatePin:1,invalidateOnRefresh:true,
+            pin:true,scrub:1,invalidateOnRefresh:true,refreshPriority:1,
             onUpdate:function(self){ if(prog) prog.style.width=(self.progress*100).toFixed(1)+'%'; }}});
         ScrollTrigger.refresh();
       })();
