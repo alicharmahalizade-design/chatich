@@ -35,16 +35,20 @@
 
 <!-- HEADER -->
 <header class="head" id="head">
-  <a href="#hero" data-go="0" aria-label="دوریان"><img class="head__logo" src="assets/img/logo.png" alt="Dorian Gentlemen's Studio"></a>
-  <nav class="nav" id="nav">
-    <a href="#story" data-go="1">مجموعه</a>
-    <a href="#floors" data-go="2">طبقات</a>
-    <a href="#services" data-go="3">خدمات</a>
-    <a href="#team" data-go="4">تیم</a>
-    <a href="#gift" data-go="5">گیفت‌کارت</a>
-    <a class="btn btn--gold head__cta" href="#reserve" data-go="6">رزرو نوبت</a>
-  </nav>
-  <button class="burger" id="burger" aria-label="منو"><span></span><span></span><span></span></button>
+  <div class="head__start">
+    <a href="#hero" data-go="0" aria-label="دوریان"><img class="head__logo" src="assets/img/logo.png" alt="Dorian Gentlemen's Studio"></a>
+    <nav class="nav" id="nav">
+      <a href="#story" data-go="1">مجموعه</a>
+      <a href="#floors" data-go="2">طبقات</a>
+      <a href="#services" data-go="3">خدمات</a>
+      <a href="#team" data-go="4">تیم</a>
+      <a href="#gift" data-go="5">گیفت‌کارت</a>
+    </nav>
+  </div>
+  <div class="head__end">
+    <a class="btn btn--gold head__cta" href="booking/">رزرو نوبت</a>
+    <button class="burger" id="burger" aria-label="منو"><span></span><span></span><span></span></button>
+  </div>
 </header>
 
 <!-- DOT NAV -->
@@ -75,7 +79,7 @@
       <img class="hero__logo anim" style="--i:3" src="assets/img/logo.png" alt="Dorian">
       <p class="hero__sub anim" style="--i:4">دامادسرا و آرایشگاه تخصصی آقایان</p>
       <div class="hero__ctas anim" style="--i:5">
-        <a class="btn btn--blue" href="#reserve" data-go="6">رزرو نوبت</a>
+        <a class="btn btn--blue" href="booking/">رزرو نوبت</a>
         <a class="btn btn--ghost" href="#floors" data-go="2" style="color:var(--blue);border-color:var(--blue)">گشتی در مجموعه</a>
       </div>
     </div>
@@ -329,8 +333,7 @@
         <a class="phone" href="tel:09165555532"><span class="k">مشاوره داماد</span><span class="v">0916 555 5532</span></a>
       </div>
       <div class="reserve__addr anim" style="--i:4"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>اهواز، کیان‌آباد، نبش خیابان سوم، وهابی</div>
-      <!-- TODO: لینک رزرو را به صفحه‌ی نوبت‌دهی تغییر بده -->
-      <div class="reserve__cta anim" style="--i:4"><a class="btn btn--gold" href="#">رزرو آنلاین</a></div>
+      <div class="reserve__cta anim" style="--i:4"><a class="btn btn--gold" href="booking/">رزرو آنلاین نوبت</a></div>
 
       <footer class="foot">
         <div class="wrap">
@@ -339,7 +342,7 @@
             <a href="https://instagram.com/dorianstudio.ir" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.4-.5.2-.9.4-1.3.8-.4.4-.6.8-.8 1.3-.2.4-.3 1-.4 2.1C2.6 9.9 2.6 10.3 2.6 12s0 2.1.1 3.3c.1 1.1.2 1.7.4 2.1.2.5.4.9.8 1.3.4.4.8.6 1.3.8.4.2 1 .3 2.1.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.4.5-.2.9-.4 1.3-.8.4-.4.6-.8.8-1.3.2-.4.3-1 .4-2.1.1-1.2.1-1.6.1-3.3s0-2.1-.1-3.3c-.1-1.1-.2-1.7-.4-2.1-.2-.5-.4-.9-.8-1.3-.4-.4-.8-.6-1.3-.8-.4-.2-1-.3-2.1-.4-1.2-.1-1.6-.1-4.7-.1zM12 7.1A4.9 4.9 0 1017 12a4.9 4.9 0 00-5-4.9zm0 8.1A3.2 3.2 0 1112 8.8a3.2 3.2 0 010 6.4zm6.3-8.3a1.15 1.15 0 11-1.15-1.15 1.15 1.15 0 011.15 1.15z"/></svg></a>
             <a href="https://dorianstudio.ir" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 1.8c1.3 0 3.1 2.3 3.6 6.4H8.4C8.9 6.1 10.7 3.8 12 3.8zM4 12c0-.7.1-1.4.2-2h3.3c-.1.6-.1 1.3-.1 2s0 1.4.1 2H4.2c-.1-.6-.2-1.3-.2-2zm.9 4h2.9c.4 2 .9 3.5 1.5 4.4A8.2 8.2 0 014.9 16zM7.8 8H4.9a8.2 8.2 0 014.4-4.4C8.7 4.5 8.2 6 7.8 8zm4.2 12.2c-1.3 0-3.1-2.3-3.6-6.2h7.2c-.5 3.9-2.3 6.2-3.6 6.2zM9.3 12c0-.7 0-1.4.1-2h5.2c.1.6.1 1.3.1 2s0 1.4-.1 2H9.4c-.1-.6-.1-1.3-.1-2zm6.9 8.4c.6-.9 1.1-2.4 1.5-4.4h2.9a8.2 8.2 0 01-4.4 4.4zM16.2 8c-.4-2-.9-3.5-1.5-4.4A8.2 8.2 0 0119.1 8zm.4 6c.1-.6.1-1.3.1-2s0-1.4-.1-2h3.3c.1.6.2 1.3.2 2s-.1 1.4-.2 2z"/></svg></a>
           </div>
-          <p class="foot__copy"><span class="lat">© 1404 Dorian — Gentlemen's Studio</span> · همه‌ی حقوق محفوظ است</p>
+          <p class="foot__copy"><span class="lat">© 2026 Designed by Ronakads | All rights reserved for Dorianstudio</span></p>
         </div>
       </footer>
     </div>

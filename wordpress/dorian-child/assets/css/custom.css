@@ -380,40 +380,58 @@
 }
 
 /* ===================== Shop · WooCommerce products =================== */
+/* header: logo + menu grouped on the right (start); reserve CTA alone on the left (end) */
+.head__start { display: flex; align-items: center; gap: clamp(18px, 2.5vw, 40px); }
+.head__end { display: flex; align-items: center; gap: 14px; }
+.head__cta { display: inline-flex; }   /* now outside .nav → keep it visible on mobile too */
+
+/* ===================== Shop · WooCommerce products (gallery redesign) === */
 #shop.shop { background: #DFD2BF; }
 .shop__inner { width: 100%; text-align: center; }
-/* match the weight/feel of the other section titles */
-.shop__inner h2 { font-weight: 800; }
+.shop__inner h2 { font-weight: 800; }   /* match other section titles */
 .shop__grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(14px, 1.6vw, 22px);
+  gap: clamp(16px, 1.8vw, 26px);
   margin-top: var(--2xl);
 }
+/* each product is a softly-lit "framed piece" */
 .shopcard {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #fbf6ec;
-  border: 1px solid rgba(160, 126, 22, 0.26);
-  border-radius: 14px;
+  background: linear-gradient(180deg, #fdfaf3, #f1e7d3);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 16px 38px -26px rgba(60, 40, 8, 0.5);
-  transition: transform 0.5s var(--ease-luxe), border-color 0.5s, box-shadow 0.5s;
+  box-shadow: 0 18px 42px -28px rgba(60, 40, 8, 0.5);
+  transition: transform 0.55s var(--ease-luxe), box-shadow 0.55s;
+}
+/* inset gold frame (the "artwork" look) */
+.shopcard::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(160, 126, 22, 0.35);
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 2;
+  transition: border-color 0.5s;
 }
 .shopcard:hover {
-  transform: translateY(-6px);
-  border-color: rgba(160, 126, 22, 0.6);
-  box-shadow: 0 30px 56px -30px rgba(60, 40, 8, 0.6);
+  transform: translateY(-8px);
+  box-shadow: 0 38px 66px -32px rgba(60, 40, 8, 0.6);
 }
-/* white media so white-background packshots blend in seamlessly; never cropped */
+.shopcard:hover::before { border-color: rgba(160, 126, 22, 0.7); }
+/* white pedestal: white-background packshots blend in, products never cropped */
 .shopcard__media {
   position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1 / 1;
-  padding: 14px;
-  background: #ffffff;
+  margin: 9px 9px 0;
+  padding: clamp(16px, 1.6vw, 26px);
+  border-radius: 8px 8px 0 0;
+  background: radial-gradient(120% 95% at 50% 32%, #ffffff 0%, #faf6ee 78%);
 }
 .shopcard__media img {
   max-width: 100%;
@@ -421,42 +439,41 @@
   width: auto;
   height: auto;
   object-fit: contain;
-  mix-blend-mode: multiply;          /* drops stray white edges into the white bg */
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 16px 18px rgba(60, 40, 8, 0.16));
   transition: transform 0.6s var(--ease-luxe);
 }
-.shopcard:hover .shopcard__media img { transform: scale(1.05); }
-/* gold hairline between the white media and the cream body */
-.shopcard__media::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(160, 126, 22, 0.5), transparent);
-}
+.shopcard:hover .shopcard__media img { transform: scale(1.06) translateY(-3px); }
 .shopcard__body {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 7px;
-  padding: 13px 13px 15px;
+  gap: 8px;
+  padding: 16px 16px 18px;
   flex: 1;
 }
-.shopcard__name { font-family: var(--font-fa); font-weight: 700; font-size: 0.96rem; line-height: 1.55; margin: 0; }
+/* gold hairline above the name */
+.shopcard__body::before {
+  content: "";
+  width: 34px; height: 1px;
+  margin-bottom: 4px;
+  background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+}
+.shopcard__name { font-family: var(--font-fa); font-weight: 700; font-size: 1rem; line-height: 1.55; margin: 0; }
 .shopcard__name a { color: var(--ink); transition: color 0.3s; }
 .shopcard__name a:hover { color: var(--blue); }
-.shopcard__price { color: var(--blue-deep); font-weight: 700; font-size: 1.05rem; margin-top: auto; }
+.shopcard__price { color: var(--blue-deep); font-weight: 800; font-size: 1.12rem; margin-top: auto; }
 .shopcard__price del { color: rgba(42, 35, 22, 0.4); font-weight: 500; font-size: 0.8em; margin-inline-end: 0.4em; }
 .shopcard__price ins { text-decoration: none; }
-/* compact gold-outline button that fills on hover (overrides v1 .btn--gold) */
+/* refined gold-outline button that fills on hover (overrides v1 .btn--gold) */
 .shopcard__add {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 6px;
   justify-content: center;
   gap: 0.5em;
-  padding: 0.7em 1.1em;
-  font-size: 0.76rem;
+  padding: 0.82em 1.2em;
+  font-size: 0.8rem;
   letter-spacing: 0.05em;
   border: 1px solid var(--gold-deep);
   border-radius: var(--r-pill);
