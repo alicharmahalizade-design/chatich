@@ -6,6 +6,21 @@ class Dorian_Frontend {
     public static function boot() {
         add_shortcode('dorian_booking', array(__CLASS__, 'shortcode'));
         add_action('wp_enqueue_scripts', array(__CLASS__, 'register'));
+        add_filter('body_class', array(__CLASS__, 'body_class'));
+    }
+
+    /** True when the current singular view hosts the booking form. */
+    public static function is_booking_view() {
+        if (!is_singular()) return false;
+        $id = get_queried_object_id();
+        if ($id && (int) $id === (int) get_option('dorian_booking_page_id')) return true;
+        $post = get_post($id);
+        return $post && has_shortcode($post->post_content, 'dorian_booking');
+    }
+
+    public static function body_class($classes) {
+        if (self::is_booking_view()) $classes[] = 'dorian-booking-page';
+        return $classes;
     }
 
     public static function register() {
@@ -17,6 +32,8 @@ class Dorian_Frontend {
     public static function enqueue() {
         wp_enqueue_style('dorian-fonts');
         wp_enqueue_style('dorian-booking');
+        // absolute @font-face so the Pinar font loads even if a cache plugin combines CSS
+        wp_add_inline_style('dorian-booking', "@font-face{font-family:'Pinar';src:url('" . DORIAN_URL . "assets/fonts/Pinar-VF.woff2') format('woff2');font-weight:100 900;font-display:swap}");
         wp_enqueue_script('dorian-booking');
         $s = dorian_settings();
         wp_localize_script('dorian-booking', 'DorianBooking', array_merge(

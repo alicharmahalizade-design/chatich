@@ -59,14 +59,27 @@ class Dorian_Seed {
         update_option('dorian_seeded', 1);
     }
 
-    /** Create (once) a published page that hosts the booking form. */
+    /** Create (once) a published page that hosts the booking form, full-screen. */
     public static function ensure_page() {
         $id = (int) get_option('dorian_booking_page_id');
-        if ($id && get_post_status($id)) return;
-        foreach (get_posts(array('post_type' => 'page', 'numberposts' => -1, 'post_status' => 'any')) as $pg) {
-            if (has_shortcode($pg->post_content, 'dorian_booking')) { update_option('dorian_booking_page_id', $pg->ID); return; }
+        if (!$id || !get_post_status($id)) {
+            $id = 0;
+            foreach (get_posts(array('post_type' => 'page', 'numberposts' => -1, 'post_status' => 'any')) as $pg) {
+                if (has_shortcode($pg->post_content, 'dorian_booking')) { $id = $pg->ID; break; }
+            }
+            if (!$id) {
+                $id = wp_insert_post(array('post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'رزرو نوبت', 'post_content' => '[dorian_booking]'));
+            }
+            if ($id && !is_wp_error($id)) update_option('dorian_booking_page_id', (int) $id);
         }
-        $pid = wp_insert_post(array('post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'رزرو نوبت', 'post_content' => '[dorian_booking]'));
-        if ($pid && !is_wp_error($pid)) update_option('dorian_booking_page_id', $pid);
+        if ($id && !is_wp_error($id)) self::canvas_template((int) $id);
+    }
+
+    /** Make the booking page render with no theme header/footer (Elementor Canvas). */
+    protected static function canvas_template($id) {
+        $tpl = defined('ELEMENTOR_VERSION') ? 'elementor_canvas' : '';
+        if ($tpl && get_post_meta($id, '_wp_page_template', true) !== $tpl) {
+            update_post_meta($id, '_wp_page_template', $tpl);
+        }
     }
 }

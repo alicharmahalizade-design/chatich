@@ -48,8 +48,8 @@ function dorian_booking_url() {
  * at most once and are cheap afterwards.
  */
 add_action('admin_init', function () {
-    if (!get_option('dorian_seeded'))          Dorian_Seed::run();
-    if (!get_option('dorian_booking_page_id')) Dorian_Seed::ensure_page();
+    if (!get_option('dorian_seeded')) Dorian_Seed::run();
+    Dorian_Seed::ensure_page(); // idempotent; also applies the Canvas (no header/footer) template
 });
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();

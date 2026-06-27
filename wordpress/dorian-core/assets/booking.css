@@ -14,8 +14,8 @@
   --ease:cubic-bezier(.22,1,.36,1);
   --shadow:0 40px 90px -50px rgba(40,30,10,.5);
 }
-*{box-sizing:border-box}
-.bk{margin-inline:auto}
+.bk *{box-sizing:border-box}
+.bk{margin-inline:auto;font-family:var(--ff);color:var(--ink);line-height:1.85}
 .serif{font-family:var(--ff)}
 .bk-home{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
   padding:8px 16px 8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.5);
@@ -179,3 +179,31 @@
   font-size:.86rem;box-shadow:0 18px 40px -18px rgba(40,30,10,.5);opacity:0;pointer-events:none;transition:.4s var(--ease)}
 .bk-toast.is-show{opacity:1;transform:translateX(-50%) translateY(0)}
 .bk-preview-tag{font-family:var(--ff);font-size:.74rem;color:var(--muted);text-align:center;opacity:.8}
+
+/* ===================== WordPress host-theme guard ====================== */
+/* full-page cream backdrop on the dedicated booking page (Canvas template) */
+body.dorian-booking-page{background:radial-gradient(120% 120% at 50% 0%,var(--cream-2),var(--cream) 60%,var(--cream-3));min-height:100vh;margin:0}
+body.dorian-booking-page .bk{margin:clamp(16px,4vw,48px) auto}
+/* neutralise the host theme's <button>/<input> styling so the form matches the preview */
+#bk button{font-family:var(--ff);-webkit-appearance:none;appearance:none}
+#bk input{font-family:var(--ff)}
+#bk .subchip,#bk .subchip:hover,#bk .subchip:focus,#bk .subchip:active{background:#fff;color:var(--ink);box-shadow:none}
+#bk .subchip:hover{border-color:var(--blue-bright)}
+#bk .subchip.is-on{background:rgba(0,102,179,.07);border-color:var(--blue)}
+#bk .pro,#bk .pro:hover,#bk .pro:focus,#bk .pro:active{background:#fff;color:var(--ink);box-shadow:none}
+#bk .pro.is-on{background:rgba(0,102,179,.07)}
+#bk .recur__opt,#bk .recur__opt:hover,#bk .recur__opt:focus,#bk .recur__opt:active{background:#fff;color:var(--ink);box-shadow:none}
+#bk .recur__opt.is-active{background:rgba(0,102,179,.1);color:var(--blue)}
+#bk .slot,#bk .slot:hover,#bk .slot:focus,#bk .slot:active{background:#fff;color:var(--ink);box-shadow:none}
+#bk .slot.is-taken{background:rgba(255,255,255,.3)}
+#bk .slot.is-on{background:var(--blue-grad);color:#fff}
+#bk .cal__cell,#bk .cal__cell:focus,#bk .cal__cell:active{background:rgba(255,255,255,.6);color:var(--ink);box-shadow:none}
+#bk .cal__cell:not(.is-disabled):not(.is-empty):hover{background:rgba(0,102,179,.12)}
+#bk .cal__cell.is-disabled{background:rgba(255,255,255,.25)}
+#bk .cal__cell.is-empty{background:none}
+#bk .cal__cell.is-sel,#bk .cal__cell.is-sel:hover{background:var(--blue-grad);color:#fff}
+#bk .cal__nav,#bk .cal__nav:hover,#bk .cal__nav:focus{background:rgba(255,255,255,.55);color:var(--blue);box-shadow:none}
+#bk .firstfree,#bk .firstfree:hover,#bk .firstfree:focus{background:rgba(0,102,179,.08);color:var(--blue);box-shadow:none}
+#bk .bk-btn--gold,#bk .bk-btn--gold:hover,#bk .bk-btn--gold:focus{background:var(--blue-grad);color:#fff}
+#bk .bk-btn--ghost,#bk .bk-btn--ghost:hover,#bk .bk-btn--ghost:focus{background:transparent;color:var(--ink)}
+#bk .field input{background:#fff;color:var(--ink)}
