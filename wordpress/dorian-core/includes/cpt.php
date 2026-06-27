@@ -103,7 +103,7 @@ class Dorian_CPT {
                 'id'       => (string) $p->ID,
                 'name'     => $p->post_title,
                 'role'     => (string) get_post_meta($p->ID, '_dorian_role', true),
-                'photo'    => $img ? $img : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"/>',
+                'photo'    => $img ? $img : DORIAN_URL . 'assets/avatar.svg',
                 'services' => array_map('strval', $prov_groups[$p->ID]),
             );
         }

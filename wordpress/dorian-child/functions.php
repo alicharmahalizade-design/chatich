@@ -74,3 +74,35 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
     }
     return $fragments;
 });
+
+/* =========================================================================
+   Theme settings — set where the "رزرو نوبت" buttons point.
+   ========================================================================= */
+add_action('admin_menu', function () {
+    add_theme_page('تنظیمات قالب دوریان', 'تنظیمات دوریان', 'manage_options', 'dorian-theme', 'dorian_theme_settings_page');
+});
+add_action('admin_init', function () {
+    register_setting('dorian_theme_group', 'dorian_reserve_url', array('sanitize_callback' => 'esc_url_raw'));
+});
+function dorian_reserve_link() {
+    $url = get_option('dorian_reserve_url');
+    if ($url) return $url;
+    if (function_exists('dorian_booking_url')) return dorian_booking_url(); // booking page from the plugin
+    return home_url('/');
+}
+function dorian_theme_settings_page() {
+    $url  = get_option('dorian_reserve_url', '');
+    $auto = function_exists('dorian_booking_url') ? dorian_booking_url() : '';
+    ?>
+    <div class="wrap"><h1>تنظیمات قالب دوریان</h1>
+    <form method="post" action="options.php"><?php settings_fields('dorian_theme_group'); ?>
+    <table class="form-table" role="presentation">
+      <tr><th scope="row">لینک دکمهٔ «رزرو نوبت»</th><td>
+        <input type="url" name="dorian_reserve_url" value="<?php echo esc_attr($url); ?>" style="width:480px" placeholder="<?php echo esc_attr($auto); ?>">
+        <p class="description">آدرسی که دکمه‌های «رزرو نوبت» به آن می‌روند. خالی بگذارید تا خودکار به برگهٔ رزروِ افزونهٔ «هسته دوریان» برود<?php echo $auto ? ': <code>' . esc_html($auto) . '</code>' : ' (ابتدا افزونه را فعال کنید).'; ?></p>
+      </td></tr>
+    </table>
+    <?php submit_button(); ?>
+    </form></div>
+    <?php
+}

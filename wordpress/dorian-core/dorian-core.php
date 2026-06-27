@@ -18,6 +18,7 @@ define('DORIAN_TABLE', 'dorian_bookings');
 
 require_once DORIAN_DIR . 'includes/db.php';
 require_once DORIAN_DIR . 'includes/cpt.php';
+require_once DORIAN_DIR . 'includes/seed.php';
 require_once DORIAN_DIR . 'includes/settings.php';
 require_once DORIAN_DIR . 'includes/sms.php';
 require_once DORIAN_DIR . 'includes/ajax.php';
@@ -28,8 +29,17 @@ require_once DORIAN_DIR . 'includes/elementor.php';
 register_activation_hook(__FILE__, function () {
     Dorian_DB::install();
     Dorian_CPT::register();         // so rewrite rules include them
+    Dorian_Seed::run();             // sample services/providers (like the preview)
+    Dorian_Seed::ensure_page();     // a published "رزرو نوبت" page with the shortcode
     flush_rewrite_rules();
 });
+
+/** URL of the booking page (for the theme's reserve buttons). */
+function dorian_booking_url() {
+    $id = (int) get_option('dorian_booking_page_id');
+    if ($id && get_post_status($id) === 'publish') return get_permalink($id);
+    return home_url('/');
+}
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();
     wp_clear_scheduled_hook('dorian_send_reminder'); // clears all args? safer to leave individual events

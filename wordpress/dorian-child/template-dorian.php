@@ -6,6 +6,7 @@
  * Assign this template to a Page, then set that Page as the static front page.
  */
 $tpl_uri = get_stylesheet_directory_uri();
+$reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : ($tpl_uri . '/booking/index.html');
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl" data-theme="light">
@@ -52,7 +53,7 @@ $tpl_uri = get_stylesheet_directory_uri();
     </nav>
   </div>
   <div class="head__end">
-    <a class="btn btn--gold head__cta" href="<?php echo $tpl_uri; ?>/booking/index.html">رزرو نوبت</a>
+    <a class="btn btn--gold head__cta" href="<?php echo esc_url($reserve_url); ?>">رزرو نوبت</a>
     <button class="burger" id="burger" aria-label="منو"><span></span><span></span><span></span></button>
   </div>
 </header>
@@ -85,7 +86,7 @@ $tpl_uri = get_stylesheet_directory_uri();
       <img class="hero__logo anim" style="--i:3" src="<?php echo $tpl_uri; ?>/assets/img/logo.png" alt="Dorian">
       <p class="hero__sub anim" style="--i:4">دامادسرا و آرایشگاه تخصصی آقایان</p>
       <div class="hero__ctas anim" style="--i:5">
-        <a class="btn btn--blue" href="<?php echo $tpl_uri; ?>/booking/index.html">رزرو نوبت</a>
+        <a class="btn btn--blue" href="<?php echo esc_url($reserve_url); ?>">رزرو نوبت</a>
         <a class="btn btn--ghost" href="#floors" data-go="2" style="color:var(--blue);border-color:var(--blue)">گشتی در مجموعه</a>
       </div>
     </div>
@@ -391,7 +392,7 @@ $tpl_uri = get_stylesheet_directory_uri();
       </div>
       <div class="reserve__addr anim" style="--i:4"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>اهواز، کیان‌آباد، نبش خیابان سوم، وهابی</div>
       <!-- TODO: لینک رزرو را به صفحه‌ی نوبت‌دهی تغییر بده -->
-      <div class="reserve__cta anim" style="--i:4"><a class="btn btn--gold" href="<?php echo $tpl_uri; ?>/booking/index.html">رزرو آنلاین نوبت</a></div>
+      <div class="reserve__cta anim" style="--i:4"><a class="btn btn--gold" href="<?php echo esc_url($reserve_url); ?>">رزرو آنلاین نوبت</a></div>
 
       <footer class="foot">
         <div class="wrap">
