@@ -28,6 +28,14 @@
 .lift { display: none !important; }
 
 /* ============== HERO · handwriting tagline (our previous pen reveal) ====== */
+/* self-hosted so it loads even when a cache plugin strips Google Fonts */
+@font-face {
+  font-family: "Pinyon Script";
+  src: url("../fonts/PinyonScript.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 .hero__tag.hero__tagline {
   font-family: "Pinyon Script", cursive;
   font-weight: 400;
