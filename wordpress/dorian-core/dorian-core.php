@@ -40,6 +40,17 @@ function dorian_booking_url() {
     if ($id && get_post_status($id) === 'publish') return get_permalink($id);
     return home_url('/');
 }
+
+/**
+ * Self-heal: if the plugin was *updated* (not freshly activated) the activation
+ * hook never fires, so the sample data / booking page can be missing. Seed it on
+ * the first admin load instead. Both calls are guarded by options, so they run
+ * at most once and are cheap afterwards.
+ */
+add_action('admin_init', function () {
+    if (!get_option('dorian_seeded'))          Dorian_Seed::run();
+    if (!get_option('dorian_booking_page_id')) Dorian_Seed::ensure_page();
+});
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();
     wp_clear_scheduled_hook('dorian_send_reminder'); // clears all args? safer to leave individual events
