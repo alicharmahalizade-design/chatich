@@ -30,14 +30,14 @@
 /* ============== HERO · handwriting tagline (our previous pen reveal) ====== */
 /* self-hosted so it loads even when a cache plugin strips Google Fonts */
 @font-face {
-  font-family: "Pinyon Script";
-  src: url("../fonts/PinyonScript.woff2") format("woff2");
+  font-family: "Mr Dafoe";
+  src: url("../fonts/MrDafoe.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 .hero__tag.hero__tagline {
-  font-family: "Pinyon Script", cursive;
+  font-family: "Mr Dafoe", cursive;
   font-weight: 400;
   color: var(--blue, #0066b3);
   font-size: clamp(2.2rem, 5.4vw, 3.8rem);

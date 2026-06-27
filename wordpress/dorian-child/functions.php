@@ -39,6 +39,12 @@ add_action('wp_enqueue_scripts', function () {
     );
     wp_enqueue_style('dorian-site', $uri . '/assets/css/site.css', array(), $v('/assets/css/site.css'));
     wp_enqueue_style('dorian-custom', $uri . '/assets/css/custom.css', array('dorian-site'), $v('/assets/css/custom.css'));
+    // bulletproof the handwriting tagline font against cache-plugin CSS stripping:
+    // absolute @font-face + forced family (survives WP Rocket "Remove Unused CSS").
+    wp_add_inline_style('dorian-custom',
+        "@font-face{font-family:'Mr Dafoe';src:url('" . $uri . "/assets/fonts/MrDafoe.woff2') format('woff2');font-weight:400;font-display:swap}"
+        . ".hero__tag.hero__tagline{font-family:'Mr Dafoe',cursive !important}"
+    );
 
     /* ---- scripts (footer, dependency-ordered) ---- */
     wp_enqueue_script('dorian-gsap', $uri . '/assets/vendor/gsap.min.js', array(), $v('/assets/vendor/gsap.min.js'), true);
