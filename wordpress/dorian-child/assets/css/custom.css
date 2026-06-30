@@ -784,3 +784,7 @@ html::-webkit-scrollbar-thumb:hover {
 
 .giftcard { text-decoration: none; }
 a.giftcard { display: block; }
+
+/* WP nav-menu items render as <li>; keep the flat flex row */
+.nav ul { list-style: none; margin: 0; padding: 0; display: contents; }
+.nav li { list-style: none; display: flex; align-items: center; }

@@ -45,10 +45,14 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
   <div class="head__start">
     <a href="#hero" data-go="0" aria-label="دوریان"><img class="head__logo" src="<?php echo $tpl_uri; ?>/assets/img/logo.png" alt="Dorian Gentlemen's Studio"></a>
     <nav class="nav" id="nav">
+      <?php if (has_nav_menu('dorian_primary')) {
+        wp_nav_menu(array('theme_location' => 'dorian_primary', 'container' => false, 'items_wrap' => '%3$s', 'depth' => 1, 'fallback_cb' => false));
+      } else { ?>
       <a href="#story" data-go="1">دربارهٔ دوریان</a>
       <a href="#services" data-go="3">خدمات</a>
       <a href="#team" data-go="4">تیم</a>
       <a href="#gift" data-go="5">گیفت‌کارت</a>
+      <?php } ?>
     </nav>
   </div>
   <div class="head__end">
@@ -78,15 +82,15 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
     <div class="hero__wm lat">DORIAN</div>
     <div class="hero__frame"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></div>
     <div class="hero__inner wrap">
-      <p class="eyebrow c hero__eyebrow anim" style="--i:0">Gentlemen's Studio · Ahvaz</p>
-      <h1 class="hero__tag hero__tagline" style="--i:1"><span class="hero__tagline-ink">Let us enchant you, in a good way</span><i class="hero__pen" aria-hidden="true"></i></h1>
-      <div class="hero__portrait anim scale" style="--i:2"><img src="<?php echo $tpl_uri; ?>/assets/img/portrait.png" alt="پرتره‌ی دوریان"></div>
+      <p class="eyebrow c hero__eyebrow anim" style="--i:0"><?php echo esc_html(dorian_opt('hero_eyebrow')); ?></p>
+      <h1 class="hero__tag hero__tagline" style="--i:1"><span class="hero__tagline-ink"><?php echo esc_html(dorian_opt('hero_tagline')); ?></span><i class="hero__pen" aria-hidden="true"></i></h1>
+      <div class="hero__portrait anim scale" style="--i:2"><img src="<?php echo esc_url(dorian_opt('hero_portrait', $tpl_uri . '/assets/img/portrait.png')); ?>" alt="پرتره‌ی دوریان"></div>
       <div class="hero__base anim" style="--i:3"><i></i><em></em><i></i></div>
       <img class="hero__logo anim" style="--i:3" src="<?php echo $tpl_uri; ?>/assets/img/logo.png" alt="Dorian">
-      <p class="hero__sub anim" style="--i:4">دامادسرا و آرایشگاه تخصصی آقایان</p>
+      <p class="hero__sub anim" style="--i:4"><?php echo esc_html(dorian_opt('hero_sub')); ?></p>
       <div class="hero__ctas anim" style="--i:5">
-        <a class="btn btn--blue" href="<?php echo esc_url($reserve_url); ?>">رزرو نوبت</a>
-        <a class="btn btn--ghost" href="<?php echo esc_url(dorian_link('dorian_tour_url', '#floors')); ?>"<?php echo dorian_link('dorian_tour_url') ? '' : ' data-go="2"'; ?> style="color:var(--blue);border-color:var(--blue)">گشتی در مجموعه</a>
+        <a class="btn btn--blue" href="<?php echo esc_url($reserve_url); ?>"><?php echo esc_html(dorian_opt('hero_cta1')); ?></a>
+        <a class="btn btn--ghost" href="<?php echo esc_url(dorian_link('dorian_tour_url', '#floors')); ?>"<?php echo dorian_link('dorian_tour_url') ? '' : ' data-go="2"'; ?> style="color:var(--blue);border-color:var(--blue)"><?php echo esc_html(dorian_opt('hero_cta2')); ?></a>
       </div>
     </div>
     <div class="cue"><span>SCROLL</span><i></i></div>
@@ -373,14 +377,17 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
     <div class="reserve__inner wrap">
       <img class="reserve__seal anim scale" style="--i:0" src="<?php echo $tpl_uri; ?>/assets/img/badge.png" alt="New Experiences">
       <span class="eyebrow c anim" style="--i:1">Reservation</span>
-      <h2 class="anim" style="--i:1">نوبت خود را رزرو کنید</h2>
-      <p class="anim" style="--i:2">برای رزرو نوبت یا مشاوره‌ی تخصصی داماد با ما در تماس باشید.</p>
+      <h2 class="anim" style="--i:1"><?php echo esc_html(dorian_opt('reserve_heading')); ?></h2>
+      <p class="anim" style="--i:2"><?php echo esc_html(dorian_opt('reserve_text')); ?></p>
       <div class="reserve__phones anim" style="--i:3">
-        <a class="phone" href="tel:09167921710"><span class="k">تماس</span><span class="v">0916 792 1710</span></a>
-        <a class="phone" href="tel:09167921310"><span class="k">تماس</span><span class="v">0916 792 1310</span></a>
-        <a class="phone" href="tel:09165555532"><span class="k">مشاوره داماد</span><span class="v">0916 555 5532</span></a>
+        <?php foreach (array(1, 2, 3) as $i) {
+          $num = dorian_opt('phone' . $i); $lbl = dorian_opt('phone' . $i . '_label');
+          if (!$num) continue;
+          $tel = preg_replace('/\D/', '', $num);
+          echo '<a class="phone" href="tel:' . esc_attr($tel) . '"><span class="k">' . esc_html($lbl) . '</span><span class="v">' . esc_html($num) . '</span></a>';
+        } ?>
       </div>
-      <div class="reserve__addr anim" style="--i:4"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>اهواز، کیان‌آباد، نبش خیابان سوم، وهابی</div>
+      <div class="reserve__addr anim" style="--i:4"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><?php echo esc_html(dorian_opt('address')); ?></div>
       <!-- TODO: لینک رزرو را به صفحه‌ی نوبت‌دهی تغییر بده -->
       <div class="reserve__cta anim" style="--i:4"><a class="btn btn--gold" href="<?php echo esc_url($reserve_url); ?>">رزرو آنلاین نوبت</a></div>
 
@@ -388,10 +395,10 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
         <div class="wrap">
           <img class="foot__logo" src="<?php echo $tpl_uri; ?>/assets/img/logo.png" alt="Dorian">
           <div class="foot__soc">
-            <a href="https://instagram.com/dorianstudio.ir" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.4-.5.2-.9.4-1.3.8-.4.4-.6.8-.8 1.3-.2.4-.3 1-.4 2.1C2.6 9.9 2.6 10.3 2.6 12s0 2.1.1 3.3c.1 1.1.2 1.7.4 2.1.2.5.4.9.8 1.3.4.4.8.6 1.3.8.4.2 1 .3 2.1.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.4.5-.2.9-.4 1.3-.8.4-.4.6-.8.8-1.3.2-.4.3-1 .4-2.1.1-1.2.1-1.6.1-3.3s0-2.1-.1-3.3c-.1-1.1-.2-1.7-.4-2.1-.2-.5-.4-.9-.8-1.3-.4-.4-.8-.6-1.3-.8-.4-.2-1-.3-2.1-.4-1.2-.1-1.6-.1-4.7-.1zM12 7.1A4.9 4.9 0 1017 12a4.9 4.9 0 00-5-4.9zm0 8.1A3.2 3.2 0 1112 8.8a3.2 3.2 0 010 6.4zm6.3-8.3a1.15 1.15 0 11-1.15-1.15 1.15 1.15 0 011.15 1.15z"/></svg></a>
-            <a href="https://dorianstudio.ir" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 1.8c1.3 0 3.1 2.3 3.6 6.4H8.4C8.9 6.1 10.7 3.8 12 3.8zM4 12c0-.7.1-1.4.2-2h3.3c-.1.6-.1 1.3-.1 2s0 1.4.1 2H4.2c-.1-.6-.2-1.3-.2-2zm.9 4h2.9c.4 2 .9 3.5 1.5 4.4A8.2 8.2 0 014.9 16zM7.8 8H4.9a8.2 8.2 0 014.4-4.4C8.7 4.5 8.2 6 7.8 8zm4.2 12.2c-1.3 0-3.1-2.3-3.6-6.2h7.2c-.5 3.9-2.3 6.2-3.6 6.2zM9.3 12c0-.7 0-1.4.1-2h5.2c.1.6.1 1.3.1 2s0 1.4-.1 2H9.4c-.1-.6-.1-1.3-.1-2zm6.9 8.4c.6-.9 1.1-2.4 1.5-4.4h2.9a8.2 8.2 0 01-4.4 4.4zM16.2 8c-.4-2-.9-3.5-1.5-4.4A8.2 8.2 0 0119.1 8zm.4 6c.1-.6.1-1.3.1-2s0-1.4-.1-2h3.3c.1.6.2 1.3.2 2s-.1 1.4-.2 2z"/></svg></a>
+            <a href="<?php echo esc_url(dorian_opt('instagram_url')); ?>" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.4-.5.2-.9.4-1.3.8-.4.4-.6.8-.8 1.3-.2.4-.3 1-.4 2.1C2.6 9.9 2.6 10.3 2.6 12s0 2.1.1 3.3c.1 1.1.2 1.7.4 2.1.2.5.4.9.8 1.3.4.4.8.6 1.3.8.4.2 1 .3 2.1.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.4.5-.2.9-.4 1.3-.8.4-.4.6-.8.8-1.3.2-.4.3-1 .4-2.1.1-1.2.1-1.6.1-3.3s0-2.1-.1-3.3c-.1-1.1-.2-1.7-.4-2.1-.2-.5-.4-.9-.8-1.3-.4-.4-.8-.6-1.3-.8-.4-.2-1-.3-2.1-.4-1.2-.1-1.6-.1-4.7-.1zM12 7.1A4.9 4.9 0 1017 12a4.9 4.9 0 00-5-4.9zm0 8.1A3.2 3.2 0 1112 8.8a3.2 3.2 0 010 6.4zm6.3-8.3a1.15 1.15 0 11-1.15-1.15 1.15 1.15 0 011.15 1.15z"/></svg></a>
+            <a href="<?php echo esc_url(dorian_opt('website_url')); ?>" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 1.8c1.3 0 3.1 2.3 3.6 6.4H8.4C8.9 6.1 10.7 3.8 12 3.8zM4 12c0-.7.1-1.4.2-2h3.3c-.1.6-.1 1.3-.1 2s0 1.4.1 2H4.2c-.1-.6-.2-1.3-.2-2zm.9 4h2.9c.4 2 .9 3.5 1.5 4.4A8.2 8.2 0 014.9 16zM7.8 8H4.9a8.2 8.2 0 014.4-4.4C8.7 4.5 8.2 6 7.8 8zm4.2 12.2c-1.3 0-3.1-2.3-3.6-6.2h7.2c-.5 3.9-2.3 6.2-3.6 6.2zM9.3 12c0-.7 0-1.4.1-2h5.2c.1.6.1 1.3.1 2s0 1.4-.1 2H9.4c-.1-.6-.1-1.3-.1-2zm6.9 8.4c.6-.9 1.1-2.4 1.5-4.4h2.9a8.2 8.2 0 01-4.4 4.4zM16.2 8c-.4-2-.9-3.5-1.5-4.4A8.2 8.2 0 0119.1 8zm.4 6c.1-.6.1-1.3.1-2s0-1.4-.1-2h3.3c.1.6.2 1.3.2 2s-.1 1.4-.2 2z"/></svg></a>
           </div>
-          <p class="foot__copy"><span class="lat">© 2026 Designed by Ronakads | All rights reserved for Dorianstudio</span></p>
+          <p class="foot__copy"><span class="lat"><?php echo esc_html(dorian_opt('footer_copy')); ?></span></p>
         </div>
       </footer>
     </div>
