@@ -86,7 +86,7 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
       <p class="hero__sub anim" style="--i:4">دامادسرا و آرایشگاه تخصصی آقایان</p>
       <div class="hero__ctas anim" style="--i:5">
         <a class="btn btn--blue" href="<?php echo esc_url($reserve_url); ?>">رزرو نوبت</a>
-        <a class="btn btn--ghost" href="#floors" data-go="2" style="color:var(--blue);border-color:var(--blue)">گشتی در مجموعه</a>
+        <a class="btn btn--ghost" href="<?php echo esc_url(dorian_link('dorian_tour_url', '#floors')); ?>"<?php echo dorian_link('dorian_tour_url') ? '' : ' data-go="2"'; ?> style="color:var(--blue);border-color:var(--blue)">گشتی در مجموعه</a>
       </div>
     </div>
     <div class="cue"><span>SCROLL</span><i></i></div>
@@ -305,24 +305,15 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
       <h2 class="anim" style="--i:1">هدیه‌ای در شأن یک نجیب‌زاده</h2>
       <p class="anim" style="--i:2">چهار کارت هدیه‌ی دوریان؛ تجربه‌ای کامل از مراقبت و آرامش را به عزیزانتان هدیه دهید.</p>
       <div class="giftcard-row anim" style="--i:3">
-        <div class="giftcard"><div class="giftcard__inner">
-          <div class="giftcard__face giftcard__front"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-gentle-front.jpg" alt="گیفت‌کارت یک میلیون تومان" loading="lazy"></div>
-          <div class="giftcard__face giftcard__back"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-gentle-back.jpg" alt="پشت گیفت‌کارت یک میلیون" loading="lazy"></div>
-        </div></div>
-        <div class="giftcard"><div class="giftcard__inner">
-          <div class="giftcard__face giftcard__front"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-duke-front.jpg" alt="گیفت‌کارت دو میلیون تومان" loading="lazy"></div>
-          <div class="giftcard__face giftcard__back"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-duke-back.jpg" alt="پشت گیفت‌کارت دو میلیون" loading="lazy"></div>
-        </div></div>
-        <div class="giftcard"><div class="giftcard__inner">
-          <div class="giftcard__face giftcard__front"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-noble-front.jpg" alt="گیفت‌کارت پنج میلیون تومان" loading="lazy"></div>
-          <div class="giftcard__face giftcard__back"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-noble-back.jpg" alt="پشت گیفت‌کارت پنج میلیون" loading="lazy"></div>
-        </div></div>
-        <div class="giftcard"><div class="giftcard__inner">
-          <div class="giftcard__face giftcard__front"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-royal-front.jpg" alt="گیفت‌کارت ده میلیون تومان" loading="lazy"></div>
-          <div class="giftcard__face giftcard__back"><img src="<?php echo $tpl_uri; ?>/assets/img/gift-royal-back.jpg" alt="پشت گیفت‌کارت ده میلیون" loading="lazy"></div>
-        </div></div>
+        <?php
+        $gl = function ($k) { return function_exists('dorian_link') ? dorian_link($k) : ''; };
+        dorian_giftcard("$tpl_uri/assets/img/gift-gentle-front.jpg", "$tpl_uri/assets/img/gift-gentle-back.jpg", 'گیفت‌کارت یک میلیون تومان', $gl('dorian_gift_url_1'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-duke-front.jpg",   "$tpl_uri/assets/img/gift-duke-back.jpg",   'گیفت‌کارت دو میلیون تومان', $gl('dorian_gift_url_2'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-noble-front.jpg",  "$tpl_uri/assets/img/gift-noble-back.jpg",  'گیفت‌کارت پنج میلیون تومان', $gl('dorian_gift_url_3'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-royal-front.jpg",  "$tpl_uri/assets/img/gift-royal-back.jpg",  'گیفت‌کارت ده میلیون تومان', $gl('dorian_gift_url_4'));
+        ?>
       </div>
-      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="#reserve" data-go="6">هدیه بدهید</a></div>
+      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="<?php echo esc_url(dorian_link('dorian_gift_cta_url', $reserve_url)); ?>">هدیه بدهید</a></div>
     </div>
   </section>
 

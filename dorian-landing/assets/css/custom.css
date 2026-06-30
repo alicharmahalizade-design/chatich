@@ -781,3 +781,6 @@ html::-webkit-scrollbar-thumb:hover {
   letter-spacing: 0;
   text-transform: none;
 }
+
+.giftcard { text-decoration: none; }
+a.giftcard { display: block; }

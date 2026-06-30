@@ -84,30 +84,60 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
 /* =========================================================================
    Theme settings — set where the "رزرو نوبت" buttons point.
    ========================================================================= */
+// every editable link the theme exposes
+function dorian_link_fields() {
+    return array(
+        'dorian_reserve_url' => 'لینک دکمه‌های «رزرو نوبت»',
+        'dorian_tour_url'    => 'لینک دکمهٔ «گشتی در مجموعه»',
+        'dorian_gift_cta_url'=> 'لینک دکمهٔ «هدیه بدهید»',
+        'dorian_gift_url_1'  => 'لینک گیفت‌کارت ۱ (یک میلیون)',
+        'dorian_gift_url_2'  => 'لینک گیفت‌کارت ۲ (دو میلیون)',
+        'dorian_gift_url_3'  => 'لینک گیفت‌کارت ۳ (پنج میلیون)',
+        'dorian_gift_url_4'  => 'لینک گیفت‌کارت ۴ (ده میلیون)',
+    );
+}
 add_action('admin_menu', function () {
     add_theme_page('تنظیمات قالب دوریان', 'تنظیمات دوریان', 'manage_options', 'dorian-theme', 'dorian_theme_settings_page');
 });
 add_action('admin_init', function () {
-    register_setting('dorian_theme_group', 'dorian_reserve_url', array('sanitize_callback' => 'esc_url_raw'));
+    foreach (array_keys(dorian_link_fields()) as $key) {
+        register_setting('dorian_theme_group', $key, array('sanitize_callback' => 'esc_url_raw'));
+    }
 });
+/** A configured link, falling back to a default. */
+function dorian_link($key, $fallback = '') {
+    $url = get_option($key);
+    return $url ? $url : $fallback;
+}
 function dorian_reserve_link() {
     $url = get_option('dorian_reserve_url');
     if ($url) return $url;
     if (function_exists('dorian_booking_url')) return dorian_booking_url(); // booking page from the plugin
     return home_url('/');
 }
+/** Render one gift card; becomes a link when a URL is configured. */
+function dorian_giftcard($front, $back, $alt, $url) {
+    $tag  = $url ? 'a' : 'div';
+    $href = $url ? ' href="' . esc_url($url) . '"' : '';
+    echo '<' . $tag . ' class="giftcard"' . $href . '><div class="giftcard__inner">'
+        . '<div class="giftcard__face giftcard__front"><img src="' . esc_url($front) . '" alt="' . esc_attr($alt) . '" loading="lazy"></div>'
+        . '<div class="giftcard__face giftcard__back"><img src="' . esc_url($back) . '" alt="' . esc_attr($alt) . '" loading="lazy"></div>'
+        . '</div></' . $tag . '>';
+}
 function dorian_theme_settings_page() {
-    $url  = get_option('dorian_reserve_url', '');
     $auto = function_exists('dorian_booking_url') ? dorian_booking_url() : '';
     ?>
     <div class="wrap"><h1>تنظیمات قالب دوریان</h1>
     <form method="post" action="options.php"><?php settings_fields('dorian_theme_group'); ?>
     <table class="form-table" role="presentation">
-      <tr><th scope="row">لینک دکمهٔ «رزرو نوبت»</th><td>
-        <input type="url" name="dorian_reserve_url" value="<?php echo esc_attr($url); ?>" style="width:480px" placeholder="<?php echo esc_attr($auto); ?>">
-        <p class="description">آدرسی که دکمه‌های «رزرو نوبت» به آن می‌روند. خالی بگذارید تا خودکار به برگهٔ رزروِ افزونهٔ «هسته دوریان» برود<?php echo $auto ? ': <code>' . esc_html($auto) . '</code>' : ' (ابتدا افزونه را فعال کنید).'; ?></p>
+      <?php foreach (dorian_link_fields() as $key => $label) :
+        $ph = ($key === 'dorian_reserve_url') ? $auto : ''; ?>
+      <tr><th scope="row"><?php echo esc_html($label); ?></th><td>
+        <input type="url" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr(get_option($key, '')); ?>" style="width:480px" placeholder="<?php echo esc_attr($ph); ?>">
       </td></tr>
+      <?php endforeach; ?>
     </table>
+    <p class="description">لینک دکمه‌ها و گیفت‌کارت‌ها را اینجا تنظیم کنید. هر گیفت‌کارت را می‌توانید به صفحهٔ تک‌محصولِ خودش وصل کنید. فیلدهای خالی به حالت پیش‌فرض می‌مانند.</p>
     <?php submit_button(); ?>
     </form></div>
     <?php
