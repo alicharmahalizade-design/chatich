@@ -45,8 +45,7 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
   <div class="head__start">
     <a href="#hero" data-go="0" aria-label="دوریان"><img class="head__logo" src="<?php echo $tpl_uri; ?>/assets/img/logo.png" alt="Dorian Gentlemen's Studio"></a>
     <nav class="nav" id="nav">
-      <a href="#story" data-go="1">مجموعه</a>
-      <a href="#floors" data-go="2">طبقات</a>
+      <a href="#story" data-go="1">دربارهٔ دوریان</a>
       <a href="#services" data-go="3">خدمات</a>
       <a href="#team" data-go="4">تیم</a>
       <a href="#gift" data-go="5">گیفت‌کارت</a>
@@ -211,11 +210,11 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
               <table>
                 <thead><tr><th>خدمت / آرایشگر</th><th>آرمان</th><th>اشکان</th><th>حسین</th><th>احمد</th></tr></thead>
                 <tbody>
-                  <tr><td class="svc">اصلاح موی سر</td><td><span class="lat">650K</span></td><td><span class="lat">550K</span></td><td><span class="lat">550K</span></td><td><span class="lat">550K</span></td></tr>
-                  <tr><td class="svc">سشوار و حالت</td><td><span class="lat">300K</span></td><td><span class="lat">300K</span></td><td><span class="lat">300K</span></td><td><span class="lat">300K</span></td></tr>
-                  <tr><td class="svc">اصلاح ریش</td><td><span class="lat">400K</span></td><td><span class="lat">400K</span></td><td><span class="lat">400K</span></td><td><span class="lat">400K</span></td></tr>
-                  <tr><td class="svc">پکیج مو + ریش</td><td><span class="lat">950K</span></td><td><span class="lat">800K</span></td><td><span class="lat">800K</span></td><td><span class="lat">800K</span></td></tr>
-                  <tr><td class="svc">پکیج ریش + سشوار</td><td><span class="lat">500K</span></td><td><span class="lat">500K</span></td><td><span class="lat">500K</span></td><td><span class="lat">500K</span></td></tr>
+                  <tr><td class="svc">اصلاح موی سر</td><td><span class="toman">۶۵۰٬۰۰۰</span></td><td><span class="toman">۵۵۰٬۰۰۰</span></td><td><span class="toman">۵۵۰٬۰۰۰</span></td><td><span class="toman">۵۵۰٬۰۰۰</span></td></tr>
+                  <tr><td class="svc">سشوار و حالت</td><td><span class="toman">۳۰۰٬۰۰۰</span></td><td><span class="toman">۳۰۰٬۰۰۰</span></td><td><span class="toman">۳۰۰٬۰۰۰</span></td><td><span class="toman">۳۰۰٬۰۰۰</span></td></tr>
+                  <tr><td class="svc">اصلاح ریش</td><td><span class="toman">۴۰۰٬۰۰۰</span></td><td><span class="toman">۴۰۰٬۰۰۰</span></td><td><span class="toman">۴۰۰٬۰۰۰</span></td><td><span class="toman">۴۰۰٬۰۰۰</span></td></tr>
+                  <tr><td class="svc">پکیج مو + ریش</td><td><span class="toman">۹۵۰٬۰۰۰</span></td><td><span class="toman">۸۰۰٬۰۰۰</span></td><td><span class="toman">۸۰۰٬۰۰۰</span></td><td><span class="toman">۸۰۰٬۰۰۰</span></td></tr>
+                  <tr><td class="svc">پکیج ریش + سشوار</td><td><span class="toman">۵۰۰٬۰۰۰</span></td><td><span class="toman">۵۰۰٬۰۰۰</span></td><td><span class="toman">۵۰۰٬۰۰۰</span></td><td><span class="toman">۵۰۰٬۰۰۰</span></td></tr>
                 </tbody>
               </table>
             </div>

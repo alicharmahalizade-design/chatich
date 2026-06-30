@@ -171,11 +171,26 @@
   inset-inline-start: 50%;
   top: 0;
   transform: translate(-50%, 0);
-  width: 14px;
-  height: 14px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 16px 3px rgba(201, 162, 39, 0.6);
+  background: radial-gradient(circle, #fff6dc 0%, var(--gold-soft, #e8c766) 45%, var(--gold) 75%);
+  border: 1px solid rgba(255, 246, 220, 0.85);
+  box-shadow: 0 0 26px 7px rgba(232, 199, 102, 0.75), 0 0 0 5px rgba(201, 162, 39, 0.22);
+  z-index: 2;
+}
+.elx-cabin::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 199, 102, 0.55);
+  animation: cabinPulse 1.8s var(--ease-luxe) infinite;
+}
+@keyframes cabinPulse {
+  0% { opacity: 0.7; transform: scale(0.85); }
+  70% { opacity: 0; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(1.6); }
 }
 .elx-building {
   position: relative;
@@ -293,7 +308,7 @@
 }
 .floor-panel__desc {
   margin-top: var(--lg);
-  max-width: 48ch;
+  max-width: 100%;
   color: var(--text-muted-light);
   font-size: 1.02rem;
   line-height: 1.9;
@@ -754,3 +769,15 @@ html::-webkit-scrollbar-thumb:hover {
 
 /* header padding (per request) */
 .head { padding: 50px clamp(20px, 4vw, 52px); }
+
+/* ===================== Services · tariff polish ====================== */
+/* full toman numbers in the price table (Persian, gold) */
+.matrix td .toman { color: var(--gold-2); font-weight: 600; font-size: 0.98rem; white-space: nowrap; }
+/* "خدمات تکمیلی مو" is Persian — use the Persian font, not the Latin all-caps style */
+.hair-extra .ttl {
+  font-family: var(--ff-fa);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
