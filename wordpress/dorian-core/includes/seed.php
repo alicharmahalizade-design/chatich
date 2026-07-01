@@ -19,12 +19,18 @@ class Dorian_Seed {
             'massage' => array('name' => 'ماساژ', 'providers' => array('ahmadreza'), 'services' => array(
                 array('ماساژ ریلکسی', 1350000, 60), array('سنگ داغ', 1750000, 60), array('ماساژ سر و صورت', 580000, 30))),
         );
+        // name, role, [group keys], panel slug, panel passcode
         $provInfo = array(
-            'arman'     => array('آرمان کاراگاه', 'Hair Master', array('hair')),
-            'ehsan'     => array('احسان حسن‌یاری', 'Hair Artist', array('hair')),
-            'hamid'     => array('حمید جوهری', 'Facial Expert', array('facial')),
-            'ahmadreza' => array('احمدرضا جلالی', 'Massage', array('massage')),
+            'arman'     => array('آرمان کاراگاه', 'Hair Master', array('hair'), 'arman', 'arman1234'),
+            'ehsan'     => array('احسان حسن‌یاری', 'Hair Artist', array('hair'), 'ehsan', 'ehsan1234'),
+            'hamid'     => array('حمید جوهری', 'Facial Expert', array('facial'), 'hamid', 'hamid1234'),
+            'ahmadreza' => array('احمدرضا جلالی', 'Massage', array('massage'), 'ahmadreza', 'ahmadreza1234'),
         );
+
+        // default weekly working hours: Sat..Thu two ranges, Friday (6) closed
+        $defHours = array();
+        for ($w = 0; $w < 6; $w++) $defHours[$w] = array('12:00-15:00', '17:00-21:00');
+        $defHours[6] = array();
 
         // groups (terms)
         $term = array();
@@ -40,6 +46,9 @@ class Dorian_Seed {
             if (is_wp_error($pid)) continue;
             update_post_meta($pid, '_dorian_role', $p[1]);
             update_post_meta($pid, '_dorian_phone', '');
+            update_post_meta($pid, '_dorian_slug', $p[3]);
+            update_post_meta($pid, '_dorian_pass', $p[4]);
+            update_post_meta($pid, '_dorian_hours', $defHours);
             $tids = array(); foreach ($p[2] as $gk) $tids[] = $term[$gk];
             wp_set_post_terms($pid, $tids, 'dorian_group');
             $prov[$k] = $pid;

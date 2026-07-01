@@ -36,16 +36,14 @@ class Dorian_Frontend {
         wp_add_inline_style('dorian-booking', "@font-face{font-family:'Pinar';src:url('" . DORIAN_URL . "assets/fonts/Pinar-VF.woff2') format('woff2');font-weight:100 900;font-display:swap}");
         wp_enqueue_script('dorian-booking');
         $s = dorian_settings();
-        wp_localize_script('dorian-booking', 'DorianBooking', array_merge(
-            Dorian_CPT::form_data(),
-            array(
-                'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce'   => wp_create_nonce('dorian_booking'),
-                'settings' => array(
-                    'depositRate' => (int) $s['deposit_rate'],
-                    'currency'    => $s['currency'],
-                ),
-            )
+        wp_localize_script('dorian-booking', 'DorianBooking', array(
+            'providers' => dorian_form_providers(),
+            'ajaxUrl'   => admin_url('admin-ajax.php'),
+            'nonce'     => wp_create_nonce('dorian_booking'),
+            'settings'  => array(
+                'depositRate' => (int) $s['deposit_rate'],
+                'currency'    => $s['currency'],
+            ),
         ));
     }
 
@@ -63,22 +61,22 @@ class Dorian_Frontend {
     <h1 class="bk__title">رزرو نوبت در <span class="serif">دوریان</span></h1>
     <p class="bk__sub">در چند گام، نوبت اختصاصی خود را رزرو کنید.</p>
     <ol class="bk-steps" id="bkSteps">
-      <li class="bk-steps__item is-active" data-stepdot="1"><span class="n">1</span><span class="t">خدمات</span></li>
-      <li class="bk-steps__item" data-stepdot="2"><span class="n">2</span><span class="t">متخصص</span></li>
+      <li class="bk-steps__item is-active" data-stepdot="1"><span class="n">1</span><span class="t">متخصص</span></li>
+      <li class="bk-steps__item" data-stepdot="2"><span class="n">2</span><span class="t">خدمات</span></li>
       <li class="bk-steps__item" data-stepdot="3"><span class="n">3</span><span class="t">زمان</span></li>
       <li class="bk-steps__item" data-stepdot="4"><span class="n">4</span><span class="t">تأیید</span></li>
     </ol>
   </header>
   <main class="bk__stage">
     <section class="bk-step is-active" data-step="1">
+      <h2 class="bk-step__h">متخصص خود را انتخاب کنید</h2>
+      <p class="bk-step__hint">ابتدا متخصص را انتخاب کنید تا خدمات و تقویمِ اختصاصیِ او نمایش داده شود.</p>
+      <div class="pro-list" id="proList"></div>
+    </section>
+    <section class="bk-step" data-step="2">
       <h2 class="bk-step__h">خدمت مورد نظر را انتخاب کنید</h2>
       <p class="bk-step__hint">می‌توانید چند خدمت را هم‌زمان انتخاب کنید.</p>
       <div class="svc-list" id="svcList"></div>
-    </section>
-    <section class="bk-step" data-step="2">
-      <h2 class="bk-step__h">متخصص خود را انتخاب کنید</h2>
-      <p class="bk-step__hint">برای هر خدمت، متخصصِ مربوط را انتخاب کنید.</p>
-      <div class="pro-list" id="proList"></div>
     </section>
     <section class="bk-step" data-step="3">
       <div class="when">

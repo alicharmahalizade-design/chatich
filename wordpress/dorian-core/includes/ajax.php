@@ -22,36 +22,47 @@ class Dorian_Ajax {
         return array_values(array_unique(array_filter(array_map('intval', $p))));
     }
 
-    /** total duration (minutes) of the chosen services */
-    protected static function calc($sub_ids) {
+    /** price/duration of the chosen services FOR a specific provider */
+    protected static function calc($sub_ids, $pid) {
+        $svcs = function_exists('dorian_provider_services') ? dorian_provider_services($pid) : array();
         $price = 0; $dur = 0; $names = array();
         foreach ($sub_ids as $sid) {
             $sid = (int) $sid;
-            if (get_post_type($sid) !== 'dorian_service') continue;
-            $price += (int) get_post_meta($sid, '_dorian_price', true);
-            $dur   += (int) get_post_meta($sid, '_dorian_duration', true) ?: 30;
-            $names[] = get_the_title($sid);
+            if (isset($svcs[$sid])) {
+                $price += (int) $svcs[$sid]['price'];
+                $dur   += (int) $svcs[$sid]['dur'];
+                $names[] = $svcs[$sid]['name'];
+            }
         }
-        return array('price' => $price, 'dur' => max(30, $dur), 'names' => implode('، ', $names));
+        return array('price' => $price, 'dur' => max(15, $dur), 'names' => implode('، ', $names));
     }
+
+    /** the single chosen provider */
+    protected static function pid() { $p = self::provider_ids(); return $p ? (int) $p[0] : 0; }
 
     public static function slots() {
         self::verify();
-        $providers = self::provider_ids();
+        $pid = self::pid();
         $date = isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '';
         $sub_ids = isset($_POST['subs']) ? array_map('intval', (array) $_POST['subs']) : array();
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) wp_send_json_error('bad date');
-        $c = self::calc($sub_ids);
-        wp_send_json_success(Dorian_DB::slots($providers, $date, $c['dur']));
+        if (!$pid || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) wp_send_json_error('bad request');
+        $c = self::calc($sub_ids, $pid);
+        wp_send_json_success(dorian_provider_slots($pid, $date, $c['dur']));
     }
 
     public static function firstfree() {
         self::verify();
-        $providers = self::provider_ids();
+        $pid = self::pid();
         $sub_ids = isset($_POST['subs']) ? array_map('intval', (array) $_POST['subs']) : array();
-        $c = self::calc($sub_ids);
-        $r = Dorian_DB::first_free($providers, $c['dur']);
-        $r ? wp_send_json_success($r) : wp_send_json_error('none');
+        if (!$pid) wp_send_json_error('none');
+        $c = self::calc($sub_ids, $pid);
+        for ($d = 0; $d < 90; $d++) {
+            $ymd = date('Y-m-d', strtotime("+$d day", current_time('timestamp')));
+            foreach (dorian_provider_slots($pid, $ymd, $c['dur']) as $slot) {
+                if ($slot['free']) wp_send_json_success(array('date' => $ymd, 'time' => $slot['t']));
+            }
+        }
+        wp_send_json_error('none');
     }
 
     public static function book() {
@@ -64,18 +75,20 @@ class Dorian_Ajax {
         $name  = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
         $phone = isset($_POST['phone']) ? preg_replace('/\D/', '', $_POST['phone']) : '';
 
-        if (!$sub_ids || !$providers) wp_send_json_error('خدمت/متخصص ناقص است.');
+        $pid = $providers ? (int) $providers[0] : 0;
+        if (!$sub_ids || !$pid) wp_send_json_error('خدمت/متخصص ناقص است.');
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !preg_match('/^\d{2}:\d{2}$/', $time)) wp_send_json_error('تاریخ/ساعت نامعتبر است.');
         if (!$name || !preg_match('/^09\d{9}$/', $phone)) wp_send_json_error('نام و موبایل معتبر وارد کنید.');
 
-        $c = self::calc($sub_ids);
+        $c = self::calc($sub_ids, $pid);
 
-        // server-side re-check: the requested start must still be free for all providers
+        // server-side re-check: the requested start must still be free for the provider
         $free = false;
-        foreach (Dorian_DB::slots($providers, $date, $c['dur']) as $slot) {
+        foreach (dorian_provider_slots($pid, $date, $c['dur']) as $slot) {
             if ($slot['t'] === $time) { $free = $slot['free']; break; }
         }
         if (!$free) wp_send_json_error('این زمان دیگر خالی نیست. لطفاً زمان دیگری انتخاب کنید.');
+        $providers = array($pid);
 
         $s = dorian_settings();
         $deposit = (int) round($c['price'] * ((int) $s['deposit_rate']) / 100 / 1000) * 1000;

@@ -1,12 +1,10 @@
-/* Dorian booking — WordPress plugin frontend.
-   Same UX as the preview, but data comes from window.DorianBooking and
-   capacity / first-free / create-booking go through admin-ajax. */
+/* Dorian booking — provider-first flow (one specialist, their own services + calendar). */
 (function () {
   "use strict";
-  var DATA = window.DorianBooking || { services: [], providers: [], settings: {}, ajaxUrl: "", nonce: "" };
+  var DATA = window.DorianBooking || { providers: [], settings: {}, ajaxUrl: "", nonce: "" };
   if (!document.getElementById("bk")) return;
 
-  /* ---------- Jalaali core (jalaali-js, MIT; truncating div/mod) ---------- */
+  /* ---------- Jalaali core (jalaali-js, MIT) ---------- */
   function div(a, b) { return Math.trunc(a / b); }
   function mod(a, b) { return a - Math.trunc(a / b) * b; }
   function jalCal(jy) {
@@ -38,15 +36,13 @@
   function money(n) { return toFa(Number(n || 0).toLocaleString("en-US")) + " " + CUR; }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   var DEPOSIT_RATE = (DATA.settings.depositRate != null ? DATA.settings.depositRate : 30) / 100;
-
-  var SERVICES = DATA.services || [];
   var PROVIDERS = DATA.providers || [];
 
   function api(action, extra) {
     var body = new URLSearchParams();
     body.append("action", "dorian_" + action);
     body.append("nonce", DATA.nonce);
-    providerIdList().forEach(function (id) { body.append("providers[]", id); });
+    if (state.provider) body.append("providers[]", state.provider.id);
     subIdList().forEach(function (id) { body.append("subs[]", id); });
     if (extra) Object.keys(extra).forEach(function (k) { body.append(k, extra[k]); });
     return fetch(DATA.ajaxUrl, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() })
@@ -54,37 +50,50 @@
   }
 
   /* ---------- state ---------- */
-  var state = { step: 1, subs: {}, providers: {}, date: null, time: null, weeks: 0 };
+  var state = { step: 1, provider: null, subs: {}, date: null, time: null, weeks: 0 };
   var today = (function () { var d = new Date(); return toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate()); })();
   var view = { jy: today.jy, jm: today.jm };
 
   function chosenSubs() { return Object.keys(state.subs).map(function (k) { return state.subs[k]; }); }
-  function totalPrice() { return chosenSubs().reduce(function (s, x) { return s + x.sub.price; }, 0); }
-  function totalDur() { return chosenSubs().reduce(function (s, x) { return s + x.sub.dur; }, 0); }
+  function totalPrice() { return chosenSubs().reduce(function (s, x) { return s + x.price; }, 0); }
+  function totalDur() { return chosenSubs().reduce(function (s, x) { return s + x.dur; }, 0); }
   function depositPrice() { return Math.round(totalPrice() * DEPOSIT_RATE / 1000) * 1000; }
-  function chosenServices() { var seen = {}; chosenSubs().forEach(function (x) { seen[x.service.id] = x.service; }); return SERVICES.filter(function (s) { return seen[s.id]; }); }
-  function chosenProviders() { return chosenServices().map(function (s) { return state.providers[s.id]; }).filter(Boolean); }
-  function providerIdList() { return chosenProviders().map(function (p) { return p.id; }); }
-  function subIdList() { return chosenSubs().map(function (x) { return x.sub.id; }); }
+  function subIdList() { return Object.keys(state.subs); }
   function refreshTotal() { document.getElementById("grandTotal").textContent = money(totalPrice()); }
 
-  /* ---------- step 1 ---------- */
+  /* ---------- step 1 · provider (single) ---------- */
+  function renderProviders() {
+    var wrap = document.getElementById("proList"); wrap.innerHTML = "";
+    if (!PROVIDERS.length) { wrap.innerHTML = '<p class="slots__empty">هنوز متخصصی ثبت نشده است.</p>'; return; }
+    var grid = el("div", "pro-grid");
+    PROVIDERS.forEach(function (p) {
+      var card = el("button", "pro" + (state.provider && state.provider.id === p.id ? " is-on" : "")); card.type = "button";
+      card.innerHTML = '<span class="pro__photo"><img src="' + p.photo + '" alt="' + p.name + '"></span><span class="pro__name">' + p.name + '</span><span class="pro__role">' + p.role + "</span>";
+      card.addEventListener("click", function () {
+        if (!state.provider || state.provider.id !== p.id) { state.provider = p; state.subs = {}; state.date = null; state.time = null; refreshTotal(); }
+        grid.querySelectorAll(".pro").forEach(function (c) { c.classList.remove("is-on"); });
+        card.classList.add("is-on");
+      });
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+  }
+
+  /* ---------- step 2 · that provider's services ---------- */
   function renderServices() {
     var wrap = document.getElementById("svcList"); wrap.innerHTML = "";
-    if (!SERVICES.length) { wrap.innerHTML = '<p class="slots__empty">هنوز خدمتی ثبت نشده است.</p>'; return; }
-    SERVICES.forEach(function (svc) {
+    if (!state.provider) { wrap.innerHTML = '<p class="slots__empty">ابتدا متخصص را انتخاب کنید.</p>'; return; }
+    (state.provider.groups || []).forEach(function (svc) {
       var card = el("div", "svc");
-      card.appendChild(el("div", "svc__head", '<svg viewBox="0 0 24 24"><path d="' + svc.icon + '"/></svg><span class="svc__name">' + svc.name + "</span>"));
+      card.appendChild(el("div", "svc__head", '<span class="svc__name">' + svc.name + "</span>"));
       var subsWrap = el("div", "svc__subs");
       svc.subs.forEach(function (sub) {
-        var key = svc.id + ":" + sub.id;
+        var key = String(sub.id);
         var row = el("button", "subchip" + (state.subs[key] ? " is-on" : "")); row.type = "button";
         row.innerHTML = '<span class="subchip__check"></span><span class="subchip__name">' + sub.name + '</span><span class="subchip__meta">' + toFa(sub.dur) + "´ · " + money(sub.price) + "</span>";
         row.addEventListener("click", function () {
           if (state.subs[key]) { delete state.subs[key]; row.classList.remove("is-on"); }
-          else { state.subs[key] = { service: svc, sub: sub }; row.classList.add("is-on"); }
-          var live = {}; chosenServices().forEach(function (s) { live[s.id] = 1; });
-          Object.keys(state.providers).forEach(function (sid) { if (!live[sid]) delete state.providers[sid]; });
+          else { state.subs[key] = { id: key, name: sub.name, price: sub.price, dur: sub.dur }; row.classList.add("is-on"); }
           state.time = null; refreshTotal();
         });
         subsWrap.appendChild(row);
@@ -93,31 +102,7 @@
     });
   }
 
-  /* ---------- step 2 ---------- */
-  function renderProviders() {
-    var wrap = document.getElementById("proList"); wrap.innerHTML = "";
-    chosenServices().forEach(function (svc) {
-      var group = el("div", "pro-group");
-      group.appendChild(el("div", "pro-group__h", '<span>متخصصِ «' + svc.name + '»</span>'));
-      var grid = el("div", "pro-grid");
-      var list = PROVIDERS.filter(function (p) { return p.services.indexOf(svc.id) !== -1; });
-      if (!list.length) grid.appendChild(el("p", "pro-group__none", "برای این خدمت متخصصی ثبت نشده است."));
-      list.forEach(function (p) {
-        var chosen = state.providers[svc.id] && state.providers[svc.id].id === p.id;
-        var card = el("button", "pro" + (chosen ? " is-on" : "")); card.type = "button";
-        card.innerHTML = '<span class="pro__photo"><img src="' + p.photo + '" alt="' + p.name + '"></span><span class="pro__name">' + p.name + '</span><span class="pro__role">' + p.role + "</span>";
-        card.addEventListener("click", function () {
-          state.providers[svc.id] = p; state.time = null;
-          grid.querySelectorAll(".pro").forEach(function (c) { c.classList.remove("is-on"); });
-          card.classList.add("is-on");
-        });
-        grid.appendChild(card);
-      });
-      group.appendChild(grid); wrap.appendChild(group);
-    });
-  }
-
-  /* ---------- step 3 ---------- */
+  /* ---------- step 3 · calendar / slots ---------- */
   function renderCalendar() {
     document.getElementById("calTitle").textContent = J_MONTHS[view.jm - 1] + " " + toFa(view.jy);
     var grid = document.getElementById("calGrid"); grid.innerHTML = "";
@@ -126,9 +111,8 @@
     var len = jMonthLen(view.jy, view.jm); var todJdn = j2d(today.jy, today.jm, today.jd);
     for (var d = 1; d <= len; d++) {
       var cell = el("button", "cal__cell"); cell.type = "button"; cell.textContent = toFa(d);
-      var jdn = j2d(view.jy, view.jm, d); var col = jColumn(view.jy, view.jm, d);
-      if (col === 6) cell.classList.add("is-fri");
-      if (jdn < todJdn || col === 6) { cell.classList.add("is-disabled"); cell.disabled = true; }
+      var jdn = j2d(view.jy, view.jm, d);
+      if (jdn < todJdn) { cell.classList.add("is-disabled"); cell.disabled = true; }
       if (jdn === todJdn) cell.classList.add("is-today");
       if (state.date && state.date.jy === view.jy && state.date.jm === view.jm && state.date.jd === d) cell.classList.add("is-sel");
       (function (day, c) { c.addEventListener("click", function () {
@@ -139,16 +123,15 @@
       grid.appendChild(cell);
     }
   }
-
   function fetchSlots(preselect) {
     var box = document.getElementById("slots");
     if (!state.date) { box.innerHTML = '<p class="slots__empty">ابتدا یک روز را انتخاب کنید.</p>'; return; }
-    if (!chosenProviders().length) { box.innerHTML = '<p class="slots__empty">ابتدا متخصص را انتخاب کنید.</p>'; return; }
+    if (!chosenSubs().length) { box.innerHTML = '<p class="slots__empty">ابتدا خدمت را انتخاب کنید.</p>'; return; }
     box.innerHTML = '<p class="slots__empty">در حال بررسی ظرفیت…</p>';
     api("slots", { date: greg(state.date.jy, state.date.jm, state.date.jd) }).then(function (res) {
       if (!res || !res.success) { box.innerHTML = '<p class="slots__empty">خطا در دریافت ساعت‌ها.</p>'; return; }
       box.innerHTML = "";
-      if (!res.data.length) { box.innerHTML = '<p class="slots__empty">برای این روز ساعتی موجود نیست.</p>'; return; }
+      if (!res.data.length) { box.innerHTML = '<p class="slots__empty">این روز برای این متخصص ساعتی ندارد (تعطیل یا خارج از ساعت کاری).</p>'; return; }
       res.data.forEach(function (s) {
         var b = el("button", "slot" + (!s.free ? " is-taken" : "") + ((preselect === s.t || state.time === s.t) ? " is-on" : ""));
         b.type = "button"; b.textContent = toFa(s.t); b.disabled = !s.free;
@@ -158,9 +141,8 @@
       });
     });
   }
-
   function firstAvailable() {
-    if (!chosenProviders().length) { toast("ابتدا خدمت و متخصص را انتخاب کنید."); return; }
+    if (!state.provider || !chosenSubs().length) { toast("ابتدا متخصص و خدمت را انتخاب کنید."); return; }
     api("firstfree", {}).then(function (res) {
       if (!res || !res.success) { toast("وقت خالی یافت نشد."); return; }
       var p = res.data.date.split("-"); var g = toJalaali(+p[0], +p[1], +p[2]);
@@ -169,7 +151,6 @@
       toast("اولین وقت: " + jWeekday(g.jy, g.jm, g.jd) + " " + toFa(g.jd) + " " + J_MONTHS[g.jm - 1] + " · " + toFa(res.data.time));
     });
   }
-
   function renderRecurNote() {
     var note = document.getElementById("recurNote");
     if (!state.weeks || !state.date || !state.time) { note.textContent = ""; return; }
@@ -189,16 +170,11 @@
   }
   function stepMonth(dir) { view.jm += dir; if (view.jm < 1) { view.jm = 12; view.jy--; } if (view.jm > 12) { view.jm = 1; view.jy++; } renderCalendar(); }
 
-  /* ---------- step 4 ---------- */
+  /* ---------- step 4 · summary ---------- */
   function renderSummary() {
     var box = document.getElementById("summary"); var rows = "";
-    chosenServices().forEach(function (svc) {
-      var p = state.providers[svc.id];
-      rows += '<div class="sumrow sumrow--svc"><span>' + svc.name + (p ? ' <em>· ' + p.name + "</em>" : "") + "</span><b></b></div>";
-      chosenSubs().filter(function (x) { return x.service.id === svc.id; }).forEach(function (x) {
-        rows += '<div class="sumrow sumrow--sub"><span>' + x.sub.name + "</span><b>" + money(x.sub.price) + "</b></div>";
-      });
-    });
+    if (state.provider) rows += '<div class="sumrow sumrow--svc"><span>متخصص</span><b>' + state.provider.name + "</b></div>";
+    chosenSubs().forEach(function (x) { rows += '<div class="sumrow sumrow--sub"><span>' + x.name + "</span><b>" + money(x.price) + "</b></div>"; });
     var dateStr = state.date ? (jWeekday(state.date.jy, state.date.jm, state.date.jd) + " " + toFa(state.date.jd) + " " + J_MONTHS[state.date.jm - 1] + " " + toFa(state.date.jy)) : "—";
     var recur = state.weeks ? (state.weeks === 1 ? "هر هفته" : "هر " + toFa(state.weeks) + " هفته") : "یک‌بار";
     var dep = depositPrice(), rest = totalPrice() - dep;
@@ -218,14 +194,15 @@
     document.querySelectorAll(".bk-steps__item").forEach(function (s) { var i = +s.dataset.stepdot; s.classList.toggle("is-active", i === n); s.classList.toggle("is-done", i < n); });
     document.getElementById("btnBack").hidden = n === 1;
     document.getElementById("btnNext").textContent = n === 4 ? ("پرداخت بیعانه · " + money(depositPrice())) : "ادامه";
-    if (n === 2) renderProviders();
+    if (n === 1) renderProviders();
+    if (n === 2) renderServices();
     if (n === 3) { renderCalendar(); state.date ? fetchSlots(state.time) : (document.getElementById("slots").innerHTML = '<p class="slots__empty">ابتدا یک روز را انتخاب کنید.</p>'); renderRecurNote(); }
     if (n === 4) renderSummary();
     document.getElementById("bk").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   function validateStep() {
-    if (state.step === 1 && chosenSubs().length === 0) { toast("حداقل یک خدمت را انتخاب کنید."); return false; }
-    if (state.step === 2) { var miss = chosenServices().filter(function (s) { return !state.providers[s.id]; }); if (miss.length) { toast("برای «" + miss[0].name + "» یک متخصص انتخاب کنید."); return false; } }
+    if (state.step === 1 && !state.provider) { toast("یک متخصص را انتخاب کنید."); return false; }
+    if (state.step === 2 && chosenSubs().length === 0) { toast("حداقل یک خدمت را انتخاب کنید."); return false; }
     if (state.step === 3 && (!state.date || !state.time)) { toast("روز و ساعت نوبت را انتخاب کنید."); return false; }
     if (state.step === 4) { var nm = document.getElementById("custName").value.trim(); var ph = document.getElementById("custPhone").value.trim(); if (!nm || !/^09\d{9}$/.test(ph)) { toast("نام و شمارهٔ موبایل معتبر وارد کنید."); return false; } }
     return true;
@@ -236,7 +213,6 @@
     if (!t) { t = el("div", "bk-toast"); t.id = "bkToast"; document.body.appendChild(t); }
     t.textContent = msg; t.classList.add("is-show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("is-show"); }, 2800);
   }
-
   function finish() {
     var btn = document.getElementById("btnNext"); btn.disabled = true; btn.textContent = "در حال ثبت…";
     api("book", {
@@ -253,14 +229,13 @@
     });
   }
   function reset() {
-    state.subs = {}; state.providers = {}; state.date = null; state.time = null; state.weeks = 0;
+    state.provider = null; state.subs = {}; state.date = null; state.time = null; state.weeks = 0;
     document.getElementById("custName").value = ""; document.getElementById("custPhone").value = "";
     document.querySelectorAll(".recur__opt").forEach(function (o, i) { o.classList.toggle("is-active", i === 0); });
-    document.getElementById("bkDone").hidden = true; renderServices(); refreshTotal(); gotoStep(1);
+    document.getElementById("bkDone").hidden = true; refreshTotal(); gotoStep(1);
   }
-
   function boot() {
-    renderServices(); wireRecur(); refreshTotal();
+    renderProviders(); wireRecur(); refreshTotal();
     document.getElementById("btnNext").addEventListener("click", function () { if (!validateStep()) return; if (state.step < 4) gotoStep(state.step + 1); else finish(); });
     document.getElementById("btnBack").addEventListener("click", function () { if (state.step > 1) gotoStep(state.step - 1); });
     document.getElementById("btnReset").addEventListener("click", reset);

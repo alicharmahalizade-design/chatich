@@ -2,7 +2,7 @@
 /**
  * Plugin Name: هسته دوریان (Dorian Core)
  * Description: هستهٔ دوریان + ماژولِ «رزرو دوریان»: نوبت‌دهی با تقویم شمسی، خدمات/قیمت/زمان، متخصص‌ها، پیامکِ فراز و پرداخت (WooCommerce). شورت‌کد و ویجت المنتور.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Ronakads
  * Text Domain: dorian-core
  * Requires PHP: 7.2
@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('DORIAN_VER', '1.0.2');
+define('DORIAN_VER', '1.0.3');
 define('DORIAN_FILE', __FILE__);
 define('DORIAN_DIR', plugin_dir_path(__FILE__));
 define('DORIAN_URL', plugin_dir_url(__FILE__));
@@ -24,6 +24,7 @@ require_once DORIAN_DIR . 'includes/sms.php';
 require_once DORIAN_DIR . 'includes/ajax.php';
 require_once DORIAN_DIR . 'includes/frontend.php';
 require_once DORIAN_DIR . 'includes/elementor.php';
+require_once DORIAN_DIR . 'includes/panel.php';
 
 /* ---------------- activation / deactivation ---------------- */
 register_activation_hook(__FILE__, function () {
@@ -31,6 +32,7 @@ register_activation_hook(__FILE__, function () {
     Dorian_CPT::register();         // so rewrite rules include them
     Dorian_Seed::run();             // sample services/providers (like the preview)
     Dorian_Seed::ensure_page();     // a published "رزرو نوبت" page with the shortcode
+    do_action('init');              // register provider slug rewrite rules before flushing
     flush_rewrite_rules();
 });
 

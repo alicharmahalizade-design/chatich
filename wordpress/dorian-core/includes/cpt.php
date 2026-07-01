@@ -64,9 +64,15 @@ class Dorian_CPT {
         wp_nonce_field('dorian_meta', 'dorian_nonce');
         $role  = get_post_meta($post->ID, '_dorian_role', true);
         $phone = get_post_meta($post->ID, '_dorian_phone', true);
+        $slug  = get_post_meta($post->ID, '_dorian_slug', true);
+        $pass  = get_post_meta($post->ID, '_dorian_pass', true);
         echo '<p><label>نقش / تخصص (مثلاً Hair Master):<br><input type="text" name="dorian_role" value="' . esc_attr($role) . '" style="width:320px"></label></p>';
         echo '<p><label>شمارهٔ موبایل (برای پیامکِ نوبت‌ها):<br><input type="text" name="dorian_phone" value="' . esc_attr($phone) . '" placeholder="09xxxxxxxxx" style="width:220px"></label></p>';
-        echo '<p style="color:#777">«تصویر شاخص» = عکسِ متخصص. «گروه» در باکس کناری = تخصص‌هایی که انجام می‌دهد.</p>';
+        echo '<hr><p><strong>پنل اختصاصی متخصص</strong></p>';
+        echo '<p><label>آدرس پنل (اسلاگ لاتین، مثلاً arman):<br><input type="text" name="dorian_slug" value="' . esc_attr($slug) . '" placeholder="arman" style="width:220px"></label>'
+           . ($slug ? ' <span style="color:#777">آدرس: <code>' . esc_html(home_url('/' . $slug)) . '</code></span>' : '') . '</p>';
+        echo '<p><label>رمز ورود به پنل:<br><input type="text" name="dorian_pass" value="' . esc_attr($pass) . '" style="width:220px"></label> <span style="color:#777">این رمز را به متخصص بدهید.</span></p>';
+        echo '<p style="color:#777">«تصویر شاخص» = عکسِ متخصص. «گروه» در باکس کناری = تخصص‌هایی که انجام می‌دهد. ساعت کاری و مدت خدمات را خودِ متخصص از پنلش تنظیم می‌کند.</p>';
     }
 
     public static function save($post_id, $post) {
@@ -81,6 +87,8 @@ class Dorian_CPT {
             update_post_meta($post_id, '_dorian_providers', $provs);
         }
         if ($post->post_type === 'dorian_provider') {
+            update_post_meta($post_id, '_dorian_slug', isset($_POST['dorian_slug']) ? sanitize_title($_POST['dorian_slug']) : '');
+            update_post_meta($post_id, '_dorian_pass', isset($_POST['dorian_pass']) ? sanitize_text_field($_POST['dorian_pass']) : '');
             update_post_meta($post_id, '_dorian_role', isset($_POST['dorian_role']) ? sanitize_text_field($_POST['dorian_role']) : '');
             update_post_meta($post_id, '_dorian_phone', isset($_POST['dorian_phone']) ? preg_replace('/\D/', '', $_POST['dorian_phone']) : '');
         }
