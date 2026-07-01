@@ -276,6 +276,21 @@ class Dorian_Panel {
         ));
     }
 
+    /* ---- inline stroke icons (currentColor) ---- */
+    protected static function icon($n) {
+        $p = array(
+            'dash'  => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
+            'book'  => '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+            'rev'   => '<rect x="3" y="6" width="18" height="12.5" rx="2.5"/><path d="M3 10.5h18"/><path d="M16.3 12.4h3.7v3h-3.7a1.5 1.5 0 0 1 0-3Z"/>',
+            'set'   => '<circle cx="12" cy="12" r="3.1"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8.8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8.8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+            'cal'   => '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+            'check' => '<circle cx="12" cy="12" r="9"/><path d="M8 12.2l2.6 2.6L16 9.4"/>',
+            'coin'  => '<ellipse cx="12" cy="6.5" rx="7.5" ry="3"/><path d="M4.5 6.5v11c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-11"/><path d="M4.5 12c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3"/>',
+        );
+        $d = isset($p[$n]) ? $p[$n] : '';
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
+    }
+
     /* ---- one booking row (shared by the day tabs and the upcoming tab) ---- */
     protected static function render_row($r, $labels) {
         $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
@@ -298,7 +313,11 @@ class Dorian_Panel {
     protected static function head($title) {
         ?><!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <meta name="theme-color" content="#DFD2BF">
+        <meta name="theme-color" content="#E1D5C0">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="پنل دوریان">
         <title><?php echo esc_html($title); ?></title>
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
@@ -319,26 +338,35 @@ class Dorian_Panel {
         body.view-set .pw{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 
         /* top-level views + bottom tab bar */
-        .view{display:none}.view.on{display:block}
-        .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:rgba(254,252,247,.92);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-        .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;padding:6px 4px;background:none;border:0;font-family:inherit;font-size:.68rem;font-weight:600;color:var(--muted);cursor:pointer;transition:color .15s}
-        .tabbtn .ic{font-size:1.3rem;line-height:1;opacity:.65;transition:opacity .15s}
+        .view{display:none}.view.on{display:block;animation:fadeUp .28s ease both}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+        .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:rgba(253,250,243,.9);backdrop-filter:saturate(1.5) blur(16px);-webkit-backdrop-filter:saturate(1.5) blur(16px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -8px 24px -20px rgba(40,30,10,.6)}
+        .tabbtn{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;padding:8px 4px;background:none;border:0;font-family:inherit;font-size:.68rem;font-weight:600;color:var(--muted);cursor:pointer;transition:color .18s}
+        .tabbtn .ic{display:flex}
+        .tabbtn .ic svg{width:25px;height:25px;display:block}
         .tabbtn.on{color:var(--blue)}
-        .tabbtn.on .ic{opacity:1}
+        .tabbtn.on .ic svg{stroke-width:2}
+        .tabbtn::before{content:"";position:absolute;top:0;left:50%;width:28px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--blue-2),var(--blue));transform:translateX(-50%) scaleX(0);transition:transform .22s cubic-bezier(.4,1.3,.5,1)}
+        .tabbtn.on::before{transform:translateX(-50%) scaleX(1)}
 
         /* dashboard / revenue tiles */
         .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .tile{background:#faf6ee;border:1px solid var(--line);border-radius:14px;padding:14px}
-        .tile__n{display:block;font-family:'Space Grotesk';font-weight:700;font-size:1.5rem;color:var(--blue);line-height:1.15}
-        .tile__l{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+        .tile{display:flex;align-items:center;gap:11px;background:linear-gradient(180deg,#fff,#faf5ea);border:1px solid var(--line);border-radius:16px;padding:13px 13px;box-shadow:0 6px 16px -14px rgba(40,30,10,.5)}
+        .tile__ic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(0,102,179,.1);color:var(--blue)}
+        .tile__ic svg{width:22px;height:22px}
+        .tile__b{min-width:0}
+        .tile__n{display:block;font-family:'Space Grotesk';font-weight:700;font-size:1.45rem;color:var(--blue);line-height:1.12;letter-spacing:.5px}
+        .tile__l{display:block;color:var(--muted);font-size:.75rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tile--ok .tile__ic{background:rgba(31,138,76,.12);color:var(--ok)}
         .tile--ok .tile__n{color:var(--ok)}
-        .tile--rev .tile__n{color:#a8862a;font-size:1.2rem}
+        .tile--rev .tile__ic{background:rgba(168,134,42,.14);color:#a8862a}
+        .tile--rev .tile__n{color:#a8862a;font-size:1.12rem}
         .pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
 
         /* app bar */
         .appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -14px 16px;padding:calc(10px + env(safe-area-inset-top)) 16px 12px;background:rgba(254,252,247,.82);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
         .appbar__id{display:flex;align-items:center;gap:12px;min-width:0}
-        .appbar__ava{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 4px 12px -6px rgba(40,30,10,.6);flex:0 0 auto}
+        .appbar__ava{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 2px var(--gold),0 5px 14px -6px rgba(40,30,10,.65);flex:0 0 auto}
         .appbar__meta{min-width:0}
         .appbar__meta h1{font-size:1.2rem;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .role{display:inline-block;font-family:'Space Grotesk';letter-spacing:.14em;font-size:.66rem;color:var(--blue);text-transform:uppercase;margin-top:1px}
@@ -530,10 +558,10 @@ class Dorian_Panel {
             <div class="pcard">
               <h2>پیشخوان</h2>
               <div class="tiles">
-                <div class="tile"><span class="tile__n"><?php echo $t_total; ?></span><span class="tile__l">نوبت امروز</span></div>
-                <div class="tile tile--ok"><span class="tile__n"><?php echo $t_done; ?></span><span class="tile__l">انجام‌شدهٔ امروز</span></div>
-                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته (تومان)</span></div>
-                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه (تومان)</span></div>
+                <div class="tile"><span class="tile__ic"><?php echo self::icon('cal'); ?></span><div class="tile__b"><span class="tile__n"><?php echo $t_total; ?></span><span class="tile__l">نوبت امروز</span></div></div>
+                <div class="tile tile--ok"><span class="tile__ic"><?php echo self::icon('check'); ?></span><div class="tile__b"><span class="tile__n"><?php echo $t_done; ?></span><span class="tile__l">انجام‌شدهٔ امروز</span></div></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته (تومان)</span></div></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه (تومان)</span></div></div>
               </div>
             </div>
             <div class="pcard">
@@ -608,8 +636,8 @@ class Dorian_Panel {
             <div class="pcard">
               <h2>گزارش درآمد</h2>
               <div class="tiles">
-                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته · <?php echo $rw['c']; ?> نوبت</span></div>
-                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه · <?php echo $rm['c']; ?> نوبت</span></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته · <?php echo $rw['c']; ?> نوبت</span></div></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه · <?php echo $rm['c']; ?> نوبت</span></div></div>
               </div>
               <p class="hint" style="margin:12px 0 0">درآمد بر اساس نوبت‌هایی که «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
             </div>
@@ -680,10 +708,10 @@ class Dorian_Panel {
         </main>
 
         <nav class="tabbar" aria-label="بخش‌های پنل">
-          <button type="button" class="tabbtn<?php echo $sv === 'dash' ? ' on' : ''; ?>" data-view="dash"><span class="ic">🏠</span>پیشخوان</button>
-          <button type="button" class="tabbtn<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book"><span class="ic">📅</span>نوبت‌ها</button>
-          <button type="button" class="tabbtn<?php echo $sv === 'rev' ? ' on' : ''; ?>" data-view="rev"><span class="ic">💰</span>درآمد</button>
-          <button type="button" class="tabbtn<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set"><span class="ic">⚙️</span>تنظیمات</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'dash' ? ' on' : ''; ?>" data-view="dash"><span class="ic"><?php echo self::icon('dash'); ?></span>پیشخوان</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book"><span class="ic"><?php echo self::icon('book'); ?></span>نوبت‌ها</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'rev' ? ' on' : ''; ?>" data-view="rev"><span class="ic"><?php echo self::icon('rev'); ?></span>درآمد</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set"><span class="ic"><?php echo self::icon('set'); ?></span>تنظیمات</button>
         </nav>
 
         <script>
@@ -811,8 +839,9 @@ class Dorian_Panel {
                     .filter(function(pp){return idx(pp[0])>=0&&idx(pp[1])>=0&&idx(pp[1])>idx(pp[0]);});
             model[w]={on:rs.length>0, ranges:rs.length?rs:[DEF.slice()]};
           }
+          function fa(s){return String(s).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[+d];});}
           function commit(w){var mm=model[w];hid(w).value=mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('،'):'';}
-          function summary(w){var mm=model[w];return mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('  ·  '):'تعطیل';}
+          function summary(w){var mm=model[w];return mm.on?fa(mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('  ·  ')):'تعطیل';}
 
           var openW=-1; // accordion: only one day expanded at a time
           function render(){
@@ -858,6 +887,19 @@ class Dorian_Panel {
           }
           for(var w2=0;w2<7;w2++)commit(w2); // normalize hidden values
           render();
+        })();
+
+        /* ---- Persian numerals everywhere (skip form controls) ---- */
+        (function(){
+          var P='۰۱۲۳۴۵۶۷۸۹',skip={SCRIPT:1,STYLE:1,SELECT:1,OPTION:1,INPUT:1,TEXTAREA:1};
+          function fa(s){return s.replace(/[0-9]/g,function(d){return P[+d];}).replace(/([۰-۹])[,،]([۰-۹])/g,'$1٬$2').replace(/([۰-۹])[,،]([۰-۹])/g,'$1٬$2');}
+          function walk(node){
+            for(var n=node.firstChild;n;n=n.nextSibling){
+              if(n.nodeType===3){ if(/[0-9]/.test(n.nodeValue)) n.nodeValue=fa(n.nodeValue); }
+              else if(n.nodeType===1 && !skip[n.tagName] && !n.hasAttribute('data-nofa')) walk(n);
+            }
+          }
+          walk(document.body);
         })();
         </script>
         <?php
