@@ -376,10 +376,30 @@ class Dorian_Panel {
         .dhead:first-child{margin-top:0}
 
         input,select{font-family:inherit;font-size:16px;color:var(--ink)}
-        table.hrs{width:100%;border-collapse:collapse}
-        table.hrs td{padding:6px 4px;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:middle}
-        table.hrs td:first-child{width:84px;font-size:.9rem}
-        table.hrs input{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff}
+
+        /* weekly working hours (option-based) */
+        .wh{display:flex;flex-direction:column;gap:10px}
+        .wh-day{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px 14px;transition:box-shadow .2s}
+        .wh-day.on{box-shadow:0 6px 16px -14px rgba(40,30,10,.6)}
+        .wh-head{display:flex;align-items:center;gap:12px}
+        .wh-name{font-weight:700;min-width:60px}
+        .wh-sum{color:var(--muted);font-family:'Space Grotesk';font-size:.85rem;direction:ltr;margin-inline-start:auto;text-align:left}
+        .wh-day.on .wh-sum{display:none}
+        .switch{position:relative;display:inline-flex;flex:0 0 auto;width:48px;height:28px;cursor:pointer}
+        .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+        .switch .knob{position:absolute;inset:0;border-radius:999px;background:#d8cdb8;transition:background .2s}
+        .switch .knob::before{content:"";position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+        .switch input:checked+.knob{background:linear-gradient(135deg,var(--blue-2),var(--blue))}
+        .switch input:checked+.knob::before{transform:translateX(-20px)}
+        .wh-body{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+        .wh-range{display:flex;align-items:center;gap:8px}
+        .wh-lbl{color:var(--muted);font-size:.85rem;flex:0 0 auto}
+        .wh-range select{flex:1 1 80px;min-width:0;min-height:44px;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:'Space Grotesk';direction:ltr;text-align:center}
+        .wh-rm{flex:0 0 auto;width:40px;min-height:40px;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--no);cursor:pointer;font-size:.9rem}
+        .wh-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+        .wh-add,.wh-copy{min-height:38px;border-radius:10px;padding:.3em 1em;font-family:inherit;font-weight:600;font-size:.82rem;cursor:pointer}
+        .wh-add{border:1px dashed var(--blue-2);background:#eef6fd;color:var(--blue)}
+        .wh-copy{border:1px solid var(--line);background:#faf6ee;color:var(--muted)}
         .svcrow{display:grid;grid-template-columns:1fr 96px 78px;gap:8px;align-items:center;margin-bottom:8px}
         .svcrow input{min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff;text-align:center}
         .svcrow .nm{font-weight:600;font-size:.9rem}
@@ -551,15 +571,15 @@ class Dorian_Panel {
 
           <div class="pcard">
             <h2>ساعت کاری هفتگی</h2>
-            <p class="hint">برای هر روز، بازه‌ها را با ویرگول جدا کنید. مثال: <code style="direction:ltr">12:00-14:00, 18:00-20:00</code> — خالی بگذارید یعنی آن روز تعطیل است.</p>
-            <table class="hrs"><?php
-              $wd = array('شنبه', 'یک‌شنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه');
+            <p class="hint">روزهای کاری را روشن کنید و ساعتِ شروع و پایان را از لیست انتخاب کنید. برای هر روز می‌توانید چند بازه اضافه کنید (مثلاً صبح و عصر). روز خاموش یعنی تعطیل.</p>
+            <div id="wh" class="wh"></div>
+            <?php
               $hours = dorian_provider_hours($pid);
-              foreach ($wd as $w => $name) {
-                  $val = isset($hours[$w]) && is_array($hours[$w]) ? implode('، ', $hours[$w]) : '';
-                  echo '<tr><td style="width:90px">' . esc_html($name) . '</td><td><input type="text" name="hours[' . $w . ']" value="' . esc_attr($val) . '" placeholder="12:00-14:00, 18:00-20:00"></td></tr>';
+              for ($w = 0; $w < 7; $w++) {
+                  $val = isset($hours[$w]) && is_array($hours[$w]) ? implode(',', $hours[$w]) : '';
+                  echo '<input type="hidden" name="hours[' . $w . ']" id="wh_' . $w . '" value="' . esc_attr($val) . '">';
               }
-            ?></table>
+            ?>
           </div>
 
           <div class="pcard">
@@ -699,6 +719,68 @@ class Dorian_Panel {
             });
             renderBlocks();
           }
+        })();
+
+        /* ---- weekly working hours: option-based picker ---- */
+        (function(){
+          var wrap=document.getElementById('wh');
+          if(!wrap) return;
+          var WD=["شنبه","یک‌شنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنج‌شنبه","جمعه"];
+          var TIMES=[];
+          for(var t=6*60;t<=24*60;t+=30){var h=Math.floor(t/60),m=t%60;TIMES.push((h<10?'0':'')+h+':'+(m<10?'0':'')+m);}
+          var DEF=['12:00','20:00'];
+          function idx(v){return TIMES.indexOf(v);}
+          function opts(cur){return TIMES.map(function(t){return '<option'+(t===cur?' selected':'')+'>'+t+'</option>';}).join('');}
+          function hid(w){return document.getElementById('wh_'+w);}
+
+          // build model from the hidden inputs
+          var model=[];
+          for(var w=0;w<7;w++){
+            var rs=(hid(w).value||'').split(/[،,]/).map(function(s){return s.trim();}).filter(Boolean)
+                    .map(function(r){var pp=r.split('-');return [pp[0],pp[1]];})
+                    .filter(function(pp){return idx(pp[0])>=0&&idx(pp[1])>=0&&idx(pp[1])>idx(pp[0]);});
+            model[w]={on:rs.length>0, ranges:rs.length?rs:[DEF.slice()]};
+          }
+          function commit(w){var mm=model[w];hid(w).value=mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('،'):'';}
+          function summary(w){var mm=model[w];return mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('  ·  '):'تعطیل';}
+
+          function render(){
+            wrap.innerHTML='';
+            for(var w=0;w<7;w++){(function(w){
+              var mm=model[w];
+              var day=document.createElement('div');day.className='wh-day'+(mm.on?' on':'');
+              var head=document.createElement('div');head.className='wh-head';
+              head.innerHTML='<label class="switch"><input type="checkbox"'+(mm.on?' checked':'')+' aria-label="'+WD[w]+'"><span class="knob"></span></label>'
+                +'<span class="wh-name">'+WD[w]+'</span><span class="wh-sum">'+summary(w)+'</span>';
+              head.querySelector('input').addEventListener('change',function(e){mm.on=e.target.checked;if(mm.on&&!mm.ranges.length)mm.ranges=[DEF.slice()];commit(w);render();});
+              day.appendChild(head);
+              if(mm.on){
+                var body=document.createElement('div');body.className='wh-body';
+                mm.ranges.forEach(function(r,ri){
+                  var row=document.createElement('div');row.className='wh-range';
+                  row.innerHTML='<span class="wh-lbl">از</span><select class="wh-from">'+opts(r[0])+'</select>'
+                    +'<span class="wh-lbl">تا</span><select class="wh-to">'+opts(r[1])+'</select>'
+                    +'<button type="button" class="wh-rm" aria-label="حذف بازه">✕</button>';
+                  var fs=row.querySelector('.wh-from'),ts=row.querySelector('.wh-to');
+                  fs.addEventListener('change',function(){r[0]=fs.value;if(idx(r[1])<=idx(r[0])){r[1]=TIMES[Math.min(idx(r[0])+1,TIMES.length-1)];ts.value=r[1];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
+                  ts.addEventListener('change',function(){r[1]=ts.value;if(idx(r[1])<=idx(r[0])){r[0]=TIMES[Math.max(idx(r[1])-1,0)];fs.value=r[0];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
+                  row.querySelector('.wh-rm').addEventListener('click',function(){mm.ranges.splice(ri,1);if(!mm.ranges.length)mm.on=false;commit(w);render();});
+                  body.appendChild(row);
+                });
+                var tools=document.createElement('div');tools.className='wh-tools';
+                var add=document.createElement('button');add.type='button';add.className='wh-add';add.textContent='+ افزودن بازه';
+                add.addEventListener('click',function(){mm.ranges.push(['18:00','20:00']);commit(w);render();});
+                var cp=document.createElement('button');cp.type='button';cp.className='wh-copy';cp.textContent='اعمال به همهٔ روزها';
+                cp.addEventListener('click',function(){for(var x=0;x<7;x++){model[x]={on:mm.on,ranges:mm.ranges.map(function(r){return r.slice();})};commit(x);}render();});
+                tools.appendChild(add);tools.appendChild(cp);
+                body.appendChild(tools);
+                day.appendChild(body);
+              }
+              wrap.appendChild(day);
+            })(w);}
+          }
+          for(var w2=0;w2<7;w2++)commit(w2); // normalize hidden values
+          render();
         })();
         </script>
         <?php
