@@ -315,7 +315,24 @@ class Dorian_Panel {
         img{max-width:100%}
         a{color:var(--blue)}
         :focus-visible{outline:3px solid rgba(30,134,214,.55);outline-offset:2px;border-radius:8px}
-        .pw{width:100%;max-width:720px;margin:0 auto;padding:0 14px calc(96px + env(safe-area-inset-bottom))}
+        .pw{width:100%;max-width:720px;margin:0 auto;padding:0 14px calc(88px + env(safe-area-inset-bottom))}
+        body.view-set .pw{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+
+        /* top-level views + bottom tab bar */
+        .view{display:none}.view.on{display:block}
+        .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:rgba(254,252,247,.92);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+        .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;padding:6px 4px;background:none;border:0;font-family:inherit;font-size:.68rem;font-weight:600;color:var(--muted);cursor:pointer;transition:color .15s}
+        .tabbtn .ic{font-size:1.3rem;line-height:1;opacity:.65;transition:opacity .15s}
+        .tabbtn.on{color:var(--blue)}
+        .tabbtn.on .ic{opacity:1}
+
+        /* dashboard / revenue tiles */
+        .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .tile{background:#faf6ee;border:1px solid var(--line);border-radius:14px;padding:14px}
+        .tile__n{display:block;font-family:'Space Grotesk';font-weight:700;font-size:1.5rem;color:var(--blue);line-height:1.15}
+        .tile__l{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+        .tile--ok .tile__n{color:var(--ok)}
+        .tile--rev .tile__n{color:#a8862a;font-size:1.2rem}
         .pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
 
         /* app bar */
@@ -377,21 +394,23 @@ class Dorian_Panel {
 
         input,select{font-family:inherit;font-size:16px;color:var(--ink)}
 
-        /* weekly working hours (option-based) */
-        .wh{display:flex;flex-direction:column;gap:10px}
-        .wh-day{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px 14px;transition:box-shadow .2s}
-        .wh-day.on{box-shadow:0 6px 16px -14px rgba(40,30,10,.6)}
-        .wh-head{display:flex;align-items:center;gap:12px}
-        .wh-name{font-weight:700;min-width:60px}
-        .wh-sum{color:var(--muted);font-family:'Space Grotesk';font-size:.85rem;direction:ltr;margin-inline-start:auto;text-align:left}
-        .wh-day.on .wh-sum{display:none}
+        /* weekly working hours (option-based, accordion) */
+        .wh{display:flex;flex-direction:column;gap:8px}
+        .wh-day{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden;transition:box-shadow .2s}
+        .wh-day.open{box-shadow:0 6px 16px -14px rgba(40,30,10,.6);border-color:rgba(0,102,179,.3)}
+        .wh-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+        .wh-name{font-weight:700;min-width:54px}
+        .wh-day:not(.on) .wh-name{color:var(--muted)}
+        .wh-sum{color:var(--muted);font-family:'Space Grotesk';font-size:.82rem;direction:ltr;margin-inline-start:auto;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .wh-chev{flex:0 0 auto;color:var(--muted);font-size:1rem;transition:transform .2s}
+        .wh-day.open .wh-chev{transform:rotate(180deg)}
         .switch{position:relative;display:inline-flex;flex:0 0 auto;width:48px;height:28px;cursor:pointer}
         .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
         .switch .knob{position:absolute;inset:0;border-radius:999px;background:#d8cdb8;transition:background .2s}
         .switch .knob::before{content:"";position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
         .switch input:checked+.knob{background:linear-gradient(135deg,var(--blue-2),var(--blue))}
         .switch input:checked+.knob::before{transform:translateX(-20px)}
-        .wh-body{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+        .wh-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:8px}
         .wh-range{display:flex;align-items:center;gap:8px}
         .wh-lbl{color:var(--muted);font-size:.85rem;flex:0 0 auto}
         .wh-range select{flex:1 1 80px;min-width:0;min-height:44px;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:'Space Grotesk';direction:ltr;text-align:center}
@@ -435,8 +454,8 @@ class Dorian_Panel {
         .lg-closed{background:var(--no)}.lg-today{border:1.5px solid var(--gold)}
 
         .saved{background:#d9efe0;border:1px solid #9ecfa8;color:#1c5a2e;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-weight:600}
-        .savebar{position:sticky;bottom:0;z-index:20;margin:8px -14px 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(225,213,192,0),rgba(225,213,192,.92) 55%);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-        .btn--save{width:100%}
+        .savebar{position:fixed;left:0;right:0;bottom:calc(59px + env(safe-area-inset-bottom));z-index:39;margin:0;padding:8px 14px;background:linear-gradient(180deg,rgba(225,213,192,0),rgba(225,213,192,.97) 45%);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+        .btn--save{display:flex;width:100%;max-width:692px;margin:0 auto}
 
         .login{max-width:380px;margin:10vh auto}
         .login input{width:100%;min-height:50px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0;font-size:16px;text-align:center;background:#fff}
@@ -452,8 +471,6 @@ class Dorian_Panel {
           .bk .badge{margin-inline-start:auto}
           .acts{width:100%}
           .svcrow{grid-template-columns:1fr 130px 110px;gap:10px}
-          .savebar{position:static;margin:0;padding:0;background:none;backdrop-filter:none}
-          .btn--save{width:auto}
         }
         </style></head><body><div class="pw"><?php
     }
@@ -490,23 +507,53 @@ class Dorian_Panel {
           <a class="iconbtn" href="?logout=1"><span aria-hidden="true">⎋</span> خروج</a>
         </header>
 
-        <?php if (isset($_GET['saved'])) echo '<div class="saved">تغییرات ذخیره شد.</div>'; ?>
+        <?php
+        if (isset($_GET['saved'])) echo '<div class="saved">تغییرات ذخیره شد.</div>';
+        $labels = array(
+            'confirmed' => array('تأییدشده', '#0066B3'),
+            'paid'      => array('پرداخت‌شده', '#1f8a4c'),
+            'done'      => array('انجام شد', '#1f8a4c'),
+            'noshow'    => array('نیامد', '#b23b3b'),
+            'cancelled' => array('لغو شد', '#9a9a9a'),
+        );
+        $rw = self::revenue($pid, 7); $rm = self::revenue($pid, 30);
+        $today = date('Y-m-d', current_time('timestamp'));
+        $trows = self::bookings_on($pid, $today);
+        $t_total = 0; $t_done = 0;
+        foreach ($trows as $r) { if ($r->status !== 'cancelled') $t_total++; if ($r->status === 'done') $t_done++; }
+        $sv = isset($_GET['saved']) ? 'set' : 'dash';
+        ?>
 
-        <div class="pcard">
-          <h2>نوبت‌ها</h2>
-          <div class="seg">
-            <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
-            <button type="button" class="tab" data-day="up">آینده</button>
-          </div>
-          <?php
-          $labels = array(
-              'confirmed' => array('تأییدشده', '#0066B3'),
-              'paid'      => array('پرداخت‌شده', '#1f8a4c'),
-              'done'      => array('انجام شد', '#1f8a4c'),
-              'noshow'    => array('نیامد', '#b23b3b'),
-              'cancelled' => array('لغو شد', '#9a9a9a'),
-          );
-          foreach ($days as $i => $d) {
+        <main class="views">
+
+          <section class="view<?php echo $sv === 'dash' ? ' on' : ''; ?>" data-view="dash">
+            <div class="pcard">
+              <h2>پیشخوان</h2>
+              <div class="tiles">
+                <div class="tile"><span class="tile__n"><?php echo $t_total; ?></span><span class="tile__l">نوبت امروز</span></div>
+                <div class="tile tile--ok"><span class="tile__n"><?php echo $t_done; ?></span><span class="tile__l">انجام‌شدهٔ امروز</span></div>
+                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته (تومان)</span></div>
+                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه (تومان)</span></div>
+              </div>
+            </div>
+            <div class="pcard">
+              <h2>نوبت‌های امروز</h2>
+              <?php if (!$trows) { echo '<p class="empty">امروز نوبتی ندارید.</p>'; }
+              else { echo '<form method="post">'; wp_nonce_field('dorian_panel_' . $pid);
+                foreach ($trows as $r) echo self::render_row($r, $labels);
+                echo '</form>'; } ?>
+            </div>
+          </section>
+
+          <section class="view<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book">
+            <div class="pcard">
+              <h2>نوبت‌ها</h2>
+              <div class="seg">
+                <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
+                <button type="button" class="tab" data-day="up">آینده</button>
+              </div>
+              <?php
+              foreach ($days as $i => $d) {
               $ymd = date('Y-m-d', strtotime("+$i day", current_time('timestamp')));
               echo '<div class="day' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">';
               $rows = self::bookings_on($pid, $ymd);
@@ -554,20 +601,22 @@ class Dorian_Panel {
           }
           echo '</div>';
           ?>
-        </div>
+            </div>
+          </section>
 
-        <?php $rw = self::revenue($pid, 7); $rm = self::revenue($pid, 30); ?>
-        <div class="pcard">
-          <h2>گزارش درآمد</h2>
-          <div class="stats">
-            <span class="stat stat--rev"><b><?php echo number_format($rw['s']); ?></b> تومان · هفتگی (۷ روز اخیر، <?php echo $rw['c']; ?> نوبت)</span>
-            <span class="stat stat--rev"><b><?php echo number_format($rm['s']); ?></b> تومان · ماهانه (۳۰ روز اخیر، <?php echo $rm['c']; ?> نوبت)</span>
-          </div>
-          <p class="hint" style="margin:10px 0 0">درآمد بر اساس نوبت‌هایی که آن‌ها را «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
-        </div>
+          <section class="view<?php echo $sv === 'rev' ? ' on' : ''; ?>" data-view="rev">
+            <div class="pcard">
+              <h2>گزارش درآمد</h2>
+              <div class="tiles">
+                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته · <?php echo $rw['c']; ?> نوبت</span></div>
+                <div class="tile tile--rev"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه · <?php echo $rm['c']; ?> نوبت</span></div>
+              </div>
+              <p class="hint" style="margin:12px 0 0">درآمد بر اساس نوبت‌هایی که «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
+            </div>
+          </section>
 
-        <form method="post">
-          <?php wp_nonce_field('dorian_panel_' . $pid); ?>
+          <form method="post" class="view<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set">
+            <?php wp_nonce_field('dorian_panel_' . $pid); ?>
 
           <div class="pcard">
             <h2>ساعت کاری هفتگی</h2>
@@ -625,11 +674,32 @@ class Dorian_Panel {
             <input type="hidden" name="closed" id="closed" value="<?php echo esc_attr(implode(',', dorian_provider_closed($pid))); ?>">
           </div>
 
-          <div class="savebar"><button class="btn btn--blue btn--save" name="dorian_save" value="1">ذخیرهٔ تنظیمات</button></div>
-        </form>
+            <div class="savebar"><button class="btn btn--blue btn--save" name="dorian_save" value="1">ذخیرهٔ تنظیمات</button></div>
+          </form>
+
+        </main>
+
+        <nav class="tabbar" aria-label="بخش‌های پنل">
+          <button type="button" class="tabbtn<?php echo $sv === 'dash' ? ' on' : ''; ?>" data-view="dash"><span class="ic">🏠</span>پیشخوان</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book"><span class="ic">📅</span>نوبت‌ها</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'rev' ? ' on' : ''; ?>" data-view="rev"><span class="ic">💰</span>درآمد</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set"><span class="ic">⚙️</span>تنظیمات</button>
+        </nav>
 
         <script>
-        // tabs
+        // bottom tab bar → switch top-level views
+        (function(){
+          var views=document.querySelectorAll('.view'),btns=document.querySelectorAll('.tabbtn');
+          function setBody(v){document.body.className=document.body.className.replace(/\bview-\S+/g,'').trim();document.body.classList.add('view-'+v);}
+          function show(v){
+            views.forEach(function(s){s.classList.toggle('on',s.dataset.view===v);});
+            btns.forEach(function(b){b.classList.toggle('on',b.dataset.view===v);});
+            setBody(v);window.scrollTo(0,0);
+          }
+          btns.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.view);});});
+          var cur=document.querySelector('.view.on');setBody(cur?cur.dataset.view:'dash');
+        })();
+        // day sub-tabs inside نوبت‌ها
         document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){
           document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
           document.querySelectorAll('.day').forEach(x=>x.classList.remove('on'));
@@ -744,36 +814,43 @@ class Dorian_Panel {
           function commit(w){var mm=model[w];hid(w).value=mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('،'):'';}
           function summary(w){var mm=model[w];return mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('  ·  '):'تعطیل';}
 
+          var openW=-1; // accordion: only one day expanded at a time
           function render(){
             wrap.innerHTML='';
             for(var w=0;w<7;w++){(function(w){
               var mm=model[w];
-              var day=document.createElement('div');day.className='wh-day'+(mm.on?' on':'');
+              var day=document.createElement('div');day.className='wh-day'+(mm.on?' on':'')+(openW===w?' open':'');
               var head=document.createElement('div');head.className='wh-head';
               head.innerHTML='<label class="switch"><input type="checkbox"'+(mm.on?' checked':'')+' aria-label="'+WD[w]+'"><span class="knob"></span></label>'
-                +'<span class="wh-name">'+WD[w]+'</span><span class="wh-sum">'+summary(w)+'</span>';
-              head.querySelector('input').addEventListener('change',function(e){mm.on=e.target.checked;if(mm.on&&!mm.ranges.length)mm.ranges=[DEF.slice()];commit(w);render();});
+                +'<span class="wh-name">'+WD[w]+'</span><span class="wh-sum">'+summary(w)+'</span><span class="wh-chev" aria-hidden="true">⌄</span>';
+              head.querySelector('.switch').addEventListener('click',function(e){e.stopPropagation();});
+              head.querySelector('input').addEventListener('change',function(e){mm.on=e.target.checked;if(mm.on){if(!mm.ranges.length)mm.ranges=[DEF.slice()];openW=w;}commit(w);render();});
+              head.addEventListener('click',function(){openW=(openW===w?-1:w);render();});
               day.appendChild(head);
-              if(mm.on){
+              if(openW===w){
                 var body=document.createElement('div');body.className='wh-body';
-                mm.ranges.forEach(function(r,ri){
-                  var row=document.createElement('div');row.className='wh-range';
-                  row.innerHTML='<span class="wh-lbl">از</span><select class="wh-from">'+opts(r[0])+'</select>'
-                    +'<span class="wh-lbl">تا</span><select class="wh-to">'+opts(r[1])+'</select>'
-                    +'<button type="button" class="wh-rm" aria-label="حذف بازه">✕</button>';
-                  var fs=row.querySelector('.wh-from'),ts=row.querySelector('.wh-to');
-                  fs.addEventListener('change',function(){r[0]=fs.value;if(idx(r[1])<=idx(r[0])){r[1]=TIMES[Math.min(idx(r[0])+1,TIMES.length-1)];ts.value=r[1];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
-                  ts.addEventListener('change',function(){r[1]=ts.value;if(idx(r[1])<=idx(r[0])){r[0]=TIMES[Math.max(idx(r[1])-1,0)];fs.value=r[0];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
-                  row.querySelector('.wh-rm').addEventListener('click',function(){mm.ranges.splice(ri,1);if(!mm.ranges.length)mm.on=false;commit(w);render();});
-                  body.appendChild(row);
-                });
-                var tools=document.createElement('div');tools.className='wh-tools';
-                var add=document.createElement('button');add.type='button';add.className='wh-add';add.textContent='+ افزودن بازه';
-                add.addEventListener('click',function(){mm.ranges.push(['18:00','20:00']);commit(w);render();});
-                var cp=document.createElement('button');cp.type='button';cp.className='wh-copy';cp.textContent='اعمال به همهٔ روزها';
-                cp.addEventListener('click',function(){for(var x=0;x<7;x++){model[x]={on:mm.on,ranges:mm.ranges.map(function(r){return r.slice();})};commit(x);}render();});
-                tools.appendChild(add);tools.appendChild(cp);
-                body.appendChild(tools);
+                if(!mm.on){
+                  body.innerHTML='<p class="hint" style="margin:0">این روز تعطیل است. برای تنظیم ساعت، کلید را روشن کنید.</p>';
+                }else{
+                  mm.ranges.forEach(function(r,ri){
+                    var row=document.createElement('div');row.className='wh-range';
+                    row.innerHTML='<span class="wh-lbl">از</span><select class="wh-from">'+opts(r[0])+'</select>'
+                      +'<span class="wh-lbl">تا</span><select class="wh-to">'+opts(r[1])+'</select>'
+                      +'<button type="button" class="wh-rm" aria-label="حذف بازه">✕</button>';
+                    var fs=row.querySelector('.wh-from'),ts=row.querySelector('.wh-to');
+                    fs.addEventListener('change',function(){r[0]=fs.value;if(idx(r[1])<=idx(r[0])){r[1]=TIMES[Math.min(idx(r[0])+1,TIMES.length-1)];ts.value=r[1];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
+                    ts.addEventListener('change',function(){r[1]=ts.value;if(idx(r[1])<=idx(r[0])){r[0]=TIMES[Math.max(idx(r[1])-1,0)];fs.value=r[0];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
+                    row.querySelector('.wh-rm').addEventListener('click',function(){mm.ranges.splice(ri,1);if(!mm.ranges.length)mm.on=false;commit(w);render();});
+                    body.appendChild(row);
+                  });
+                  var tools=document.createElement('div');tools.className='wh-tools';
+                  var add=document.createElement('button');add.type='button';add.className='wh-add';add.textContent='+ افزودن بازه';
+                  add.addEventListener('click',function(){mm.ranges.push(['18:00','20:00']);commit(w);render();});
+                  var cp=document.createElement('button');cp.type='button';cp.className='wh-copy';cp.textContent='اعمال به همهٔ روزها';
+                  cp.addEventListener('click',function(){for(var x=0;x<7;x++){model[x]={on:mm.on,ranges:mm.ranges.map(function(r){return r.slice();})};commit(x);}render();});
+                  tools.appendChild(add);tools.appendChild(cp);
+                  body.appendChild(tools);
+                }
                 day.appendChild(body);
               }
               wrap.appendChild(day);
