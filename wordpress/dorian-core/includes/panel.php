@@ -239,6 +239,19 @@ class Dorian_Panel {
         if ($owns) $wpdb->update($t, array('status' => $st), array('id' => $id));
     }
 
+    /** Realized income (from bookings marked "done") over the last N days, incl. today. */
+    protected static function revenue($pid, $days) {
+        global $wpdb;
+        $t = Dorian_DB::table();
+        $since = date('Y-m-d 00:00:00', strtotime('-' . (max(1, (int) $days) - 1) . ' day', current_time('timestamp')));
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT COUNT(*) c, COALESCE(SUM(total_price),0) s FROM $t
+             WHERE status='done' AND FIND_IN_SET(%d, provider_ids) AND start_dt >= %s",
+            $pid, $since
+        ));
+        return array('c' => (int) $row->c, 's' => (int) $row->s);
+    }
+
     /* ---- bookings for a provider on a Y-m-d (all statuses, for display) ---- */
     protected static function bookings_on($pid, $ymd) {
         global $wpdb;
@@ -401,6 +414,16 @@ class Dorian_Panel {
               echo '</form>';
               echo '</div>';
           } ?>
+        </div>
+
+        <?php $rw = self::revenue($pid, 7); $rm = self::revenue($pid, 30); ?>
+        <div class="pcard">
+          <h2>گزارش درآمد</h2>
+          <div class="stats">
+            <span class="stat stat--rev"><b><?php echo number_format($rw['s']); ?></b> تومان · هفتگی (۷ روز اخیر، <?php echo $rw['c']; ?> نوبت)</span>
+            <span class="stat stat--rev"><b><?php echo number_format($rm['s']); ?></b> تومان · ماهانه (۳۰ روز اخیر، <?php echo $rm['c']; ?> نوبت)</span>
+          </div>
+          <p class="hint" style="margin:10px 0 0">درآمد بر اساس نوبت‌هایی که آن‌ها را «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
         </div>
 
         <form method="post">

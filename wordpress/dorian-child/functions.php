@@ -275,18 +275,107 @@ function dorian_theme_settings_page() {
       </table>
 
     <?php submit_button(); ?>
-    </form></div>
+    </form>
+
+    <hr style="margin:34px 0 22px">
+    <h2>شخصیت‌های دوریان (تیم)</h2>
+    <p class="description">اعضای تیم را اینجا اضافه، ویرایش یا حذف کنید. ترتیبِ نمایش با عددِ «ترتیب» تعیین می‌شود (کوچک‌تر = جلوتر). «تخصص‌ها» را در هر خط یک مورد بنویسید. اگر همه را حذف کنید، تیمِ پیش‌فرض نمایش داده می‌شود.</p>
+    <?php if (isset($_GET['chars']) && $_GET['chars'] === 'saved') echo '<div class="notice notice-success is-dismissible"><p>شخصیت‌ها ذخیره شد.</p></div>'; ?>
+    <?php $chars = get_posts(array('post_type' => 'dorian_character', 'numberposts' => -1, 'orderby' => 'menu_order date', 'order' => 'ASC', 'post_status' => 'any')); ?>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="dchars">
+      <input type="hidden" name="action" value="dorian_save_chars">
+      <?php wp_nonce_field('dorian_save_chars'); ?>
+      <div id="dchar-rows">
+        <?php $idx = 0; foreach ($chars as $c) dorian_char_row($idx++, $c); ?>
+      </div>
+      <p><button type="button" class="button" id="dchar-add">+ افزودن شخصیت</button></p>
+      <?php submit_button('ذخیرهٔ شخصیت‌ها'); ?>
+    </form>
+    <script type="text/template" id="dchar-tpl"><?php dorian_char_row('__IDX__', null); ?></script>
+    </div>
+    <style>.dchar-row.to-del{opacity:.45;text-decoration:line-through}</style>
     <script>
     jQuery(function($){
-      $('.dorian-img-pick').on('click', function(e){
+      // media picker (delegated so cloned rows work too)
+      $(document).on('click', '.dorian-img-pick', function(e){
         e.preventDefault(); var btn=$(this), frame=wp.media({title:'انتخاب تصویر', multiple:false});
         frame.on('select', function(){ var u=frame.state().get('selection').first().toJSON().url; btn.prev('.dorian-img-url').val(u); });
         frame.open();
+      });
+      // characters repeater
+      var i = <?php echo (int) count($chars); ?>;
+      $('#dchar-add').on('click', function(){
+        $('#dchar-rows').append($('#dchar-tpl').html().replace(/__IDX__/g, i++));
+      });
+      $('#dchar-rows').on('click', '.dchar-del', function(){
+        var row=$(this).closest('.dchar-row');
+        if (row.find('.dchar-id').val()){
+          var f=row.find('.dchar-delflag');
+          if (f.val()==='1'){ f.val(''); row.removeClass('to-del'); $(this).text('حذف'); }
+          else { f.val('1'); row.addClass('to-del'); $(this).text('لغو حذف'); }
+        } else { row.remove(); }
       });
     });
     </script>
     <?php
 }
+
+/** One editable character row inside the theme-settings team manager. */
+function dorian_char_row($idx, $c) {
+    $id    = $c ? $c->ID : '';
+    $title = $c ? $c->post_title : '';
+    $order = $c ? (int) $c->menu_order : 0;
+    $role  = $c ? get_post_meta($c->ID, '_role', true) : '';
+    $en    = $c ? get_post_meta($c->ID, '_name_en', true) : '';
+    $photo = $c ? get_post_meta($c->ID, '_photo', true) : '';
+    if ($c && !$photo) { $th = get_the_post_thumbnail_url($c->ID, 'medium'); if ($th) $photo = $th; }
+    $skills = $c ? get_post_meta($c->ID, '_skills', true) : '';
+    $n = 'chars[' . $idx . ']';
+    ?>
+    <div class="dchar-row" style="border:1px solid #dcdcde;border-radius:8px;padding:12px 14px;margin-bottom:12px;background:#fff">
+      <input type="hidden" class="dchar-id" name="<?php echo $n; ?>[id]" value="<?php echo esc_attr($id); ?>">
+      <input type="hidden" class="dchar-delflag" name="<?php echo $n; ?>[del]" value="">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+        <label>نام فارسی<br><input type="text" name="<?php echo $n; ?>[title]" value="<?php echo esc_attr($title); ?>" style="width:180px"></label>
+        <label>نام انگلیسی<br><input type="text" name="<?php echo $n; ?>[name_en]" value="<?php echo esc_attr($en); ?>" style="width:180px"></label>
+        <label>نقش/تخصص (EN)<br><input type="text" name="<?php echo $n; ?>[role]" value="<?php echo esc_attr($role); ?>" style="width:170px"></label>
+        <label>ترتیب<br><input type="number" name="<?php echo $n; ?>[order]" value="<?php echo esc_attr($order); ?>" style="width:70px"></label>
+      </div>
+      <p style="margin:10px 0 0"><label>تصویر<br><input type="url" class="dorian-img-url" name="<?php echo $n; ?>[photo]" value="<?php echo esc_attr($photo); ?>" style="width:420px"></label> <button type="button" class="button dorian-img-pick">انتخاب تصویر</button></p>
+      <p style="margin:10px 0 0"><label>تخصص‌ها (هر خط یک مورد)<br><textarea name="<?php echo $n; ?>[skills]" rows="4" style="width:420px"><?php echo esc_textarea($skills); ?></textarea></label></p>
+      <p style="margin:10px 0 0"><button type="button" class="button-link-delete dchar-del" style="color:#b32d2e">حذف</button></p>
+    </div>
+    <?php
+}
+
+/** Save/create/delete team characters submitted from the theme-settings manager. */
+add_action('admin_post_dorian_save_chars', function () {
+    if (!current_user_can('manage_options')) wp_die('عدم دسترسی');
+    check_admin_referer('dorian_save_chars');
+    $rows = isset($_POST['chars']) && is_array($_POST['chars']) ? $_POST['chars'] : array();
+    foreach ($rows as $row) {
+        $id    = isset($row['id']) ? (int) $row['id'] : 0;
+        $title = sanitize_text_field($row['title'] ?? '');
+        if (!empty($row['del'])) { if ($id) wp_delete_post($id, true); continue; }
+        if (!$id && $title === '') continue; // skip empty new rows
+        $data = array(
+            'post_type'   => 'dorian_character',
+            'post_status' => 'publish',
+            'post_title'  => $title,
+            'menu_order'  => (int) ($row['order'] ?? 0),
+        );
+        if ($id) { $data['ID'] = $id; wp_update_post($data); }
+        else { $id = wp_insert_post($data); }
+        if ($id && !is_wp_error($id)) {
+            update_post_meta($id, '_role', sanitize_text_field($row['role'] ?? ''));
+            update_post_meta($id, '_name_en', sanitize_text_field($row['name_en'] ?? ''));
+            update_post_meta($id, '_photo', esc_url_raw($row['photo'] ?? ''));
+            update_post_meta($id, '_skills', sanitize_textarea_field($row['skills'] ?? ''));
+        }
+    }
+    wp_safe_redirect(add_query_arg(array('page' => 'dorian-theme', 'chars' => 'saved'), admin_url('themes.php')));
+    exit;
+});
 
 /* =========================================================================
    شخصیت‌های دوریان (تیم) — افزودن/حذف/ویرایش از پیشخان
@@ -298,7 +387,8 @@ add_action('init', function () {
             'add_new' => 'افزودن شخصیت', 'add_new_item' => 'افزودن شخصیت جدید', 'edit_item' => 'ویرایش شخصیت',
             'menu_name' => 'شخصیت‌های دوریان',
         ),
-        'public' => false, 'show_ui' => true, 'menu_icon' => 'dashicons-groups', 'menu_position' => 27,
+        // managed from «نمایش → تنظیمات دوریان»; no separate top-level menu
+        'public' => false, 'show_ui' => true, 'show_in_menu' => false,
         'supports' => array('title', 'thumbnail', 'page-attributes'),
     ));
 });
