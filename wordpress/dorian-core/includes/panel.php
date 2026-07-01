@@ -300,7 +300,7 @@ class Dorian_Panel {
     }
 
     /* ---- inline stroke icons (currentColor) ---- */
-    protected static function icon($n) {
+    public static function icon($n) {
         $p = array(
             'dash'  => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
             'book'  => '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
@@ -346,7 +346,7 @@ class Dorian_Panel {
         return $h . '</span></div>';
     }
 
-    protected static function head($title) {
+    public static function head($title) {
         ?><!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#E1D5C0">
@@ -610,7 +610,7 @@ class Dorian_Panel {
         }
         </style></head><body><div class="pw"><?php
     }
-    protected static function foot() { echo '</div></body></html>'; }
+    public static function foot() { echo '</div></body></html>'; }
 
     protected static function login_page($provider, $err) {
         self::head('ورود — ' . $provider->post_title);

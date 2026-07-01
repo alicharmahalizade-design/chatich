@@ -2,7 +2,7 @@
 /**
  * Plugin Name: هسته دوریان (Dorian Core)
  * Description: هستهٔ دوریان + ماژولِ «رزرو دوریان»: نوبت‌دهی با تقویم شمسی، خدمات/قیمت/زمان، متخصص‌ها، پیامکِ فراز و پرداخت (WooCommerce). شورت‌کد و ویجت المنتور.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Ronakads
  * Text Domain: dorian-core
  * Requires PHP: 7.2
@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('DORIAN_VER', '1.1.0');
+define('DORIAN_VER', '1.2.0');
 define('DORIAN_FILE', __FILE__);
 define('DORIAN_DIR', plugin_dir_path(__FILE__));
 define('DORIAN_URL', plugin_dir_url(__FILE__));
@@ -25,6 +25,7 @@ require_once DORIAN_DIR . 'includes/ajax.php';
 require_once DORIAN_DIR . 'includes/frontend.php';
 require_once DORIAN_DIR . 'includes/elementor.php';
 require_once DORIAN_DIR . 'includes/panel.php';
+require_once DORIAN_DIR . 'includes/manage.php';
 
 /* ---------------- activation / deactivation ---------------- */
 register_activation_hook(__FILE__, function () {
@@ -69,6 +70,9 @@ function dorian_settings() {
         'reminder_hours' => 3,
         'currency'       => 'تومان',
         'pay_mode'       => 'woocommerce', // woocommerce | none
+        // management / reception oversight panel (dorianstudio.ir/<manage_slug>)
+        'manage_slug'    => 'modir',
+        'manage_pass'    => '',
         // FarazSMS / IPPanel
         'sms_enabled'    => 0,
         'sms_apikey'     => '',

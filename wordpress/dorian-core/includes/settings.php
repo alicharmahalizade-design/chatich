@@ -28,6 +28,8 @@ class Dorian_Settings {
         $out['reminder_hours'] = max(0, (int) ($in['reminder_hours'] ?? 3));
         $out['sms_enabled']    = !empty($in['sms_enabled']) ? 1 : 0;
         $out['off_days']       = isset($in['off_days']) ? array_map('intval', (array) $in['off_days']) : array();
+        if (isset($in['manage_slug'])) $out['manage_slug'] = sanitize_title($in['manage_slug']);
+        if (isset($in['manage_pass'])) $out['manage_pass'] = sanitize_text_field($in['manage_pass']);
         return $out;
     }
 
@@ -53,6 +55,17 @@ class Dorian_Settings {
               <option value="woocommerce" <?php selected($s['pay_mode'],'woocommerce'); ?>>WooCommerce (بیعانه به‌صورت سفارش)</option>
               <option value="none" <?php selected($s['pay_mode'],'none'); ?>>بدون پرداخت آنلاین (تأیید مستقیم)</option>
             </select></td></tr>
+        </table>
+
+        <h2>پنل مدیریت / منشی (نظارتی)</h2>
+        <table class="form-table" role="presentation">
+          <tr><th>آدرس پنل مدیریت</th><td>
+            <input type="text" name="dorian_settings[manage_slug]" value="<?php echo esc_attr($s['manage_slug']); ?>" placeholder="modir">
+            <?php if (!empty($s['manage_slug'])) echo ' <code>' . esc_html(home_url('/' . $s['manage_slug'])) . '</code>'; ?>
+            <p class="description">اسلاگ لاتین. این پنل نمای کلی همهٔ متخصص‌ها، نوبت‌ها و درآمد را نشان می‌دهد و قیمت هر متخصص را مدیریت می‌کند.</p></td></tr>
+          <tr><th>رمز ورود مدیریت</th><td>
+            <input type="text" name="dorian_settings[manage_pass]" value="<?php echo esc_attr($s['manage_pass']); ?>">
+            <p class="description">تا وقتی رمز خالی باشد، پنل مدیریت غیرفعال است.</p></td></tr>
         </table>
 
         <h2>پنل پیامک (FarazSMS / IPPanel)</h2>
