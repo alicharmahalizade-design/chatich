@@ -121,6 +121,8 @@ function dorian_opts_defaults() {
         'website_url'   => 'https://dorianstudio.ir',
         // footer
         'footer_copy'   => '© 2026 Designed by Ronakads | All rights reserved for Dorianstudio',
+        // advanced
+        'custom_css'    => '',
     );
 }
 function dorian_opts() {
@@ -136,7 +138,8 @@ function dorian_opts_sanitize($in) {
     $out = array();
     foreach (dorian_opts_defaults() as $k => $v) {
         if (!isset($in[$k])) { $out[$k] = ''; continue; }
-        if (strpos($k, 'color_') === 0)      $out[$k] = sanitize_hex_color($in[$k]);
+        if ($k === 'custom_css')             $out[$k] = preg_replace('#</?\s*(style|script)[^>]*>#i', '', (string) $in[$k]); // raw CSS, no tag breakout
+        elseif (strpos($k, 'color_') === 0)  $out[$k] = sanitize_hex_color($in[$k]);
         elseif (strpos($k, '_url') !== false || $k === 'hero_portrait') $out[$k] = esc_url_raw($in[$k]);
         else                                  $out[$k] = sanitize_text_field($in[$k]);
     }
@@ -189,6 +192,9 @@ add_action('wp_head', function () {
     $o = dorian_opts();
     $b = $o['color_blue']; $g = $o['color_gold'];
     echo "<style id=\"dorian-brand\">:root{--blue:$b;--blue-bright:$b;--blue-deep:$b;--gold:$g;--gold-2:$g;--gold-1:$g;}</style>\n";
+    if (!empty($o['custom_css'])) {
+        echo "<style id=\"dorian-custom-css\">\n" . $o['custom_css'] . "\n</style>\n";
+    }
 }, 99);
 
 function dorian_field($key, $label, $type = 'text') {
@@ -254,6 +260,10 @@ function dorian_theme_settings_page() {
         dorian_field('footer_copy', 'متن کپی‌رایت', 'textarea');
       ?></table>
 
+      <h2>CSS سفارشی</h2>
+      <p class="description">هر استایلِ دلخواهی را اینجا وارد کنید؛ در انتهای صفحه اعمال می‌شود و بر بقیهٔ استایل‌ها اولویت دارد.</p>
+      <textarea name="dorian_opts[custom_css]" rows="10" dir="ltr" style="width:100%;max-width:900px;font-family:monospace" placeholder=".story__copy p{max-width:100%}"><?php echo esc_textarea(dorian_opt('custom_css')); ?></textarea>
+
       <h2>لینک دکمه‌ها و گیفت‌کارت‌ها</h2>
       <table class="form-table">
         <?php foreach (dorian_link_fields() as $key => $label) :
@@ -277,3 +287,95 @@ function dorian_theme_settings_page() {
     </script>
     <?php
 }
+
+/* =========================================================================
+   شخصیت‌های دوریان (تیم) — افزودن/حذف/ویرایش از پیشخان
+   ========================================================================= */
+add_action('init', function () {
+    register_post_type('dorian_character', array(
+        'labels' => array(
+            'name' => 'شخصیت‌های دوریان', 'singular_name' => 'شخصیت',
+            'add_new' => 'افزودن شخصیت', 'add_new_item' => 'افزودن شخصیت جدید', 'edit_item' => 'ویرایش شخصیت',
+            'menu_name' => 'شخصیت‌های دوریان',
+        ),
+        'public' => false, 'show_ui' => true, 'menu_icon' => 'dashicons-groups', 'menu_position' => 27,
+        'supports' => array('title', 'thumbnail', 'page-attributes'),
+    ));
+});
+add_action('add_meta_boxes', function () {
+    add_meta_box('dorian_char_meta', 'مشخصات شخصیت', 'dorian_char_box', 'dorian_character', 'normal', 'high');
+});
+function dorian_char_box($post) {
+    wp_nonce_field('dorian_char', 'dorian_char_nonce');
+    $role  = get_post_meta($post->ID, '_role', true);
+    $en    = get_post_meta($post->ID, '_name_en', true);
+    $photo = get_post_meta($post->ID, '_photo', true);
+    $skills= get_post_meta($post->ID, '_skills', true);
+    echo '<p><label>نقش/تخصص (انگلیسی، مثل Hair Artist):<br><input type="text" name="dorian_char_role" value="' . esc_attr($role) . '" style="width:320px"></label></p>';
+    echo '<p><label>نام انگلیسی:<br><input type="text" name="dorian_char_en" value="' . esc_attr($en) . '" style="width:320px"></label></p>';
+    echo '<p><label>تصویر (آدرس):<br><input type="url" class="dorian-img-url" name="dorian_char_photo" value="' . esc_attr($photo) . '" style="width:420px"> <button type="button" class="button dorian-img-pick">انتخاب تصویر</button></label>'
+       . '<br><span style="color:#777">یا از «تصویر شاخص» در ستون کناری استفاده کنید.</span></p>';
+    echo '<p><label>تخصص‌ها (هر خط یک مورد):<br><textarea name="dorian_char_skills" rows="6" style="width:420px">' . esc_textarea($skills) . '</textarea></label></p>';
+    echo '<p style="color:#777">ترتیب نمایش با «ترتیب» در باکسِ «ویژگی‌های» کناری تعیین می‌شود (عدد کوچک‌تر = جلوتر).</p>';
+}
+add_action('save_post_dorian_character', function ($post_id) {
+    if (!isset($_POST['dorian_char_nonce']) || !wp_verify_nonce($_POST['dorian_char_nonce'], 'dorian_char')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+    update_post_meta($post_id, '_role', sanitize_text_field($_POST['dorian_char_role'] ?? ''));
+    update_post_meta($post_id, '_name_en', sanitize_text_field($_POST['dorian_char_en'] ?? ''));
+    update_post_meta($post_id, '_photo', esc_url_raw($_POST['dorian_char_photo'] ?? ''));
+    update_post_meta($post_id, '_skills', sanitize_textarea_field($_POST['dorian_char_skills'] ?? ''));
+});
+
+/** Render the team cards from the CPT; returns false when there are none. */
+function dorian_render_characters() {
+    $items = get_posts(array('post_type' => 'dorian_character', 'numberposts' => -1, 'orderby' => 'menu_order date', 'order' => 'ASC', 'post_status' => 'publish'));
+    if (!$items) return false;
+    foreach ($items as $p) {
+        $role  = get_post_meta($p->ID, '_role', true);
+        $en    = get_post_meta($p->ID, '_name_en', true);
+        $photo = get_the_post_thumbnail_url($p->ID, 'medium');
+        if (!$photo) $photo = get_post_meta($p->ID, '_photo', true);
+        $skills = array_filter(array_map('trim', explode("\n", (string) get_post_meta($p->ID, '_skills', true))));
+        echo '<article class="tcard"><div class="tcard__inner">'
+           . '<span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span>'
+           . '<span class="tcard__role lat">' . esc_html($role) . '</span>'
+           . '<div class="tcard__photo"><img src="' . esc_url($photo) . '" alt="' . esc_attr($p->post_title) . '" loading="lazy"></div>'
+           . '<div class="tcard__name"><div class="fa">' . esc_html($p->post_title) . '</div><div class="en lat">' . esc_html($en) . '</div></div>'
+           . '<div class="tcard__skills"><div class="h">Specialties</div><ul>';
+        foreach ($skills as $sk) echo '<li>' . esc_html($sk) . '</li>';
+        echo '</ul></div></div></article>';
+    }
+    return true;
+}
+
+/** Seed the current 9 members once, so they can be edited/deleted individually. */
+add_action('admin_init', function () {
+    if (get_option('dorian_chars_seeded')) return;
+    if (get_posts(array('post_type' => 'dorian_character', 'numberposts' => 1, 'post_status' => 'any', 'fields' => 'ids'))) {
+        update_option('dorian_chars_seeded', 1); return;
+    }
+    $uri = get_stylesheet_directory_uri() . '/assets/img/';
+    $team = array(
+        array('آرمان کاراگاه', 'Arman Karagah', 'Hair Master', 'team-01.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nاکستنشن طبیعی مو\nپروتز مو\nکراتین مو\nگریم تخصصی داماد"),
+        array('احسان حسن‌یاری', 'Ehsan Hasanyari', 'Hair Artist', 'team-02.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nشمع و ماسک صورت\nمانیکور و پدیکور\nگریم داماد"),
+        array('ارسلان پورفضل', 'Arsalan Pourfazl', 'Hair Artist', 'team-03.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nشمع و ماسک صورت"),
+        array('اشکان محمدی', 'Ashkan Mohammadi', 'Hair Artist', 'team-04.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nماسک صورت"),
+        array('حسین لویمی', 'Hossein Loyami', 'Hair Artist', 'team-05.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nشمع و ماسک صورت"),
+        array('مجتبی میراحمدی', 'Mojtaba Mirahmadi', 'Hair Artist', 'team-06.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nشمع و ماسک صورت"),
+        array('احمد سرخه', 'Ahmad Sorkheh', 'Hair Artist', 'team-07.jpg', "کوتاهی مو و ریش\nسشوار و استایل مو\nشمع و ماسک صورت\nرنگ مو\nکراتین مو"),
+        array('احمدرضا جلالی', 'Ahmadreza Jalali', 'Massage', 'team-08.jpg', "ماساژ درمانی\nماساژ ریلکسی"),
+        array('حمید جوهری', 'Hamid Johari', 'Facial', 'team-09.jpg', "پاکسازی تخصصی\nرنگ مو و ریش\nویتامینه مو\nمانیکور و پدیکور\nشمع صورت"),
+    );
+    $i = 0;
+    foreach ($team as $t) {
+        $pid = wp_insert_post(array('post_type' => 'dorian_character', 'post_status' => 'publish', 'post_title' => $t[0], 'menu_order' => $i++));
+        if (is_wp_error($pid)) continue;
+        update_post_meta($pid, '_name_en', $t[1]);
+        update_post_meta($pid, '_role', $t[2]);
+        update_post_meta($pid, '_photo', $uri . $t[3]);
+        update_post_meta($pid, '_skills', $t[4]);
+    }
+    update_option('dorian_chars_seeded', 1);
+});

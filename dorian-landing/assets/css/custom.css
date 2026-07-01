@@ -788,3 +788,11 @@ a.giftcard { display: block; }
 /* WP nav-menu items render as <li>; keep the flat flex row */
 .nav ul { list-style: none; margin: 0; padding: 0; display: contents; }
 .nav li { list-style: none; display: flex; align-items: center; }
+
+/* ===================== Story · full-width paragraphs ================= */
+.story__copy p:not(.story__q) {
+  color: var(--ink-soft);
+  max-width: 100%;
+  margin-bottom: 13px;
+  font-size: 1.04rem;
+}
