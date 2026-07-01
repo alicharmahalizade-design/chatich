@@ -155,6 +155,10 @@ class Dorian_Panel {
     public static function handle($provider) {
         $pid = $provider->ID;
 
+        // this page is login/cookie-gated; never let a page-cache plugin or CDN serve a stale copy of it
+        if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
+        nocache_headers();
+
         // login
         if (isset($_POST['dorian_login'])) {
             $pass = (string) get_post_meta($pid, '_dorian_pass', true);
