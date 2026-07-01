@@ -202,11 +202,16 @@ class Dorian_Panel {
         }
         update_post_meta($pid, '_dorian_hours', $hours);
 
-        // per-service price + duration
-        $svc = array();
+        // per-service duration (price is set by management, never by the provider — preserve it)
+        $svc = get_post_meta($pid, '_dorian_svc', true);
+        if (!is_array($svc)) $svc = array();
         if (!empty($_POST['svc']) && is_array($_POST['svc'])) {
             foreach ($_POST['svc'] as $sid => $vals) {
-                $svc[(int) $sid] = array('price' => (int) ($vals['price'] ?? 0), 'dur' => max(15, (int) ($vals['dur'] ?? 30)));
+                $sid  = (int) $sid;
+                $prev = isset($svc[$sid]) && is_array($svc[$sid]) ? $svc[$sid] : array();
+                $row  = array('dur' => max(15, (int) ($vals['dur'] ?? 30)));
+                if (isset($prev['price'])) $row['price'] = (int) $prev['price']; // keep admin-set price
+                $svc[$sid] = $row;
             }
         }
         update_post_meta($pid, '_dorian_svc', $svc);
@@ -256,6 +261,24 @@ class Dorian_Panel {
         return array('c' => (int) $row->c, 's' => (int) $row->s);
     }
 
+    /** Per-day realized income for the last N days (oldest→newest), for the mini chart. */
+    protected static function revenue_by_day($pid, $days) {
+        global $wpdb;
+        $t = Dorian_DB::table();
+        $wd = array('ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج');
+        $out = array();
+        for ($i = max(1, (int) $days) - 1; $i >= 0; $i--) {
+            $ts = strtotime("-$i day", current_time('timestamp'));
+            $d  = date('Y-m-d', $ts);
+            $s  = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COALESCE(SUM(total_price),0) FROM $t WHERE status='done' AND FIND_IN_SET(%d, provider_ids) AND DATE(start_dt)=%s",
+                $pid, $d
+            ));
+            $out[] = array('s' => $s, 'x' => $wd[((int) date('w', $ts) + 1) % 7], 'today' => ($i === 0));
+        }
+        return $out;
+    }
+
     /* ---- bookings for a provider on a Y-m-d (all statuses, for display) ---- */
     protected static function bookings_on($pid, $ymd) {
         global $wpdb;
@@ -286,6 +309,10 @@ class Dorian_Panel {
             'cal'   => '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
             'check' => '<circle cx="12" cy="12" r="9"/><path d="M8 12.2l2.6 2.6L16 9.4"/>',
             'coin'  => '<ellipse cx="12" cy="6.5" rx="7.5" ry="3"/><path d="M4.5 6.5v11c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-11"/><path d="M4.5 12c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3"/>',
+            'phone' => '<path d="M6.4 3.5c.5 0 .9.3 1 .8l.7 2.5c.1.4 0 .8-.3 1.1L6.3 9.2a12 12 0 0 0 5.5 5.5l1.3-1.5c.3-.3.7-.4 1.1-.3l2.5.7c.5.1.8.5.8 1v2.6a2 2 0 0 1-2.2 2A15 15 0 0 1 4.4 5.7a2 2 0 0 1 2-2.2Z"/>',
+            'sms'   => '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4 3.4V16H5.5A1.5 1.5 0 0 1 4 14.5Z"/>',
+            'bell'  => '<path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+            'search'=> '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
         );
         $d = isset($p[$n]) ? $p[$n] : '';
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
@@ -295,10 +322,19 @@ class Dorian_Panel {
     protected static function render_row($r, $labels) {
         $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
         $lb = $labels[$st];
-        $h  = '<div class="bk bk--' . esc_attr($st) . '"><span class="time">' . esc_html(date('H:i', strtotime($r->start_dt))) . '</span>'
+        $ts = strtotime($r->start_dt);
+        $start_min = (int) date('G', $ts) * 60 + (int) date('i', $ts);
+        $ph = esc_attr($r->customer_phone);
+        $q  = function_exists('mb_strtolower') ? mb_strtolower($r->customer_name) : strtolower($r->customer_name);
+        $h  = '<div class="bk bk--' . esc_attr($st) . '" data-q="' . esc_attr($q . ' ' . $r->customer_phone) . '" data-start="' . $start_min . '" data-dur="' . (int) $r->duration_min . '">'
+            . '<span class="time">' . esc_html(date('H:i', $ts)) . '</span>'
             . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
             . '<span class="badge" style="background:' . esc_attr($lb[1]) . '">' . esc_html($lb[0]) . '</span>'
-            . '<a class="tel" href="tel:' . esc_attr($r->customer_phone) . '">' . esc_html($r->customer_phone) . '</a>'
+            . '<span class="contact">'
+            .   '<a class="tel" href="tel:' . $ph . '">' . esc_html($r->customer_phone) . '</a>'
+            .   '<a class="cbtn call" href="tel:' . $ph . '" aria-label="تماس">' . self::icon('phone') . '</a>'
+            .   '<a class="cbtn sms" href="sms:' . $ph . '" aria-label="پیامک">' . self::icon('sms') . '</a>'
+            . '</span>'
             . '<span class="acts">';
         if ($st === 'confirmed' || $st === 'paid') {
             $h .= '<button class="mini ok" name="dorian_status" value="' . (int) $r->id . ':done">✓ انجام شد</button>'
@@ -361,6 +397,49 @@ class Dorian_Panel {
         .tile--ok .tile__n{color:var(--ok)}
         .tile--rev .tile__ic{background:rgba(168,134,42,.14);color:#a8862a}
         .tile--rev .tile__n{color:#a8862a;font-size:1.12rem}
+
+        /* search */
+        .search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 12px;margin-bottom:14px}
+        .search__ic{display:flex;color:var(--muted)}.search__ic svg{width:18px;height:18px}
+        .search input{flex:1;min-width:0;border:0;background:none;min-height:46px;font-size:16px;font-family:inherit;color:var(--ink);outline:none}
+        .search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+        .search__x{border:0;background:none;color:var(--muted);font-size:1rem;cursor:pointer;width:30px;height:30px}
+        .pcard.searching .seg,.pcard.searching .stats,.pcard.searching .dhead,.pcard.searching .gap,.pcard.searching .nowline,.pcard.searching .empty:not(.search-empty){display:none}
+        .pcard.searching .day{display:block}
+        .bk.hidden{display:none}
+
+        /* revenue mini bar chart */
+        .chart{display:flex;align-items:flex-end;gap:6px;height:130px;padding-top:18px}
+        .chart__col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+        .chart__bar{width:66%;max-width:26px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#e3c04a,#b8901f);min-height:3px;transition:height .5s ease}
+        .chart__col.is-today .chart__bar{background:linear-gradient(180deg,var(--blue-2),var(--blue))}
+        .chart__x{font-size:.72rem;color:var(--muted)}
+        .chart__v{font-family:'Space Grotesk';font-size:.62rem;color:var(--muted);height:12px;letter-spacing:.3px}
+
+        /* timeline gaps + now marker */
+        .gap{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--muted);font-size:.76rem}
+        .gap::before,.gap::after{content:"";flex:1;border-top:1px dashed var(--line)}
+        .gap span{background:rgba(0,102,179,.08);color:var(--blue);border-radius:999px;padding:.15em .85em;white-space:nowrap}
+        .nowline{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+        .nowline::before,.nowline::after{content:"";flex:1;border-top:2px solid var(--no)}
+        .nowline span{background:var(--no);color:#fff;border-radius:999px;padding:.12em .8em;font-size:.72rem;font-weight:700;white-space:nowrap}
+
+        /* notify button + toast */
+        .nbtn{width:100%;margin-top:12px;color:var(--blue)}
+        .nbtn svg{width:18px;height:18px}
+        .nbtn.on{color:var(--ok);border-color:#bfe3ca;background:#f4fbf6}
+        .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,18px);z-index:60;background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;padding:12px 18px;border-radius:14px;box-shadow:0 16px 34px -14px rgba(0,0,0,.5);opacity:0;transition:.32s;max-width:92%;font-weight:600;text-align:center}
+        .toast.on{opacity:1;transform:translate(-50%,0)}
+
+        /* splash / app-launch */
+        .splash{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:radial-gradient(140% 120% at 50% 0%,#EEE6D4,#E1D5C0 55%,#D6C8AD);transition:opacity .4s}
+        .splash.hide{opacity:0;pointer-events:none}
+        .splash__box{display:flex;flex-direction:column;align-items:center;gap:18px}
+        .splash__ava{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 0 0 3px var(--gold),0 12px 30px -12px rgba(40,30,10,.6);animation:pop .5s ease}
+        @keyframes pop{from{transform:scale(.82);opacity:0}to{transform:scale(1);opacity:1}}
+        .splash__bar{width:120px;height:5px;border-radius:999px;background:rgba(0,75,133,.15);overflow:hidden}
+        .splash__bar i{display:block;height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg,var(--blue-2),var(--blue));animation:slide 1s ease-in-out infinite}
+        @keyframes slide{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
         .pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
 
         /* app bar */
@@ -401,7 +480,12 @@ class Dorian_Panel {
         .bk>span:nth-child(2){grid-area:who;min-width:0}
         .bk .who{font-weight:700}.bk .svc{color:var(--muted);font-size:.85rem}
         .bk .badge{grid-area:badge;color:#fff;border-radius:999px;padding:.25em .85em;font-size:.72rem;white-space:nowrap;justify-self:end}
-        .bk .tel{grid-area:tel;color:var(--blue);text-decoration:none;font-family:'Space Grotesk';font-weight:600}
+        .bk .contact{grid-area:tel;display:flex;align-items:center;gap:8px}
+        .bk .tel{color:var(--blue);text-decoration:none;font-family:'Space Grotesk';font-weight:600}
+        .cbtn{width:36px;height:36px;flex:0 0 auto;border-radius:10px;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;color:var(--blue);background:#fff;transition:transform .1s}
+        .cbtn svg{width:17px;height:17px}
+        .cbtn.sms{color:var(--ok)}
+        .cbtn:active{transform:translateY(1px)}
         .bk--confirmed{border-inline-start-color:var(--blue)}
         .bk--paid{border-inline-start-color:var(--ok)}
         .bk--done{border-inline-start-color:var(--ok);background:#f4fbf6}
@@ -450,6 +534,7 @@ class Dorian_Panel {
         .svcrow{display:grid;grid-template-columns:1fr 96px 78px;gap:8px;align-items:center;margin-bottom:8px}
         .svcrow input{min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff;text-align:center}
         .svcrow .nm{font-weight:600;font-size:.9rem}
+        .svc-price{min-height:44px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';direction:ltr;color:var(--muted);background:#f4efe4;border:1px solid var(--line);border-radius:10px}
         .capf{width:140px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff}
 
         .blkadd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
@@ -500,6 +585,29 @@ class Dorian_Panel {
           .acts{width:100%}
           .svcrow{grid-template-columns:1fr 130px 110px;gap:10px}
         }
+
+        /* ---- automatic dark mode ---- */
+        @media (prefers-color-scheme:dark){
+          :root{--ink:#ece7dd;--muted:#a49d8c;--line:rgba(255,255,255,.12);--card:#1e1c17;--blue:#57a8e6;--blue-2:#6fb6ec;--gold:#d4b455;--ok:#43c07d;--no:#e5695f}
+          body{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
+          .appbar{background:rgba(30,28,23,.82)}
+          .iconbtn,.btn--ghost,.bk,.mini,.cbtn,.wh-day,.wh-range select,.wh-rm,.capf,.svcrow input,.blkadd select,.blkadd input,.blkitem,.cal .c,.calnav button,.search,.search input,.tab.on,.login input{background:#26231d;color:var(--ink);border-color:var(--line)}
+          .stat{background:#231f19}
+          .tile{background:linear-gradient(180deg,#272318,#201d17)}
+          .seg{background:#18160f}
+          .tabbar{background:rgba(22,20,16,.9)}
+          .bk .time{background:rgba(87,168,230,.16)}
+          .bk--done{background:#172219;border-inline-start-color:var(--ok)}
+          .bk--noshow{background:#241a19;border-inline-start-color:var(--no)}
+          .cal .c.past{background:#211e18}
+          .savebar{background:linear-gradient(180deg,rgba(20,19,16,0),rgba(20,19,16,.96) 45%)}
+          .splash{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
+          .switch .knob{background:#4a453a}
+          .hint code{background:rgba(255,255,255,.08)}
+          .saved{background:#12351f;border-color:#1f5a34;color:#a8e6c0}
+          .nbtn.on{background:#172219}
+          .gap span{background:rgba(87,168,230,.14)}
+        }
         </style></head><body><div class="pw"><?php
     }
     protected static function foot() { echo '</div></body></html>'; }
@@ -527,6 +635,7 @@ class Dorian_Panel {
         $days = array('امروز', 'فردا', 'پس‌فردا');
         self::head('پنل ' . $provider->post_title);
         ?>
+        <div class="splash" id="splash"><div class="splash__box"><img class="splash__ava" src="<?php echo esc_url($photo); ?>" alt=""><div class="splash__bar"><i></i></div></div></div>
         <header class="appbar">
           <div class="appbar__id">
             <img class="appbar__ava" src="<?php echo esc_url($photo); ?>" alt="">
@@ -549,8 +658,11 @@ class Dorian_Panel {
         $trows = self::bookings_on($pid, $today);
         $t_total = 0; $t_done = 0;
         foreach ($trows as $r) { if ($r->status !== 'cancelled') $t_total++; if ($r->status === 'done') $t_done++; }
+        global $wpdb;
+        $maxid = (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(MAX(id),0) FROM " . Dorian_DB::table() . " WHERE FIND_IN_SET(%d, provider_ids)", $pid));
         $sv = isset($_GET['saved']) ? 'set' : 'dash';
         ?>
+        <div id="pnl" data-pid="<?php echo (int) $pid; ?>" data-ajax="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" data-max="<?php echo $maxid; ?>" hidden></div>
 
         <main class="views">
 
@@ -563,11 +675,12 @@ class Dorian_Panel {
                 <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته (تومان)</span></div></div>
                 <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه (تومان)</span></div></div>
               </div>
+              <button type="button" id="notifyBtn" class="btn btn--ghost nbtn"><?php echo self::icon('bell'); ?> فعال‌سازی اعلانِ نوبت جدید</button>
             </div>
             <div class="pcard">
               <h2>نوبت‌های امروز</h2>
               <?php if (!$trows) { echo '<p class="empty">امروز نوبتی ندارید.</p>'; }
-              else { echo '<form method="post">'; wp_nonce_field('dorian_panel_' . $pid);
+              else { echo '<form method="post" class="today-list daylist" data-today="1">'; wp_nonce_field('dorian_panel_' . $pid);
                 foreach ($trows as $r) echo self::render_row($r, $labels);
                 echo '</form>'; } ?>
             </div>
@@ -576,6 +689,7 @@ class Dorian_Panel {
           <section class="view<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book">
             <div class="pcard">
               <h2>نوبت‌ها</h2>
+              <div class="search"><span class="search__ic"><?php echo self::icon('search'); ?></span><input type="search" id="bkSearch" placeholder="جست‌وجوی نام یا شماره…" autocomplete="off"><button type="button" class="search__x" id="bkSearchX" aria-label="پاک کردن" hidden>✕</button></div>
               <div class="seg">
                 <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
                 <button type="button" class="tab" data-day="up">آینده</button>
@@ -601,7 +715,7 @@ class Dorian_Panel {
 
               if (!$rows) { echo '<p class="empty">نوبتی برای این روز ثبت نشده.</p>'; echo '</div>'; continue; }
 
-              echo '<form method="post">';
+              echo '<form method="post" class="daylist"' . ($i === 0 ? ' data-today="1"' : '') . '>';
               wp_nonce_field('dorian_panel_' . $pid);
               foreach ($rows as $r) echo self::render_row($r, $labels);
               echo '</form>';
@@ -641,6 +755,22 @@ class Dorian_Panel {
               </div>
               <p class="hint" style="margin:12px 0 0">درآمد بر اساس نوبت‌هایی که «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
             </div>
+            <div class="pcard">
+              <h2>نمودار ۷ روز اخیر</h2>
+              <?php
+              $bd = self::revenue_by_day($pid, 7);
+              $mx = 1; foreach ($bd as $b) { if ($b['s'] > $mx) $mx = $b['s']; }
+              echo '<div class="chart">';
+              foreach ($bd as $b) {
+                  $hpct = (int) round($b['s'] / $mx * 100);
+                  echo '<div class="chart__col' . ($b['today'] ? ' is-today' : '') . '">'
+                     . '<span class="chart__v">' . ($b['s'] ? number_format($b['s'] / 1000) . 'K' : '') . '</span>'
+                     . '<div class="chart__bar" style="height:' . max(2, $hpct) . '%"></div>'
+                     . '<span class="chart__x">' . esc_html($b['x']) . '</span></div>';
+              }
+              echo '</div>';
+              ?>
+            </div>
           </section>
 
           <form method="post" class="view<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set">
@@ -660,12 +790,12 @@ class Dorian_Panel {
           </div>
 
           <div class="pcard">
-            <h2>خدمات (قیمت و زمان)</h2>
-            <p class="hint">قیمت و مدتِ هر خدمت مختصِ شماست. اسلات‌ها بر اساس مدتِ خدمت ساخته می‌شوند.</p>
+            <h2>خدمات و زمان</h2>
+            <p class="hint">قیمت‌ها توسط مدیریت تعیین می‌شود و اینجا فقط برای اطلاع نمایش داده می‌شود. شما فقط مدتِ هر خدمت را تنظیم می‌کنید (اسلات‌ها بر اساس آن ساخته می‌شوند).</p>
             <div class="svcrow" style="font-size:.8rem;color:var(--muted)"><span>خدمت</span><span>قیمت (تومان)</span><span>مدت (دقیقه)</span></div>
             <?php foreach (dorian_provider_services($pid) as $sid => $s) {
                 echo '<div class="svcrow"><span class="nm">' . esc_html($s['name']) . ($s['group'] ? ' <small style="color:var(--muted)">· ' . esc_html($s['group']) . '</small>' : '') . '</span>'
-                   . '<input type="number" name="svc[' . $sid . '][price]" value="' . esc_attr($s['price']) . '">'
+                   . '<span class="svc-price">' . number_format((int) $s['price']) . '</span>'
                    . '<input type="number" step="5" name="svc[' . $sid . '][dur]" value="' . esc_attr($s['dur']) . '"></div>';
             } ?>
           </div>
@@ -889,6 +1019,86 @@ class Dorian_Panel {
           render();
         })();
 
+        /* ---- search / filter bookings by name or phone ---- */
+        (function(){
+          var inp=document.getElementById('bkSearch'); if(!inp) return;
+          var xbtn=document.getElementById('bkSearchX'),card=inp.closest('.pcard');
+          function norm(s){return s.replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d);}).toLowerCase().trim();}
+          function apply(){
+            var q=norm(inp.value);
+            card.classList.toggle('searching',q.length>0);
+            if(xbtn) xbtn.hidden=!q;
+            var hits=0;
+            card.querySelectorAll('.bk').forEach(function(bk){
+              var show=!q || (bk.dataset.q||'').indexOf(q)>=0;
+              bk.classList.toggle('hidden',!show); if(show&&q)hits++;
+            });
+            var res=card.querySelector('.search-empty');
+            if(q&&hits===0){ if(!res){res=document.createElement('p');res.className='empty search-empty';res.textContent='نتیجه‌ای پیدا نشد.';card.appendChild(res);} res.hidden=false; }
+            else if(res){ res.hidden=true; }
+          }
+          inp.addEventListener('input',apply);
+          if(xbtn) xbtn.addEventListener('click',function(){inp.value='';apply();inp.focus();});
+        })();
+
+        /* ---- today timeline: free-gap chips + "now" marker ---- */
+        (function(){
+          function fmt(m){var h=Math.floor(m/60),mm=m%60;if(h&&mm)return h+' ساعت و '+mm+' دقیقه';if(h)return h+' ساعت';return mm+' دقیقه';}
+          function build(container,isToday){
+            var rows=[].slice.call(container.querySelectorAll('.bk')).filter(function(b){return !b.classList.contains('bk--cancelled');});
+            var prevEnd=null;
+            rows.forEach(function(bk){
+              var s=+bk.dataset.start,d=+bk.dataset.dur;
+              if(prevEnd!==null && s-prevEnd>=15){
+                var g=document.createElement('div');g.className='gap';g.innerHTML='<span>'+fmt(s-prevEnd)+' آزاد</span>';
+                bk.parentNode.insertBefore(g,bk);
+              }
+              prevEnd=(prevEnd===null)?s+d:Math.max(prevEnd,s+d);
+            });
+            if(isToday){
+              var now=new Date().getHours()*60+new Date().getMinutes(),line=document.createElement('div');line.className='nowline';line.innerHTML='<span>الان</span>';
+              var placed=false;
+              rows.forEach(function(bk){ if(!placed&&(+bk.dataset.start)>now){bk.parentNode.insertBefore(line,bk);placed=true;} });
+              if(!placed) container.appendChild(line);
+            }
+          }
+          document.querySelectorAll('.daylist').forEach(function(c){ build(c,c.dataset.today==='1'); });
+        })();
+
+        /* ---- new-booking notifications (foreground poll) ---- */
+        (function(){
+          var meta=document.getElementById('pnl'); if(!meta) return;
+          var pid=meta.dataset.pid,url=meta.dataset.ajax,last=+meta.dataset.max||0;
+          function fa(s){return String(s).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[+d];});}
+          var btn=document.getElementById('notifyBtn');
+          if(btn){
+            if(!('Notification' in window)) btn.style.display='none';
+            else if(Notification.permission==='granted') btn.classList.add('on');
+            btn.addEventListener('click',function(){ if(!('Notification' in window))return; Notification.requestPermission().then(function(pm){ if(pm==='granted'){btn.classList.add('on');} }); });
+          }
+          function toast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);requestAnimationFrame(function(){t.classList.add('on');});setTimeout(function(){t.classList.remove('on');setTimeout(function(){t.parentNode&&t.remove();},350);},6000);}
+          function poll(){
+            fetch(url+'?action=dorian_panel_ping&pid='+encodeURIComponent(pid),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+              if(!j||!j.success)return; var m=+j.data.max;
+              if(last>0 && m>last){
+                var msg='نوبت جدید'+(j.data.name?': '+j.data.name:'')+(j.data.when?' — '+fa(j.data.when):'');
+                toast(msg);
+                if(('Notification' in window)&&Notification.permission==='granted'){try{new Notification('نوبت جدید دوریان',{body:msg});}catch(e){}}
+              }
+              last=m;
+            }).catch(function(){});
+          }
+          setInterval(poll,60000);
+        })();
+
+        /* ---- splash / app-launch feel ---- */
+        (function(){
+          var s=document.getElementById('splash'); if(!s) return;
+          function hide(){ s.classList.add('hide'); setTimeout(function(){s.parentNode&&s.remove();},450); }
+          if(document.readyState==='complete') setTimeout(hide,300); else window.addEventListener('load',function(){setTimeout(hide,300);});
+          setTimeout(hide,1600);
+        })();
+
         /* ---- Persian numerals everywhere (skip form controls) ---- */
         (function(){
           var P='۰۱۲۳۴۵۶۷۸۹',skip={SCRIPT:1,STYLE:1,SELECT:1,OPTION:1,INPUT:1,TEXTAREA:1};
@@ -905,4 +1115,23 @@ class Dorian_Panel {
         <?php
         self::foot();
     }
+
+    /** Lightweight poll endpoint: latest booking id for a provider (cookie-gated). */
+    public static function ping() {
+        $pid = isset($_GET['pid']) ? (int) $_GET['pid'] : 0;
+        if (!$pid || get_post_type($pid) !== 'dorian_provider' || !self::is_authed($pid)) wp_send_json_error();
+        global $wpdb;
+        $t = Dorian_DB::table();
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, customer_name, start_dt FROM $t WHERE FIND_IN_SET(%d, provider_ids) ORDER BY id DESC LIMIT 1",
+            $pid
+        ));
+        wp_send_json_success(array(
+            'max'  => $row ? (int) $row->id : 0,
+            'name' => $row ? $row->customer_name : '',
+            'when' => $row ? date('H:i', strtotime($row->start_dt)) : '',
+        ));
+    }
 }
+add_action('wp_ajax_dorian_panel_ping', array('Dorian_Panel', 'ping'));
+add_action('wp_ajax_nopriv_dorian_panel_ping', array('Dorian_Panel', 'ping'));
