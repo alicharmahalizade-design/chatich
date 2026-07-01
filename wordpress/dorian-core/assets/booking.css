@@ -207,3 +207,6 @@ body.dorian-booking-page .bk{margin:clamp(16px,4vw,48px) auto}
 #bk .bk-btn--gold,#bk .bk-btn--gold:hover,#bk .bk-btn--gold:focus{background:var(--blue-grad);color:#fff}
 #bk .bk-btn--ghost,#bk .bk-btn--ghost:hover,#bk .bk-btn--ghost:focus{background:transparent;color:var(--ink)}
 #bk .field input{background:#fff;color:var(--ink)}
+
+/* back-to-home button above the booking form */
+.bk-homewrap { width: min(960px, 100%); margin: 0 auto 14px; }

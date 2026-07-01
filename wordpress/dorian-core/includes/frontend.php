@@ -52,6 +52,11 @@ class Dorian_Frontend {
     public static function shortcode($atts) {
         self::enqueue();
         ob_start(); ?>
+<div class="bk-homewrap">
+  <a class="bk-home" href="<?php echo esc_url(home_url('/')); ?>" aria-label="بازگشت به خانهٔ دوریان">
+    <span aria-hidden="true">→</span><span>بازگشت به خانهٔ دوریان</span>
+  </a>
+</div>
 <div class="bk" id="bk">
   <header class="bk__top">
     <span class="bk__eyebrow">Reservation</span>
