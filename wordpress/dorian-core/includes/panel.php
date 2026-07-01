@@ -18,7 +18,14 @@ function dorian_provider_hours($pid) {
 }
 function dorian_provider_closed($pid) {
     $c = get_post_meta($pid, '_dorian_closed', true);
-    return is_array($c) ? $c : array();  // ["Y-m-d", ...]
+    return is_array($c) ? $c : array();  // ["Y-m-d", ...] full-day closes (incl. vacation ranges)
+}
+function dorian_provider_blocks($pid) {
+    $b = get_post_meta($pid, '_dorian_blocks', true);
+    return is_array($b) ? $b : array();  // ["Y-m-d|HH:MM-HH:MM", ...] partial-day closes
+}
+function dorian_provider_cap($pid) {
+    return max(0, (int) get_post_meta($pid, '_dorian_cap', true)); // 0 = unlimited
 }
 function dorian_global_ranges() {
     $s = dorian_settings();
@@ -52,12 +59,23 @@ function dorian_provider_slots($pid, $date_ymd, $dur) {
     $hours = dorian_provider_hours($pid);
     $ranges = empty($hours) ? dorian_global_ranges() : (isset($hours[$w]) ? (array) $hours[$w] : array());
 
-    $busy = array();
+    $busy = array(); $count = 0;
     foreach (Dorian_DB::bookings_for(array($pid), $date_ymd) as $b) {
         $t = strtotime($b->start_dt);
         $from = (int) date('G', $t) * 60 + (int) date('i', $t);
         $busy[] = array($from, $from + (int) $b->duration_min);
+        $count++;
     }
+    // partial-day blocks ("this day, only this range") act like busy intervals
+    foreach (dorian_provider_blocks($pid) as $blk) {
+        $parts = explode('|', $blk);
+        if (count($parts) !== 2 || $parts[0] !== $date_ymd || strpos($parts[1], '-') === false) continue;
+        list($ba, $bb) = explode('-', $parts[1], 2);
+        $busy[] = array(dorian_hm($ba), dorian_hm($bb));
+    }
+    // daily cap: once reached, no more slots are offered that day
+    $cap = dorian_provider_cap($pid);
+    $cap_reached = ($cap > 0 && $count >= $cap);
     $now = ($date_ymd === current_time('Y-m-d')) ? ((int) current_time('G') * 60 + (int) current_time('i')) : -1;
 
     $out = array();
@@ -66,7 +84,7 @@ function dorian_provider_slots($pid, $date_ymd, $dur) {
         list($a, $b2) = explode('-', $r, 2);
         $s = dorian_hm($a); $e = dorian_hm($b2);
         for ($m = $s; $m + $dur <= $e + 1; $m += $dur) {
-            $free = ($m > $now);
+            $free = ($m > $now) && !$cap_reached;
             foreach ($busy as $x) { if ($m < $x[1] && ($m + $dur) > $x[0]) { $free = false; break; } }
             $out[] = array('t' => sprintf('%02d:%02d', intdiv($m, 60), $m % 60), 'free' => $free);
         }
@@ -153,6 +171,11 @@ class Dorian_Panel {
 
         if (!self::is_authed($pid)) { self::login_page($provider, isset($err) ? $err : ''); return; }
 
+        // update a booking's status (done / no-show / cancel / undo)
+        if (isset($_POST['dorian_status']) && check_admin_referer('dorian_panel_' . $pid)) {
+            self::set_status($pid, sanitize_text_field($_POST['dorian_status']));
+            wp_safe_redirect(strtok($_SERVER['REQUEST_URI'], '?')); exit;
+        }
         // save settings
         if (isset($_POST['dorian_save']) && check_admin_referer('dorian_panel_' . $pid)) {
             self::save($pid);
@@ -184,21 +207,44 @@ class Dorian_Panel {
         }
         update_post_meta($pid, '_dorian_svc', $svc);
 
-        // closed dates (Gregorian Y-m-d, comma separated, sent by the JS calendar)
+        // closed dates (Gregorian Y-m-d, comma separated, sent by the JS calendar — includes vacation ranges)
         $closed = array();
         foreach (explode(',', (string) ($_POST['closed'] ?? '')) as $d) {
             $d = trim($d);
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) $closed[] = $d;
         }
         update_post_meta($pid, '_dorian_closed', array_values(array_unique($closed)));
+
+        // partial-day blocks ("Y-m-d|HH:MM-HH:MM", comma separated)
+        $blocks = array();
+        foreach (explode(',', (string) ($_POST['blocks'] ?? '')) as $b) {
+            $b = trim($b);
+            if (preg_match('/^\d{4}-\d{2}-\d{2}\|\d{1,2}:\d{2}-\d{1,2}:\d{2}$/', $b)) $blocks[] = $b;
+        }
+        update_post_meta($pid, '_dorian_blocks', array_values(array_unique($blocks)));
+
+        // daily cap (0 = unlimited)
+        update_post_meta($pid, '_dorian_cap', max(0, (int) ($_POST['cap'] ?? 0)));
     }
 
-    /* ---- bookings for a provider on a Y-m-d ---- */
+    /** Update a booking status; only if the booking belongs to this provider. */
+    protected static function set_status($pid, $val) {
+        $parts = explode(':', $val);
+        if (count($parts) !== 2) return;
+        $id = (int) $parts[0]; $st = $parts[1];
+        if (!$id || !in_array($st, array('confirmed', 'done', 'noshow', 'cancelled'), true)) return;
+        global $wpdb;
+        $t = Dorian_DB::table();
+        $owns = $wpdb->get_var($wpdb->prepare("SELECT id FROM $t WHERE id=%d AND FIND_IN_SET(%d, provider_ids)", $id, $pid));
+        if ($owns) $wpdb->update($t, array('status' => $st), array('id' => $id));
+    }
+
+    /* ---- bookings for a provider on a Y-m-d (all statuses, for display) ---- */
     protected static function bookings_on($pid, $ymd) {
         global $wpdb;
         $t = Dorian_DB::table();
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $t WHERE DATE(start_dt)=%s AND status<>'cancelled' AND FIND_IN_SET(%d, provider_ids) ORDER BY start_dt ASC",
+            "SELECT * FROM $t WHERE DATE(start_dt)=%s AND FIND_IN_SET(%d, provider_ids) ORDER BY start_dt ASC",
             $ymd, $pid
         ));
     }
@@ -225,11 +271,30 @@ class Dorian_Panel {
         .tab{padding:.5em 1.2em;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:.9rem}
         .tab.on{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff;border-color:transparent}
         .day{display:none}.day.on{display:block}
-        .bk{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px}
+        .bk{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;flex-wrap:wrap}
         .bk .time{font-family:'Space Grotesk';font-weight:700;color:var(--blue);min-width:56px}
         .bk .who{font-weight:700}.bk .svc{color:var(--muted);font-size:.9rem}
-        .bk .tel{margin-inline-start:auto;color:var(--blue);text-decoration:none;font-family:'Space Grotesk'}
+        .bk .tel{color:var(--blue);text-decoration:none;font-family:'Space Grotesk'}
+        .bk--cancelled{opacity:.55}.bk--cancelled .who{text-decoration:line-through}
+        .bk--done{background:#f2fbf5}.bk--noshow{background:#fdf3f3}
+        .badge{color:#fff;border-radius:999px;padding:.15em .8em;font-size:.72rem;white-space:nowrap;margin-inline-start:auto}
+        .acts{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:8px}
+        .mini{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.35em .95em;font-family:inherit;font-size:.78rem;cursor:pointer}
+        .mini.ok{color:#1f8a4c;border-color:#bfe3ca}.mini.no{color:#b23b3b;border-color:#e8c4c4}.mini.cx{color:#8a8a8a}.mini.undo{color:var(--blue)}
+        .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+        .stat{background:#fff;border:1px solid var(--line);border-radius:999px;padding:.35em 1.1em;font-size:.85rem}
+        .stat b{font-family:'Space Grotesk';color:var(--blue)}
+        .stat--ok b{color:#1f8a4c}.stat--no b{color:#b23b3b}.stat--rev b{color:#a8862a}
         .empty{color:var(--muted);padding:14px 0}
+        .capf{width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
+        .blkadd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+        .blkadd select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;background:#fff}
+        .blkadd input{width:88px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
+        .blklist{display:flex;flex-direction:column;gap:6px}
+        .blkitem{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+        .blkitem .rm{border:none;background:none;color:#b23b3b;cursor:pointer;font-size:1rem}
+        #vac.on{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff;border-color:transparent}
+        .cal .c.selstart{background:var(--gold);color:#fff}
         table.hrs{width:100%;border-collapse:collapse}
         table.hrs td{padding:6px 4px;border-bottom:1px solid rgba(0,0,0,.05)}
         table.hrs input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
@@ -286,16 +351,54 @@ class Dorian_Panel {
           <div class="tabs">
             <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
           </div>
-          <?php foreach ($days as $i => $d) {
+          <?php
+          $labels = array(
+              'confirmed' => array('تأییدشده', '#0066B3'),
+              'paid'      => array('پرداخت‌شده', '#1f8a4c'),
+              'done'      => array('انجام شد', '#1f8a4c'),
+              'noshow'    => array('نیامد', '#b23b3b'),
+              'cancelled' => array('لغو شد', '#9a9a9a'),
+          );
+          foreach ($days as $i => $d) {
               $ymd = date('Y-m-d', strtotime("+$i day", current_time('timestamp')));
               echo '<div class="day' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">';
               $rows = self::bookings_on($pid, $ymd);
-              if (!$rows) { echo '<p class="empty">نوبتی برای این روز ثبت نشده.</p>'; }
+
+              // daily stats
+              $c_total = 0; $c_done = 0; $c_no = 0; $rev = 0;
               foreach ($rows as $r) {
-                  echo '<div class="bk"><span class="time">' . esc_html(date('H:i', strtotime($r->start_dt))) . '</span>'
-                     . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
-                     . '<a class="tel" href="tel:' . esc_attr($r->customer_phone) . '">' . esc_html($r->customer_phone) . '</a></div>';
+                  if ($r->status !== 'cancelled') $c_total++;
+                  if ($r->status === 'done') { $c_done++; $rev += (int) $r->total_price; }
+                  if ($r->status === 'noshow') $c_no++;
               }
+              echo '<div class="stats">'
+                 . '<span class="stat"><b>' . $c_total . '</b> نوبت</span>'
+                 . '<span class="stat stat--ok"><b>' . $c_done . '</b> انجام‌شده</span>'
+                 . '<span class="stat stat--no"><b>' . $c_no . '</b> عدم‌حضور</span>'
+                 . '<span class="stat stat--rev"><b>' . number_format($rev) . '</b> تومان درآمد</span></div>';
+
+              if (!$rows) { echo '<p class="empty">نوبتی برای این روز ثبت نشده.</p>'; echo '</div>'; continue; }
+
+              echo '<form method="post">';
+              wp_nonce_field('dorian_panel_' . $pid);
+              foreach ($rows as $r) {
+                  $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
+                  $lb = $labels[$st];
+                  echo '<div class="bk bk--' . esc_attr($st) . '"><span class="time">' . esc_html(date('H:i', strtotime($r->start_dt))) . '</span>'
+                     . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
+                     . '<span class="badge" style="background:' . esc_attr($lb[1]) . '">' . esc_html($lb[0]) . '</span>'
+                     . '<a class="tel" href="tel:' . esc_attr($r->customer_phone) . '">' . esc_html($r->customer_phone) . '</a>';
+                  echo '<span class="acts">';
+                  if ($st === 'confirmed' || $st === 'paid') {
+                      echo '<button class="mini ok" name="dorian_status" value="' . (int) $r->id . ':done">✓ انجام شد</button>'
+                         . '<button class="mini no" name="dorian_status" value="' . (int) $r->id . ':noshow">نیامد</button>'
+                         . '<button class="mini cx" name="dorian_status" value="' . (int) $r->id . ':cancelled">لغو</button>';
+                  } else {
+                      echo '<button class="mini undo" name="dorian_status" value="' . (int) $r->id . ':confirmed">↺ بازگردانی</button>';
+                  }
+                  echo '</span></div>';
+              }
+              echo '</form>';
               echo '</div>';
           } ?>
         </div>
@@ -328,8 +431,29 @@ class Dorian_Panel {
           </div>
 
           <div class="pcard">
-            <h2>روزهای تعطیل</h2>
-            <p class="hint">روی روزهایی که نیستید کلیک کنید (قرمز = تعطیل).</p>
+            <h2>سقف نوبت روزانه</h2>
+            <p class="hint">حداکثر تعداد نوبت در هر روز. وقتی پر شد، دیگر ساعت خالی نمایش داده نمی‌شود. صفر یعنی نامحدود.</p>
+            <input type="number" min="0" name="cap" class="capf" value="<?php echo esc_attr(dorian_provider_cap($pid)); ?>">
+          </div>
+
+          <div class="pcard">
+            <h2>بستن بازهٔ ساعتی یک روز</h2>
+            <p class="hint">اگر روزی فقط بخشی از آن نیستید (مثلاً فقط بعدازظهر)، روز و بازهٔ ساعت را انتخاب و «افزودن» بزنید. کل روز را از تقویم پایین ببندید.</p>
+            <div class="blkadd">
+              <select id="blkDay"></select>
+              <input type="text" id="blkFrom" placeholder="18:00">
+              <span>تا</span>
+              <input type="text" id="blkTo" placeholder="20:00">
+              <button type="button" class="btn btn--ghost" id="blkAdd">افزودن</button>
+            </div>
+            <div class="blklist" id="blkList"></div>
+            <input type="hidden" name="blocks" id="blocks" value="<?php echo esc_attr(implode(',', dorian_provider_blocks($pid))); ?>">
+          </div>
+
+          <div class="pcard">
+            <h2>روزهای تعطیل و مرخصی</h2>
+            <p class="hint">روی هر روز کلیک کنید تا کل آن روز تعطیل شود (قرمز). برای مرخصیِ چندروزه، «حالت مرخصی» را بزنید و سپس ابتدا و انتهای بازه را کلیک کنید.</p>
+            <button type="button" class="btn btn--ghost" id="vac" style="margin-bottom:12px">🏖️ حالت مرخصی (بازهٔ چندروزه)</button>
             <div class="calnav"><button type="button" id="cprev">‹</button><b id="ctitle">—</b><button type="button" id="cnext">›</button></div>
             <div class="cal" id="cal"></div>
             <input type="hidden" name="closed" id="closed" value="<?php echo esc_attr(implode(',', dorian_provider_closed($pid))); ?>">
@@ -345,8 +469,8 @@ class Dorian_Panel {
           document.querySelectorAll('.day').forEach(x=>x.classList.remove('on'));
           t.classList.add('on'); document.querySelector('.day[data-day="'+t.dataset.day+'"]').classList.add('on');
         });});
-        // jalaali closed-days calendar
         (function(){
+          /* ---- jalaali core (shared) ---- */
           function tr(a,b){return Math.trunc(a/b)} function md(a,b){return a-Math.trunc(a/b)*b}
           function jc(jy){var br=[-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178],gy=jy+621,lj=-14,jp=br[0],jm,ju=0,lp,n,i;for(i=1;i<br.length;i++){jm=br[i];ju=jm-jp;if(jy<jm)break;lj+=tr(ju,33)*8+tr(md(ju,33),4);jp=jm}n=jy-jp;lj+=tr(n,33)*8+tr(md(n,33)+3,4);if(md(ju,33)===4&&ju-n===4)lj++;var lg=tr(gy,4)-tr((tr(gy,100)+1)*3,4)-150,mr=20+lj-lg;if(ju-n<6)n=n-ju+tr(ju+4,33)*33;lp=md(md(n+1,33)-1,4);if(lp===-1)lp=4;return{leap:lp,gy:gy,march:mr}}
           function g2d(gy,gm,gd){var d=tr((gy+tr(gm-8,6)+100100)*1461,4)+tr(153*md(gm+9,12)+2,5)+gd-34840408;d=d-tr(tr(gy+100100+tr(gm-8,6),100)*3,4)+752;return d}
@@ -357,25 +481,74 @@ class Dorian_Panel {
           function ml(jy,jm){if(jm<=6)return 31;if(jm<=11)return 30;return jc(jy).leap===0?30:29}
           function col(jy,jm,jd){var g=d2g(j2d(jy,jm,jd));return (new Date(g.gy,g.gm-1,g.gd).getDay()+1)%7}
           var M=["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+          var WD=["شنبه","یک‌شنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنج‌شنبه","جمعه"];
           function fa(n){return String(n).replace(/[0-9]/g,d=>"۰۱۲۳۴۵۶۷۸۹"[d])}
           function p(n){return (n<10?'0':'')+n}
           function greg(jy,jm,jd){var g=d2g(j2d(jy,jm,jd));return g.gy+'-'+p(g.gm)+'-'+p(g.gd)}
+          function ymdOf(jdn){var g=d2g(jdn);return g.gy+'-'+p(g.gm)+'-'+p(g.gd)}
+          function jlabel(ymd){var s=ymd.split('-'),j=g2j(+s[0],+s[1],+s[2]);return WD[col(j.jy,j.jm,j.jd)]+' '+fa(j.jd)+' '+M[j.jm-1]}
+
+          /* ---- closed-days + vacation calendar ---- */
           var closedEl=document.getElementById('closed');
           var closed=new Set((closedEl.value||'').split(',').filter(Boolean));
           var td=new Date(),tj=g2j(td.getFullYear(),td.getMonth()+1,td.getDate()),view={jy:tj.jy,jm:tj.jm},tdn=j2d(tj.jy,tj.jm,tj.jd);
           var grid=document.getElementById('cal');
+          var rangeMode=false,rangeStart=null,vac=document.getElementById('vac');
+          function commit(){closedEl.value=[...closed].join(',')}
+          if(vac)vac.addEventListener('click',function(){rangeMode=!rangeMode;rangeStart=null;vac.classList.toggle('on',rangeMode);render()});
           function render(){
             document.getElementById('ctitle').textContent=M[view.jm-1]+' '+fa(view.jy);
             grid.innerHTML='';["ش","ی","د","س","چ","پ","ج"].forEach(h=>{var e=document.createElement('div');e.className='h';e.textContent=h;grid.appendChild(e)});
             var lead=col(view.jy,view.jm,1);for(var i=0;i<lead;i++){var e=document.createElement('div');e.className='c empty';grid.appendChild(e)}
             var len=ml(view.jy,view.jm);
-            for(var dd=1;dd<=len;dd++){(function(day){var jdn=j2d(view.jy,view.jm,day),g=greg(view.jy,view.jm,day),c=document.createElement('div');c.className='c';c.textContent=fa(day);
-              if(jdn<tdn){c.className+=' past'}else{if(closed.has(g))c.className+=' closed';c.addEventListener('click',function(){if(closed.has(g)){closed.delete(g);c.classList.remove('closed')}else{closed.add(g);c.classList.add('closed')}closedEl.value=[...closed].join(',')})}
+            for(var dd=1;dd<=len;dd++){(function(day){
+              var jdn=j2d(view.jy,view.jm,day),g=greg(view.jy,view.jm,day),c=document.createElement('div');c.className='c';c.textContent=fa(day);
+              if(jdn<tdn){c.className+=' past'}
+              else{
+                if(closed.has(g))c.className+=' closed';
+                if(rangeMode&&rangeStart===jdn)c.className+=' selstart';
+                c.addEventListener('click',function(){
+                  if(rangeMode){
+                    if(rangeStart===null){rangeStart=jdn;c.classList.add('selstart')}
+                    else{var a=Math.min(rangeStart,jdn),b=Math.max(rangeStart,jdn);for(var x=a;x<=b;x++)closed.add(ymdOf(x));rangeStart=null;rangeMode=false;if(vac)vac.classList.remove('on');commit();render()}
+                  }else{
+                    if(closed.has(g)){closed.delete(g);c.classList.remove('closed')}else{closed.add(g);c.classList.add('closed')}commit()
+                  }
+                })
+              }
               grid.appendChild(c)})(dd)}
           }
           document.getElementById('cprev').addEventListener('click',function(){view.jm--;if(view.jm<1){view.jm=12;view.jy--}render()});
           document.getElementById('cnext').addEventListener('click',function(){view.jm++;if(view.jm>12){view.jm=1;view.jy++}render()});
           render();
+
+          /* ---- partial-day time blocks ---- */
+          var blkEl=document.getElementById('blocks');
+          if(blkEl){
+            var blocks=new Set((blkEl.value||'').split(',').filter(Boolean));
+            var sel=document.getElementById('blkDay');
+            for(var i=0;i<45;i++){var dd=new Date();dd.setDate(dd.getDate()+i);var g=dd.getFullYear()+'-'+p(dd.getMonth()+1)+'-'+p(dd.getDate());var o=document.createElement('option');o.value=g;o.textContent=jlabel(g);sel.appendChild(o)}
+            function isHM(v){return /^\d{1,2}:\d{2}$/.test(v)}
+            function padHM(v){var s=v.split(':');return p(+s[0])+':'+p(+s[1])}
+            function renderBlocks(){
+              var list=document.getElementById('blkList');list.innerHTML='';
+              if(!blocks.size){list.innerHTML='<p class="hint" style="margin:0">بازه‌ای بسته نشده.</p>';return}
+              [...blocks].sort().forEach(function(b){
+                var parts=b.split('|'),item=document.createElement('div');item.className='blkitem';
+                item.innerHTML='<span>'+jlabel(parts[0])+' · <b dir="ltr">'+parts[1]+'</b></span>';
+                var x=document.createElement('button');x.type='button';x.className='rm';x.textContent='✕';
+                x.addEventListener('click',function(){blocks.delete(b);blkEl.value=[...blocks].join(',');renderBlocks()});
+                item.appendChild(x);list.appendChild(item)
+              })
+            }
+            document.getElementById('blkAdd').addEventListener('click',function(){
+              var d=sel.value,f=document.getElementById('blkFrom').value.trim(),t=document.getElementById('blkTo').value.trim();
+              if(!d||!isHM(f)||!isHM(t)){alert('ساعت را به صورت 18:00 وارد کنید.');return}
+              blocks.add(d+'|'+padHM(f)+'-'+padHM(t));blkEl.value=[...blocks].join(',');
+              document.getElementById('blkFrom').value='';document.getElementById('blkTo').value='';renderBlocks()
+            });
+            renderBlocks();
+          }
         })();
         </script>
         <?php
