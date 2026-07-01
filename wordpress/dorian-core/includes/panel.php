@@ -266,6 +266,35 @@ class Dorian_Panel {
         ));
     }
 
+    /* ---- all upcoming bookings for a provider from a Y-m-d onward (for the "آینده" tab) ---- */
+    protected static function upcoming($pid, $from_ymd, $limit = 200) {
+        global $wpdb;
+        $t = Dorian_DB::table();
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $t WHERE DATE(start_dt) >= %s AND FIND_IN_SET(%d, provider_ids) ORDER BY start_dt ASC LIMIT %d",
+            $from_ymd, $pid, $limit
+        ));
+    }
+
+    /* ---- one booking row (shared by the day tabs and the upcoming tab) ---- */
+    protected static function render_row($r, $labels) {
+        $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
+        $lb = $labels[$st];
+        $h  = '<div class="bk bk--' . esc_attr($st) . '"><span class="time">' . esc_html(date('H:i', strtotime($r->start_dt))) . '</span>'
+            . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
+            . '<span class="badge" style="background:' . esc_attr($lb[1]) . '">' . esc_html($lb[0]) . '</span>'
+            . '<a class="tel" href="tel:' . esc_attr($r->customer_phone) . '">' . esc_html($r->customer_phone) . '</a>'
+            . '<span class="acts">';
+        if ($st === 'confirmed' || $st === 'paid') {
+            $h .= '<button class="mini ok" name="dorian_status" value="' . (int) $r->id . ':done">✓ انجام شد</button>'
+                . '<button class="mini no" name="dorian_status" value="' . (int) $r->id . ':noshow">نیامد</button>'
+                . '<button class="mini cx" name="dorian_status" value="' . (int) $r->id . ':cancelled">لغو</button>';
+        } else {
+            $h .= '<button class="mini undo" name="dorian_status" value="' . (int) $r->id . ':confirmed">↺ بازگردانی</button>';
+        }
+        return $h . '</span></div>';
+    }
+
     protected static function head($title) {
         ?><!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -326,6 +355,8 @@ class Dorian_Panel {
         .mini{min-height:38px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:.3em 1em;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
         .mini.ok{color:var(--ok);border-color:#bfe3ca}.mini.no{color:var(--no);border-color:#e8c4c4}.mini.cx{color:#8a8a8a}.mini.undo{color:var(--blue)}
         .empty{color:var(--muted);padding:12px 0}
+        .dhead{margin:16px 0 8px;font-weight:700;color:var(--blue);font-size:.95rem;padding-bottom:5px;border-bottom:1px solid var(--line)}
+        .dhead:first-child{margin-top:0}
 
         input,select{font-family:inherit;font-size:16px;color:var(--ink)}
         table.hrs{width:100%;border-collapse:collapse}
@@ -425,6 +456,7 @@ class Dorian_Panel {
           <h2>نوبت‌ها</h2>
           <div class="tabs">
             <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
+            <button type="button" class="tab" data-day="up">آینده</button>
           </div>
           <?php
           $labels = array(
@@ -456,26 +488,32 @@ class Dorian_Panel {
 
               echo '<form method="post">';
               wp_nonce_field('dorian_panel_' . $pid);
-              foreach ($rows as $r) {
-                  $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
-                  $lb = $labels[$st];
-                  echo '<div class="bk bk--' . esc_attr($st) . '"><span class="time">' . esc_html(date('H:i', strtotime($r->start_dt))) . '</span>'
-                     . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
-                     . '<span class="badge" style="background:' . esc_attr($lb[1]) . '">' . esc_html($lb[0]) . '</span>'
-                     . '<a class="tel" href="tel:' . esc_attr($r->customer_phone) . '">' . esc_html($r->customer_phone) . '</a>';
-                  echo '<span class="acts">';
-                  if ($st === 'confirmed' || $st === 'paid') {
-                      echo '<button class="mini ok" name="dorian_status" value="' . (int) $r->id . ':done">✓ انجام شد</button>'
-                         . '<button class="mini no" name="dorian_status" value="' . (int) $r->id . ':noshow">نیامد</button>'
-                         . '<button class="mini cx" name="dorian_status" value="' . (int) $r->id . ':cancelled">لغو</button>';
-                  } else {
-                      echo '<button class="mini undo" name="dorian_status" value="' . (int) $r->id . ':confirmed">↺ بازگردانی</button>';
-                  }
-                  echo '</span></div>';
-              }
+              foreach ($rows as $r) echo self::render_row($r, $labels);
               echo '</form>';
               echo '</div>';
-          } ?>
+          }
+
+          // upcoming tab: everything from the 4th day onward, grouped by date
+          $fut = self::upcoming($pid, date('Y-m-d', strtotime('+3 day', current_time('timestamp'))));
+          echo '<div class="day" data-day="up">';
+          if (!$fut) {
+              echo '<p class="empty">نوبتی برای روزهای بعد ثبت نشده.</p>';
+          } else {
+              echo '<form method="post">';
+              wp_nonce_field('dorian_panel_' . $pid);
+              $cur = '';
+              foreach ($fut as $r) {
+                  $d = date('Y-m-d', strtotime($r->start_dt));
+                  if ($d !== $cur) {
+                      $cur = $d;
+                      echo '<div class="dhead"><span class="jdate" data-ymd="' . esc_attr($d) . '">' . esc_html($d) . '</span></div>';
+                  }
+                  echo self::render_row($r, $labels);
+              }
+              echo '</form>';
+          }
+          echo '</div>';
+          ?>
         </div>
 
         <?php $rw = self::revenue($pid, 7); $rm = self::revenue($pid, 30); ?>
@@ -610,6 +648,9 @@ class Dorian_Panel {
           document.getElementById('cprev').addEventListener('click',function(){view.jm--;if(view.jm<1){view.jm=12;view.jy--}render()});
           document.getElementById('cnext').addEventListener('click',function(){view.jm++;if(view.jm>12){view.jm=1;view.jy++}render()});
           render();
+
+          /* ---- Jalaali date headers in the "upcoming" tab ---- */
+          document.querySelectorAll('.jdate').forEach(function(el){ if(el.dataset.ymd) el.textContent=jlabel(el.dataset.ymd); });
 
           /* ---- partial-day time blocks ---- */
           var blkEl=document.getElementById('blocks');
