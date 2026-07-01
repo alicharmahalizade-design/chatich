@@ -268,68 +268,125 @@ class Dorian_Panel {
 
     protected static function head($title) {
         ?><!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#DFD2BF">
         <title><?php echo esc_html($title); ?></title>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
         @font-face{font-family:'Pinar';src:url('<?php echo DORIAN_URL; ?>assets/fonts/Pinar-VF.woff2') format('woff2');font-weight:100 900;font-display:swap}
-        :root{--blue:#0066B3;--gold:#C9A227;--ink:#1c160c;--muted:#736a59;--line:rgba(0,75,133,.16);--cream:#DFD2BF}
+        :root{
+          --blue:#0066B3;--blue-2:#1E86D6;--gold:#C9A227;
+          --ink:#1c160c;--muted:#6b6252;--line:rgba(0,75,133,.14);
+          --card:#FBF6EC;--card-2:#F3E9D6;--ok:#1f8a4c;--no:#c0392b;
+          --rad:16px;--shadow:0 20px 50px -34px rgba(40,30,10,.55)
+        }
         *{box-sizing:border-box}
-        body{margin:0;font-family:'Pinar',Tahoma,sans-serif;background:radial-gradient(120% 120% at 50% 0%,#E9DFCB,#DFD2BF 60%,#D3C4A8);color:var(--ink);line-height:1.9;min-height:100vh}
-        .pw{width:min(880px,94%);margin:0 auto;padding:26px 0 60px}
-        .pcard{background:linear-gradient(180deg,#FBF6EC,#F3E9D6);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-bottom:18px;box-shadow:0 30px 70px -50px rgba(40,30,10,.5)}
-        .ptop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
-        .ptop h1{font-size:1.5rem;margin:0}
-        .ptop .role{font-family:'Space Grotesk';letter-spacing:.16em;font-size:.7rem;color:var(--blue)}
-        .btn{display:inline-flex;align-items:center;gap:6px;padding:.6em 1.3em;border-radius:999px;border:1px solid transparent;font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none}
-        .btn--blue{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff}
-        .btn--ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+        html{-webkit-text-size-adjust:100%}
+        body{margin:0;font-family:'Pinar',Tahoma,sans-serif;background:radial-gradient(140% 120% at 50% 0%,#ECE3D0,#DFD2BF 55%,#D3C4A8);background-attachment:fixed;color:var(--ink);line-height:1.85;min-height:100vh;font-size:16px;-webkit-font-smoothing:antialiased}
+        img{max-width:100%}
+        a{color:var(--blue)}
+        :focus-visible{outline:3px solid rgba(30,134,214,.55);outline-offset:2px;border-radius:6px}
+        .pw{width:100%;max-width:920px;margin:0 auto;padding:16px 14px calc(96px + env(safe-area-inset-bottom))}
+        .pcard{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--line);border-radius:var(--rad);padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+
+        .ptop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+        .ptop h1{font-size:1.35rem;margin:0;line-height:1.3}
+        .ptop .role{display:inline-block;font-family:'Space Grotesk';letter-spacing:.14em;font-size:.68rem;color:var(--blue);text-transform:uppercase;margin-top:2px}
+
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:.5em 1.25em;border-radius:999px;border:1px solid transparent;font-family:inherit;font-weight:700;font-size:.95rem;cursor:pointer;text-decoration:none;transition:transform .12s ease,box-shadow .2s ease,filter .2s ease}
+        .btn:active{transform:translateY(1px)}
+        .btn--blue{background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;box-shadow:0 12px 24px -14px rgba(0,102,179,.9)}
+        .btn--blue:hover{filter:brightness(1.05)}
+        .btn--ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+        .btn--ghost:hover{background:#fbfbfb}
+
+        h2{font-size:1.05rem;margin:0 0 8px}
+        .hint{color:var(--muted);font-size:.85rem;margin:0 0 12px;line-height:1.7}
+        .hint code{background:rgba(0,0,0,.05);padding:.1em .4em;border-radius:5px;direction:ltr;display:inline-block}
+
         .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-        .tab{padding:.5em 1.2em;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:.9rem}
-        .tab.on{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff;border-color:transparent}
+        .tab{flex:1 1 auto;min-width:88px;min-height:44px;padding:.4em 1em;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:.92rem;font-weight:600;color:var(--ink);transition:background .2s,color .2s}
+        .tab.on{background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;border-color:transparent}
         .day{display:none}.day.on{display:block}
-        .bk{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;flex-wrap:wrap}
-        .bk .time{font-family:'Space Grotesk';font-weight:700;color:var(--blue);min-width:56px}
-        .bk .who{font-weight:700}.bk .svc{color:var(--muted);font-size:.9rem}
-        .bk .tel{color:var(--blue);text-decoration:none;font-family:'Space Grotesk'}
-        .bk--cancelled{opacity:.55}.bk--cancelled .who{text-decoration:line-through}
-        .bk--done{background:#f2fbf5}.bk--noshow{background:#fdf3f3}
-        .badge{color:#fff;border-radius:999px;padding:.15em .8em;font-size:.72rem;white-space:nowrap;margin-inline-start:auto}
-        .acts{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:8px}
-        .mini{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.35em .95em;font-family:inherit;font-size:.78rem;cursor:pointer}
-        .mini.ok{color:#1f8a4c;border-color:#bfe3ca}.mini.no{color:#b23b3b;border-color:#e8c4c4}.mini.cx{color:#8a8a8a}.mini.undo{color:var(--blue)}
+
         .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-        .stat{background:#fff;border:1px solid var(--line);border-radius:999px;padding:.35em 1.1em;font-size:.85rem}
+        .stat{background:#fff;border:1px solid var(--line);border-radius:999px;padding:.3em 1em;font-size:.82rem}
         .stat b{font-family:'Space Grotesk';color:var(--blue)}
-        .stat--ok b{color:#1f8a4c}.stat--no b{color:#b23b3b}.stat--rev b{color:#a8862a}
-        .empty{color:var(--muted);padding:14px 0}
-        .capf{width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
-        .blkadd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-        .blkadd select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;background:#fff}
-        .blkadd input{width:88px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
-        .blklist{display:flex;flex-direction:column;gap:6px}
-        .blkitem{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-        .blkitem .rm{border:none;background:none;color:#b23b3b;cursor:pointer;font-size:1rem}
-        #vac.on{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff;border-color:transparent}
-        .cal .c.selstart{background:var(--gold);color:#fff}
+        .stat--ok b{color:var(--ok)}.stat--no b{color:var(--no)}.stat--rev b{color:#a8862a}
+
+        .bk{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"time who badge" "tel tel tel" "acts acts acts";gap:6px 12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
+        .bk .time{grid-area:time;font-family:'Space Grotesk';font-weight:700;color:var(--blue);font-size:1.05rem}
+        .bk>span:nth-child(2){grid-area:who;min-width:0}
+        .bk .who{font-weight:700}.bk .svc{color:var(--muted);font-size:.85rem}
+        .bk .badge{grid-area:badge;color:#fff;border-radius:999px;padding:.2em .8em;font-size:.72rem;white-space:nowrap;justify-self:end}
+        .bk .tel{grid-area:tel;color:var(--blue);text-decoration:none;font-family:'Space Grotesk';font-weight:600}
+        .bk--cancelled{opacity:.6}.bk--cancelled .who{text-decoration:line-through}
+        .bk--done{background:#f2fbf5;border-color:#bfe3ca}.bk--noshow{background:#fdf3f3;border-color:#e8c4c4}
+        .acts{grid-area:acts;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+        .mini{min-height:38px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:.3em 1em;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+        .mini.ok{color:var(--ok);border-color:#bfe3ca}.mini.no{color:var(--no);border-color:#e8c4c4}.mini.cx{color:#8a8a8a}.mini.undo{color:var(--blue)}
+        .empty{color:var(--muted);padding:12px 0}
+
+        input,select{font-family:inherit;font-size:16px;color:var(--ink)}
         table.hrs{width:100%;border-collapse:collapse}
-        table.hrs td{padding:6px 4px;border-bottom:1px solid rgba(0,0,0,.05)}
-        table.hrs input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
-        .svcrow{display:grid;grid-template-columns:1fr 130px 110px;gap:10px;align-items:center;margin-bottom:8px}
-        .svcrow input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
-        .svcrow .nm{font-weight:600}
-        .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:340px}
-        .cal .h{text-align:center;font-size:.72rem;color:var(--muted)}
-        .cal .c{aspect-ratio:1;border:1px solid transparent;border-radius:8px;background:#fff;cursor:pointer;font-family:'Space Grotesk';font-size:.85rem}
-        .cal .c.empty{background:none;cursor:default}.cal .c.past{opacity:.35;cursor:not-allowed}
-        .cal .c.closed{background:#c0392b;color:#fff;border-color:transparent}
-        .calnav{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-        .calnav button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer}
-        h2{font-size:1.1rem;margin:0 0 10px}
-        .hint{color:var(--muted);font-size:.85rem;margin:0 0 12px}
-        .saved{background:#d4edda;border:1px solid #9ecfa8;color:#20612f;padding:8px 14px;border-radius:10px;margin-bottom:14px}
-        .login{max-width:360px;margin:12vh auto}.login input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:8px 0;font-size:1rem}
-        .err{color:#c0392b}
+        table.hrs td{padding:6px 4px;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:middle}
+        table.hrs td:first-child{width:84px;font-size:.9rem}
+        table.hrs input{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff}
+        .svcrow{display:grid;grid-template-columns:1fr 96px 78px;gap:8px;align-items:center;margin-bottom:8px}
+        .svcrow input{min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff;text-align:center}
+        .svcrow .nm{font-weight:600;font-size:.9rem}
+        .capf{width:140px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff}
+
+        .blkadd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+        .blkadd select{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;background:#fff;flex:1 1 130px}
+        .blkadd input{flex:0 0 84px;width:84px;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff;text-align:center}
+        .blklist{display:flex;flex-direction:column;gap:6px}
+        .blkitem{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.9rem}
+        .blkitem .rm{border:none;background:none;color:var(--no);cursor:pointer;font-size:1.1rem;min-width:32px;min-height:32px}
+
+        #vac{margin-bottom:12px}
+        #vac.on{background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;border-color:transparent}
+        .calwrap{max-width:360px;margin:0 auto}
+        .calnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+        .calnav b{font-size:1rem}
+        .calnav button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:1.2rem;color:var(--blue);display:flex;align-items:center;justify-content:center}
+        .calnav button:hover{background:#f5f5f5}
+        .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+        .cal .h{text-align:center;font-size:.72rem;color:var(--muted);font-weight:600;padding-bottom:4px}
+        .cal .c{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-family:'Space Grotesk';font-size:.9rem;transition:background .15s,transform .1s}
+        .cal .c:not(.empty):not(.past):hover{background:#eef6fd;border-color:var(--blue-2)}
+        .cal .c:active{transform:scale(.94)}
+        .cal .c.empty{background:none;border-color:transparent;cursor:default}
+        .cal .c.past{opacity:.4;cursor:not-allowed;background:#f4efe4}
+        .cal .c.today{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+        .cal .c.closed{background:var(--no);color:#fff;border-color:transparent}
+        .cal .c.selstart{background:var(--gold);color:#fff;border-color:transparent}
+        .callegend{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:14px;font-size:.78rem;color:var(--muted)}
+        .callegend span{display:inline-flex;align-items:center;gap:6px}
+        .callegend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+        .lg-closed{background:var(--no)}.lg-today{border:1.5px solid var(--gold)}
+
+        .saved{background:#d9efe0;border:1px solid #9ecfa8;color:#1c5a2e;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-weight:600}
+        .savebar{position:sticky;bottom:0;z-index:20;margin:4px -14px 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(223,210,191,0),#DFD2BF 45%)}
+        .btn--save{width:100%}
+
+        .login{max-width:380px;margin:10vh auto}
+        .login input{width:100%;min-height:50px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0;font-size:16px;text-align:center;background:#fff}
+        .err{color:var(--no);font-weight:600}
+
+        @media (min-width:640px){
+          .pw{padding:26px 20px 60px}
+          .pcard{padding:22px 24px;margin-bottom:18px}
+          .ptop h1{font-size:1.5rem}
+          h2{font-size:1.15rem}
+          .tab{flex:0 0 auto}
+          .bk{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+          .bk .badge{margin-inline-start:auto}
+          .acts{width:100%}
+          .svcrow{grid-template-columns:1fr 130px 110px;gap:10px}
+          .savebar{position:static;margin:0;padding:0;background:none}
+          .btn--save{width:auto}
+        }
         </style></head><body><div class="pw"><?php
     }
     protected static function foot() { echo '</div></body></html>'; }
@@ -341,8 +398,9 @@ class Dorian_Panel {
           <p class="hint" style="text-align:center">برای ورود به پنل، رمز خود را وارد کنید.</p>
           <?php if ($err) echo '<p class="err" style="text-align:center">' . esc_html($err) . '</p>'; ?>
           <form method="post">
-            <input type="password" name="passcode" placeholder="رمز" autofocus>
-            <button class="btn btn--blue" name="dorian_login" value="1" style="width:100%;justify-content:center">ورود</button>
+            <label for="passcode" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">رمز ورود</label>
+            <input id="passcode" type="password" name="passcode" placeholder="رمز" autocomplete="current-password" inputmode="numeric" autofocus>
+            <button class="btn btn--blue" name="dorian_login" value="1" style="width:100%">ورود</button>
           </form>
         </div><?php
         self::foot();
@@ -480,13 +538,16 @@ class Dorian_Panel {
           <div class="pcard">
             <h2>روزهای تعطیل و مرخصی</h2>
             <p class="hint">روی هر روز کلیک کنید تا کل آن روز تعطیل شود (قرمز). برای مرخصیِ چندروزه، «حالت مرخصی» را بزنید و سپس ابتدا و انتهای بازه را کلیک کنید.</p>
-            <button type="button" class="btn btn--ghost" id="vac" style="margin-bottom:12px">🏖️ حالت مرخصی (بازهٔ چندروزه)</button>
-            <div class="calnav"><button type="button" id="cprev">‹</button><b id="ctitle">—</b><button type="button" id="cnext">›</button></div>
-            <div class="cal" id="cal"></div>
+            <button type="button" class="btn btn--ghost" id="vac">🏖️ حالت مرخصی (بازهٔ چندروزه)</button>
+            <div class="calwrap">
+              <div class="calnav"><button type="button" id="cprev" aria-label="ماه قبل">‹</button><b id="ctitle">—</b><button type="button" id="cnext" aria-label="ماه بعد">›</button></div>
+              <div class="cal" id="cal"></div>
+              <div class="callegend"><span><i class="lg-closed"></i> تعطیل</span><span><i class="lg-today"></i> امروز</span></div>
+            </div>
             <input type="hidden" name="closed" id="closed" value="<?php echo esc_attr(implode(',', dorian_provider_closed($pid))); ?>">
           </div>
 
-          <button class="btn btn--blue" name="dorian_save" value="1">ذخیرهٔ تنظیمات</button>
+          <div class="savebar"><button class="btn btn--blue btn--save" name="dorian_save" value="1">ذخیرهٔ تنظیمات</button></div>
         </form>
 
         <script>
@@ -532,6 +593,7 @@ class Dorian_Panel {
               var jdn=j2d(view.jy,view.jm,day),g=greg(view.jy,view.jm,day),c=document.createElement('div');c.className='c';c.textContent=fa(day);
               if(jdn<tdn){c.className+=' past'}
               else{
+                if(jdn===tdn)c.className+=' today';
                 if(closed.has(g))c.className+=' closed';
                 if(rangeMode&&rangeStart===jdn)c.className+=' selstart';
                 c.addEventListener('click',function(){
