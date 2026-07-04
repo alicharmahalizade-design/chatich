@@ -2,7 +2,7 @@
    DORIAN — internal pages layer
    Shared "light & fast" chrome + layouts for About / Contact / Blog / Page /
    WooCommerce single-product. Loaded AFTER site.css; reuses all of its tokens
-   (--paper/--navy/--gold-*/--blue/--ff-fa/--wrap/.btn/.eyebrow/.ds/.corner…).
+   (paper / navy / gold / blue / ff-fa / wrap, plus .btn .eyebrow .ds .corner).
    No GSAP/Lenis — motion is CSS + a tiny IntersectionObserver.
    ========================================================================= */
 
@@ -10,6 +10,9 @@
   --fs: var(--dorian-fs, 17px);
   --line: 1.9;
   --rr: 18px;
+  --head-h: 76px;                        /* fixed header height on internal pages */
+  --head-h-c: 62px;                      /* compacted (scrolled) height */
+  --section-y: clamp(56px, 8vw, 104px);  /* one vertical rhythm for every section */
 }
 
 /* ---- base page surface (paper, readable, RTL) ---- */
@@ -21,9 +24,9 @@ body.dorian-inner {
   overflow-x: hidden;
 }
 body.dorian-inner #tone { background: var(--paper); }
-/* the landing hides these via other rules; keep the ambient dust subtle here */
-body.dorian-inner .dust { opacity: .5; }
-.dorian-main { display: block; min-height: 40vh; }
+body.dorian-inner .dust { opacity: .4; }
+/* content is offset by the header height so nothing ever hides beneath it */
+.dorian-inner .dorian-main { display: block; min-height: 50vh; padding-block-start: var(--head-h); }
 
 /* heading scale variants (from the panel) */
 .dorian-scale-compact { --h1: clamp(1.9rem, 4vw, 2.7rem); --h2: clamp(1.5rem, 3vw, 2rem); }
@@ -34,21 +37,47 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 .skip-link { position: fixed; inset-block-start: -60px; inset-inline-start: 12px; z-index: 500; background: var(--navy); color: var(--paper); padding: 10px 16px; border-radius: 10px; transition: inset-block-start .2s; }
 .skip-link:focus { inset-block-start: 12px; }
 
-/* keep the fixed header from covering content (header is ~76px) */
-.dorian-inner .head--static { position: absolute; }
-.pagehero { padding-block-start: clamp(120px, 16vh, 168px); }
+/* ============================ INTERNAL HEADER (redesigned) ============================
+   The landing keeps its cinematic fade-out header. Internal pages get a solid,
+   standards-compliant bar: real background, fixed height, hairline + soft shadow,
+   compacts on scroll. Content is pushed down by --head-h (above), so no overlap. */
+.dorian-inner .head {
+  position: fixed; inset-block-start: 0; inset-inline: 0; z-index: 200;
+  height: var(--head-h); padding-block: 0; padding-inline: clamp(16px, 4vw, 52px);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  color: var(--ink);
+  background: rgba(246, 239, 224, .9);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1); backdrop-filter: blur(12px) saturate(1.1);
+  border-block-end: 1px solid rgba(168, 128, 26, .2);
+  box-shadow: 0 8px 30px -22px rgba(20, 17, 10, .55);
+  transition: height .35s var(--ease), background .35s, box-shadow .35s;
+}
+.dorian-inner .head::before { display: none; }           /* kill the landing fade mask */
+.dorian-inner .head.compact { height: var(--head-h-c); background: rgba(246, 239, 224, .96); box-shadow: 0 12px 30px -18px rgba(20, 17, 10, .6); }
+.dorian-inner .head.head--static { position: absolute; } /* when the "sticky header" option is off */
+.dorian-inner .head__start { display: flex; align-items: center; gap: clamp(16px, 3vw, 40px); min-width: 0; }
+.dorian-inner .head__end { display: flex; align-items: center; gap: 14px; }
+.dorian-inner .head__logo { height: 40px; width: auto; transition: height .35s var(--ease); }
+.dorian-inner .head.compact .head__logo { height: 32px; }
+.dorian-inner .nav { display: flex; align-items: center; gap: clamp(14px, 2vw, 30px); }
+.dorian-inner .nav a { font-family: var(--ff-fa); font-weight: 600; font-size: 1rem; color: var(--ink-2); opacity: 1; }
+.dorian-inner .nav a::after { background: var(--gold-2); }
+.dorian-inner .nav a:hover { color: var(--blue); }
+.dorian-inner .head__cta { padding: 10px 22px; font-size: .95rem; }
 
 /* the reserve CTA that lives inside the mobile menu: hidden on desktop
    (desktop shows the one in .head__end), shown only in the open mobile nav */
 .head__cta--mobile { display: none !important; }
 @media (max-width: 920px) {
+  .dorian-inner .head__cta { display: none; }             /* desktop CTA hidden on mobile */
   .head__cta--mobile { display: inline-flex !important; margin-top: 10px; font-family: var(--ff-fa); font-size: 1rem; }
+  .dorian-inner .nav { position: fixed; inset: 0; padding-block-start: var(--head-h); }
 }
 
 /* ============================ PAGE HERO ============================ */
 .pagehero {
   position: relative;
-  padding-block-end: clamp(30px, 5vw, 54px);
+  padding-block: clamp(40px, 6vw, 72px) clamp(30px, 5vw, 54px);
   text-align: center;
   background:
     radial-gradient(120% 90% at 50% -10%, rgba(0,102,179,.10), transparent 60%),
@@ -60,7 +89,7 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
   content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; height: 1px;
   background: var(--gold-line);
 }
-.pagehero--slim { padding-block-end: 14px; text-align: start; }
+.pagehero--slim { padding-block: clamp(18px, 3vw, 28px); text-align: start; }
 .pagehero__inner { position: relative; z-index: 2; }
 .crumbs { font-family: var(--ff-en); font-size: .8rem; letter-spacing: .04em; color: var(--ink-soft); display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-block-end: 14px; }
 .pagehero--slim .crumbs { justify-content: flex-start; margin-block-end: 0; }
@@ -79,10 +108,10 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 .pagehero__sub { max-width: 60ch; margin: 12px auto 0; color: var(--ink-soft); }
 
 /* ============================ SECTION RHYTHM ============================ */
-.listing, .about, .values, .contact, .single, .related, .comments-section, .woo, .about-cta, .notfound {
-  padding-block: clamp(48px, 7vw, 88px);
+.listing, .about, .values, .contact, .single, .about-team, .related, .comments-section, .woo, .about-cta, .notfound {
+  padding-block: var(--section-y);
 }
-.related, .comments-section { padding-block-start: clamp(30px, 5vw, 56px); }
+.related, .comments-section { padding-block-start: clamp(34px, 5vw, 60px); }
 .values, .about-cta { background: linear-gradient(180deg, var(--paper), var(--paper-3)); }
 
 /* ============================ BLOG / ARCHIVE GRID ============================ */
@@ -332,6 +361,46 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 /* notices */
 .woocommerce-message, .woocommerce-info, .woocommerce-error { border-block-start-color: var(--gold-2); border-radius: 12px; }
 .woocommerce-message::before, .woocommerce-info::before { color: var(--gold-soft); }
+
+/* ---- single product: premium touches (creative pass) ---- */
+/* framed gallery on a paper mat with gold hairline + corner ticks */
+.woo .woocommerce div.product .woocommerce-product-gallery {
+  position: relative; background: linear-gradient(160deg, #fff, var(--paper-2));
+  border: 1px solid rgba(168,128,26,.28); border-radius: var(--rr);
+  padding: clamp(14px, 2vw, 26px); box-shadow: 0 34px 70px -40px rgba(20,17,10,.5);
+}
+.woo .woocommerce div.product .woocommerce-product-gallery__wrapper { border-radius: 12px; overflow: hidden; }
+.woo .woocommerce div.product .woocommerce-product-gallery::before,
+.woo .woocommerce div.product .woocommerce-product-gallery::after {
+  content: ""; position: absolute; width: 22px; height: 22px; border: 2px solid var(--gold-2); opacity: .8;
+}
+.woo .woocommerce div.product .woocommerce-product-gallery::before { inset-block-start: 10px; inset-inline-start: 10px; border-inline-end: 0; border-block-end: 0; }
+.woo .woocommerce div.product .woocommerce-product-gallery::after { inset-block-end: 10px; inset-inline-end: 10px; border-inline-start: 0; border-block-start: 0; }
+
+/* summary: category as gold eyebrow, gold divider under the title */
+.woo .woocommerce div.product .product_title { position: relative; padding-block-end: 14px; margin-block-end: 4px; }
+.woo .woocommerce div.product .product_title::after {
+  content: ""; position: absolute; inset-block-end: 0; inset-inline-start: 0; width: 60px; height: 2px; background: var(--gold-line);
+}
+.woo .woocommerce div.product .price { margin-block: 6px 14px; }
+.woo .woocommerce div.product .price .woocommerce-Price-currencySymbol { font-size: .7em; margin-inline-start: 3px; color: var(--ink-soft); }
+
+/* trust / benefits strip (injected by dorian_product_benefits) */
+.dorian-benefits { list-style: none; display: grid; gap: 12px; margin: 22px 0 0; padding: 18px 20px; border: 1px solid rgba(168,128,26,.2); border-radius: 14px; background: rgba(255,255,255,.5); }
+.dorian-benefits li { display: flex; align-items: center; gap: 12px; }
+.dorian-benefits__ic { flex: none; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: var(--gold-grad); color: #241803; }
+.dorian-benefits__ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.dorian-benefits__t { display: flex; flex-direction: column; line-height: 1.5; }
+.dorian-benefits__t b { font-weight: 800; color: var(--ink); font-size: 1rem; }
+.dorian-benefits__t em { font-style: normal; color: var(--ink-soft); font-size: .86rem; }
+.woocommerce div.product .product_meta { margin-block-start: 16px; padding-block-start: 14px; border-block-start: 1px solid rgba(20,17,10,.1); color: var(--ink-soft); font-size: .88rem; }
+
+/* related products: gentle card lift + gold heading rule */
+.woo .woocommerce .related { border-block-start: 1px solid rgba(168,128,26,.2); padding-block-start: clamp(34px,5vw,56px); }
+.woo .woocommerce .related > h2 { position: relative; display: inline-block; }
+.woo .woocommerce .related > h2::after { content: ""; display: block; width: 54px; height: 2px; margin-block-start: 8px; background: var(--gold-line); }
+.woocommerce ul.products li.product { transition: transform .5s var(--ease); }
+.woocommerce ul.products li.product:hover { transform: translateY(-5px); }
 
 /* ============================ COMMENTS ============================ */
 .comments-section { background: linear-gradient(180deg, var(--paper), var(--paper-3)); }

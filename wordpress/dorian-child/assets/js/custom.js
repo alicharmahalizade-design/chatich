@@ -165,9 +165,11 @@
     setActive(0);
     var current = 0;
     ScrollTrigger.create({
-      trigger: "#floors", start: "top top", end: "+=300%",
+      trigger: "#floors", start: "top top", end: "+=160%",   // shorter: ~one scroll per floor
       pin: "#floors", scrub: 1, invalidateOnRefresh: true,
       refreshPriority: 2,   // middle pin: after story, before team
+      // snap to each floor's centre so a single scroll settles on the next floor
+      snap: { snapTo: [0.1667, 0.5, 0.8333], duration: { min: 0.2, max: 0.5 }, delay: 0.04, ease: "power2.inOut" },
       onUpdate: function (self) {
         var p = self.progress;
         var top = CELL_CENTER[0] - p * (CELL_CENTER[0] - CELL_CENTER[2]);

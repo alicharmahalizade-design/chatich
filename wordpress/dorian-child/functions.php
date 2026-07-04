@@ -901,4 +901,29 @@ add_action('after_setup_theme', function () {
     }
     // give the shop a comfortable 3-up grid by default
     add_filter('loop_shop_columns', function () { return 3; });
+    // a trust / benefits strip inside the product summary, after the add-to-cart
+    add_action('woocommerce_single_product_summary', 'dorian_product_benefits', 35);
 });
+
+/** Trust / benefits strip shown under the add-to-cart on single products. */
+function dorian_product_benefits() {
+    $ic = array(
+        // shield-check
+        '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+        // truck
+        '<svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>',
+        // chat
+        '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-4 3v-3H4z"/></svg>',
+    );
+    $items = array(
+        array('اصالت کالا', 'ضمانتِ اصل‌بودن همهٔ محصولات'),
+        array('ارسال سریع', 'بسته‌بندیِ ویژه به سراسر کشور'),
+        array('مشاورهٔ رایگان', 'راهنماییِ تخصصی پیش از خرید'),
+    );
+    echo '<ul class="dorian-benefits">';
+    foreach ($items as $i => $b) {
+        echo '<li><span class="dorian-benefits__ic" aria-hidden="true">' . $ic[$i] . '</span>'
+            . '<span class="dorian-benefits__t"><b>' . esc_html($b[0]) . '</b><em>' . esc_html($b[1]) . '</em></span></li>';
+    }
+    echo '</ul>';
+}
