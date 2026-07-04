@@ -82,6 +82,38 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
 });
 
 /* =========================================================================
+   Inner pages (shop, single-product, cart, About, Contact, …) — a cosmetic
+   Dorian skin. NOT loaded on the landing template (it has its own full CSS)
+   nor on the booking page (the plugin styles that full-screen itself).
+   ========================================================================= */
+function dorian_is_inner_page() {
+    if (is_admin() || is_page_template('template-dorian.php')) return false;
+    $bid = (int) get_option('dorian_booking_page_id');
+    if ($bid && is_page($bid)) return false;
+    if (is_singular()) {
+        $p = get_post();
+        if ($p && has_shortcode((string) $p->post_content, 'dorian_booking')) return false;
+    }
+    return true;
+}
+add_action('wp_enqueue_scripts', function () {
+    if (!dorian_is_inner_page()) return;
+    $uri = get_stylesheet_directory_uri();
+    $dir = get_stylesheet_directory();
+    $ver = file_exists($dir . '/assets/css/internal.css') ? filemtime($dir . '/assets/css/internal.css') : '1.0.0';
+    wp_enqueue_style('dorian-inner-fonts', 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap', array(), null);
+    wp_enqueue_style('dorian-internal', $uri . '/assets/css/internal.css', array('dorian-inner-fonts'), $ver);
+    // self-hosted Pinar, forced absolute so a cache plugin's "remove unused CSS" can't drop it
+    wp_add_inline_style('dorian-internal',
+        "@font-face{font-family:'Pinar';src:url('" . $uri . "/assets/fonts/Pinar-VF.woff2') format('woff2');font-weight:100 900;font-display:swap}"
+    );
+}, 20);
+add_filter('body_class', function ($classes) {
+    if (dorian_is_inner_page()) $classes[] = 'dorian-inner';
+    return $classes;
+});
+
+/* =========================================================================
    Dorian theme options — edit (almost) everything without code.
    ========================================================================= */
 

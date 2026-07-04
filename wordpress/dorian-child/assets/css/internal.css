@@ -1,0 +1,251 @@
+/* =========================================================================
+   DORIAN — INNER PAGES (everything except the landing template)
+   Cosmetic theme ONLY. We never impose display:grid/flex on WooCommerce or
+   Elementor markup — layout stays with the plugin/theme, we only restyle
+   colour, type, buttons, cards and add overflow guards. This keeps the shop,
+   single-product, cart, checkout, About & Contact pages robust.
+
+   Selectors are anchored on `body.dorian-inner` + the WooCommerce component
+   class (NOT a separate `.woocommerce` ancestor, because Woo puts that class
+   on <body> itself). Key button/title/price props use !important so they
+   reliably beat WooCommerce's own high-specificity defaults and can never be
+   squished by a stray parent grid.
+   ========================================================================= */
+
+@font-face{
+  font-family:'Pinar';
+  src:url("../fonts/Pinar-VF.woff2") format('woff2');
+  font-weight:100 900; font-display:swap;
+}
+
+:root{
+  --d-paper:#ECDEC9; --d-paper-2:#F6EFE0; --d-paper-3:#E1D0B3; --d-paper-deep:#D8C4A2;
+  --d-ink:#15110A;   --d-ink-2:#2A2316;   --d-ink-soft:#5A5140;
+  --d-blue:#0066B3;  --d-blue-deep:#004B85; --d-blue-bright:#1E86D6;
+  --d-navy:#081726;  --d-navy-2:#0C2138;
+  --d-gold-1:#A8801A; --d-gold-2:#D9B65A; --d-gold-3:#F4E1A0; --d-gold-deep:#6b4f12;
+  --d-gold-grad:linear-gradient(135deg,#A8801A,#D9B65A 45%,#F4E1A0 72%,#D9B65A);
+  --d-line:rgba(10,40,70,.14);
+  --d-ff-fa:'Pinar',Tahoma,sans-serif;
+  --d-ff-en:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --d-r:16px; --d-r-lg:22px; --d-r-pill:999px;
+  --d-shadow:0 30px 70px -50px rgba(30,20,5,.55);
+}
+
+/* ---- base canvas & type (header/footer are Elementor templates → left alone) */
+body.dorian-inner{
+  background:radial-gradient(130% 120% at 50% -10%,#F3EAD7 0%,#ECDEC9 45%,#E1D0B3 100%);
+  color:var(--d-ink);
+  font-family:var(--d-ff-fa);
+  overflow-x:hidden;                 /* kills the horizontal bleed on Contact */
+}
+body.dorian-inner img,
+body.dorian-inner video,
+body.dorian-inner iframe{max-width:100%;height:auto}
+body.dorian-inner ::selection{background:var(--d-gold-2);color:var(--d-navy)}
+
+/* latin runs (prices, SKUs, breadcrumbs) read better in the display face */
+body.dorian-inner .price,
+body.dorian-inner .woocommerce-Price-amount,
+body.dorian-inner .sku,
+body.dorian-inner .woocommerce-breadcrumb{font-family:var(--d-ff-en)}
+
+/* =========================================================================
+   Shared breadcrumb
+   ========================================================================= */
+body.dorian-inner .woocommerce-breadcrumb{
+  max-width:1180px;margin:0 auto 22px;padding:14px 20px;
+  color:var(--d-ink-soft);font-size:.86rem;letter-spacing:.02em;
+}
+body.dorian-inner .woocommerce-breadcrumb a{color:var(--d-blue);text-decoration:none}
+body.dorian-inner .woocommerce-breadcrumb a:hover{color:var(--d-blue-deep)}
+
+/* =========================================================================
+   WooCommerce — SINGLE PRODUCT (cosmetic only; Woo owns the two columns)
+   ========================================================================= */
+body.dorian-inner div.product{max-width:1180px;margin-inline:auto}
+
+/* overflow guard: let the two Woo columns shrink instead of pushing the page */
+body.dorian-inner div.product > .summary,
+body.dorian-inner div.product > .woocommerce-product-gallery,
+body.dorian-inner .woocommerce-tabs,
+body.dorian-inner .entry-content{min-width:0}
+
+body.dorian-inner div.product .product_title{
+  font-family:var(--d-ff-fa);font-weight:800;color:var(--d-ink) !important;
+  font-size:clamp(1.6rem,3.2vw,2.4rem);line-height:1.25;letter-spacing:-.01em;
+}
+body.dorian-inner div.product p.price,
+body.dorian-inner div.product span.price,
+body.dorian-inner div.product .price{
+  color:var(--d-gold-deep) !important;font-weight:700;font-size:1.5rem;
+}
+body.dorian-inner div.product p.price del{color:var(--d-ink-soft) !important;opacity:.6;font-weight:400}
+body.dorian-inner div.product p.price ins{text-decoration:none}
+
+body.dorian-inner div.product .woocommerce-product-gallery{
+  background:linear-gradient(180deg,#FBF6EC,#F1E7D4);
+  border:1px solid var(--d-line);border-radius:var(--d-r-lg);
+  padding:14px;box-shadow:var(--d-shadow);
+}
+body.dorian-inner div.product .woocommerce-product-gallery img{border-radius:12px}
+
+body.dorian-inner div.product .woocommerce-product-details__short-description{
+  color:var(--d-ink-soft);line-height:2;
+}
+body.dorian-inner div.product .product_meta{
+  color:var(--d-ink-soft);font-size:.86rem;border-top:1px solid var(--d-line);padding-top:14px;margin-top:16px;
+}
+body.dorian-inner div.product .product_meta a{color:var(--d-blue);text-decoration:none}
+
+/* quantity + add-to-cart row */
+body.dorian-inner div.product form.cart{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:18px 0;
+}
+body.dorian-inner div.product form.cart .quantity{margin:0;float:none}
+body.dorian-inner .quantity .qty{
+  width:88px;height:52px;text-align:center;
+  border:1px solid var(--d-line);border-radius:12px;background:#fff;
+  font-family:var(--d-ff-en);font-size:1rem;color:var(--d-ink);
+}
+
+/* =========================================================================
+   Buttons — the piece that was collapsing. !important + width:auto + nowrap so
+   a parent grid can never crush them into vertical single-character strips.
+   ========================================================================= */
+body.dorian-inner a.button,
+body.dorian-inner button.button,
+body.dorian-inner input.button,
+body.dorian-inner a.button.alt,
+body.dorian-inner button.button.alt,
+body.dorian-inner .single_add_to_cart_button,
+body.dorian-inner ul.products li.product .button,
+body.dorian-inner .add_to_cart_button,
+body.dorian-inner .checkout-button,
+body.dorian-inner #place_order{
+  display:inline-flex !important;align-items:center;justify-content:center;gap:8px;
+  width:auto !important;min-width:0;max-width:100%;white-space:nowrap !important;float:none !important;
+  padding:.9em 1.8em !important;min-height:52px;line-height:1.1 !important;
+  font-family:var(--d-ff-fa);font-weight:700;font-size:1rem;
+  border:0 !important;border-radius:var(--d-r-pill) !important;cursor:pointer;text-decoration:none !important;
+  background:var(--d-gold-grad) !important;color:var(--d-navy) !important;
+  box-shadow:0 18px 30px -20px rgba(120,90,20,.7);
+  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease;
+}
+body.dorian-inner a.button:hover,
+body.dorian-inner button.button:hover,
+body.dorian-inner input.button:hover,
+body.dorian-inner .single_add_to_cart_button:hover,
+body.dorian-inner ul.products li.product .button:hover,
+body.dorian-inner .add_to_cart_button:hover,
+body.dorian-inner .checkout-button:hover,
+body.dorian-inner #place_order:hover{
+  transform:translateY(-2px);filter:brightness(1.04);
+  box-shadow:0 24px 40px -22px rgba(120,90,20,.8);color:var(--d-navy) !important;
+}
+/* the little “View cart” link Woo appends after an ajax add */
+body.dorian-inner a.added_to_cart{
+  display:inline-flex;align-items:center;margin-inline-start:10px;
+  padding:.7em 1.3em;border-radius:var(--d-r-pill);white-space:nowrap;
+  background:transparent;border:1px solid var(--d-blue);color:var(--d-blue);
+  font-family:var(--d-ff-fa);font-weight:700;text-decoration:none;
+}
+body.dorian-inner a.added_to_cart:hover{background:var(--d-blue);color:#fff}
+
+/* =========================================================================
+   WooCommerce — TABS
+   ========================================================================= */
+body.dorian-inner div.product .woocommerce-tabs ul.tabs{
+  display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0 0 18px;border:0;
+}
+body.dorian-inner div.product .woocommerce-tabs ul.tabs::before,
+body.dorian-inner div.product .woocommerce-tabs ul.tabs li::before,
+body.dorian-inner div.product .woocommerce-tabs ul.tabs li::after{display:none;border:0}
+body.dorian-inner div.product .woocommerce-tabs ul.tabs li{
+  background:#fff;border:1px solid var(--d-line) !important;border-radius:var(--d-r-pill);
+  margin:0;padding:0;
+}
+body.dorian-inner div.product .woocommerce-tabs ul.tabs li a{
+  display:block;padding:.6em 1.4em;color:var(--d-ink);font-family:var(--d-ff-fa);
+  font-weight:600;font-size:.95rem;text-decoration:none;
+}
+body.dorian-inner div.product .woocommerce-tabs ul.tabs li.active{
+  background:linear-gradient(135deg,var(--d-blue-bright),var(--d-blue-deep));border-color:transparent !important;
+}
+body.dorian-inner div.product .woocommerce-tabs ul.tabs li.active a{color:#fff}
+body.dorian-inner div.product .woocommerce-tabs .panel{
+  background:linear-gradient(180deg,#FBF6EC,#F3E9D6);border:1px solid var(--d-line);
+  border-radius:var(--d-r);padding:22px 24px;color:var(--d-ink-soft);line-height:2;
+}
+body.dorian-inner #reviews h2,
+body.dorian-inner div.product .woocommerce-tabs h2{color:var(--d-ink)}
+
+/* =========================================================================
+   WooCommerce — PRODUCT GRID (shop + related / up-sells). Woo owns the columns.
+   ========================================================================= */
+body.dorian-inner ul.products li.product{
+  background:linear-gradient(180deg,#FBF6EC,#F3E9D6);
+  border:1px solid var(--d-line);border-radius:var(--d-r-lg);
+  padding:16px 16px 20px;box-shadow:var(--d-shadow);text-align:center;
+}
+body.dorian-inner ul.products li.product a{text-decoration:none}
+body.dorian-inner ul.products li.product a img{
+  border-radius:12px;margin-bottom:12px;background:#fff;
+}
+body.dorian-inner ul.products li.product .woocommerce-loop-product__title{
+  font-family:var(--d-ff-fa);font-weight:700;color:var(--d-ink);font-size:1.05rem;padding:6px 0;
+}
+body.dorian-inner ul.products li.product .price{
+  color:var(--d-gold-deep) !important;font-weight:700;display:block;margin-bottom:12px;
+}
+body.dorian-inner ul.products li.product .onsale{
+  background:var(--d-blue) !important;color:#fff !important;border-radius:var(--d-r-pill);
+  min-height:auto;padding:.3em .9em;font-family:var(--d-ff-fa);
+}
+body.dorian-inner .related.products > h2,
+body.dorian-inner .up-sells > h2,
+body.dorian-inner .cross-sells > h2,
+body.dorian-inner .products > h2{
+  font-family:var(--d-ff-fa);font-weight:800;color:var(--d-ink);
+  font-size:clamp(1.4rem,2.6vw,1.9rem);margin:36px 0 20px;
+}
+
+/* =========================================================================
+   WooCommerce — CART / CHECKOUT / NOTICES (light, safe theming)
+   ========================================================================= */
+body.dorian-inner table.shop_table{
+  border:1px solid var(--d-line);border-radius:var(--d-r);overflow:hidden;background:#fff;
+}
+body.dorian-inner table.shop_table th{color:var(--d-ink);font-family:var(--d-ff-fa)}
+body.dorian-inner .cart_totals h2,
+body.dorian-inner .woocommerce-checkout h3,
+body.dorian-inner form.checkout h3{color:var(--d-ink);font-family:var(--d-ff-fa)}
+body.dorian-inner form .form-row input.input-text,
+body.dorian-inner form .form-row textarea,
+body.dorian-inner .select2-container--default .select2-selection--single{
+  border:1px solid var(--d-line);border-radius:10px;background:#fff;padding:10px 12px;min-height:48px;
+}
+body.dorian-inner .woocommerce-message,
+body.dorian-inner .woocommerce-info,
+body.dorian-inner .woocommerce-error{
+  border-top-color:var(--d-gold-2);border-radius:12px;background:#FBF6EC;color:var(--d-ink);
+}
+body.dorian-inner .woocommerce-message::before,
+body.dorian-inner .woocommerce-info::before{color:var(--d-blue)}
+
+/* =========================================================================
+   Generic content (About, Contact & other pages) — typography + guards only.
+   No layout is imposed; Elementor keeps its own structure.
+   ========================================================================= */
+body.dorian-inner .entry-content h1,
+body.dorian-inner .entry-content h2,
+body.dorian-inner .entry-content h3,
+body.dorian-inner .page-header .entry-title{
+  font-family:var(--d-ff-fa);color:var(--d-ink);font-weight:800;letter-spacing:-.01em;
+}
+body.dorian-inner .entry-content a{color:var(--d-blue)}
+body.dorian-inner .entry-content a:hover{color:var(--d-blue-deep)}
+body.dorian-inner .entry-content{line-height:2;color:var(--d-ink-2)}
+
+/* any bare table inside content shouldn't blow past the viewport */
+body.dorian-inner .entry-content table{display:block;max-width:100%;overflow-x:auto}

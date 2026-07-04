@@ -129,15 +129,19 @@ add_action('init', function () {
 });
 add_action('save_post_dorian_provider', function () { flush_rewrite_rules(); });
 
-/* ---------- render the panel ---------- */
+/* ---------- render the panel ----------
+   Priority 0 so we run BEFORE redirect_canonical: otherwise a POST to /arman
+   gets 301-redirected to /arman/ and the form data (passcode) is dropped —
+   which looked like "nothing happens" on login. */
 add_action('template_redirect', function () {
     $slug = get_query_var('dorian_pslug');
     if (!$slug) return;
     $provider = dorian_provider_by_slug($slug);
     if (!$provider) return; // let WP 404
+    nocache_headers();       // never let a page cache store the panel (auth + customer data)
     Dorian_Panel::handle($provider);
     exit;
-});
+}, 0);
 
 class Dorian_Panel {
 
@@ -336,7 +340,7 @@ class Dorian_Panel {
           <h1 style="text-align:center;margin:0 0 4px"><?php echo esc_html($provider->post_title); ?></h1>
           <p class="hint" style="text-align:center">برای ورود به پنل، رمز خود را وارد کنید.</p>
           <?php if ($err) echo '<p class="err" style="text-align:center">' . esc_html($err) . '</p>'; ?>
-          <form method="post">
+          <form method="post" action="<?php echo esc_url(home_url('/' . get_post_meta($provider->ID, '_dorian_slug', true) . '/')); ?>">
             <input type="password" name="passcode" placeholder="رمز" autofocus>
             <button class="btn btn--blue" name="dorian_login" value="1" style="width:100%;justify-content:center">ورود</button>
           </form>
