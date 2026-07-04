@@ -1,11 +1,12 @@
 /*
-Theme Name: Dorian Landing (Child)
+Theme Name: Dorian
 Theme URI: https://dorianstudio.ir
-Description: چایلد-تمِ دوریان — صفحهٔ فرود سینمایی «Dorian Gentlemen's Studio» را به‌صورت یک Page Template اضافه می‌کند، بدون تغییر قالب والد. پس از فعال‌سازی: یک برگه با قالب «Dorian Landing» بسازید و در تنظیمات ← خواندن آن را صفحهٔ اصلی کنید.
+Description: قالب اختصاصی «دوریان» — صفحهٔ فرود سینمایی «Dorian Gentlemen's Studio» به‌همراه صفحات داخلیِ هماهنگ (درباره ما، تماس با ما، مقالات، تک‌محصولیِ ووکامرس) و یک پنل تنظیماتِ پیشرفته که تقریباً هر چیزِ قالب را بدون کدنویسی قابل تغییر می‌کند. روی قالبِ hello-elementor سوار می‌شود.
 Author: Dorian
-Version: 1.0.5
+Version: 2.0.0
 Template: hello-elementor
+Text Domain: dorian
 */
 
-/* این فایل عمداً خالی است؛ استایل‌های لندینگ از assets/css/ با wp_enqueue بارگذاری می‌شوند
-   و فقط روی همان Page Template اعمال می‌شوند تا با قالب والد تداخل نداشته باشند. */
+/* استایل‌ها از assets/css/ با wp_enqueue بارگذاری می‌شوند: site.css توکن‌ها و پوستهٔ مشترک،
+   custom.css لایهٔ لندینگ، و internal.css صفحاتِ داخلی. این فایل عمداً سبک نگه داشته شده است. */
