@@ -369,6 +369,24 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 .site-foot__bar { border-block-start: 1px solid rgba(217,182,90,.16); padding-block: 18px; text-align: center; }
 .site-foot__bar .foot__copy { color: rgba(236,222,201,.55); }
 
+/* ============================ ABOUT · TEAM (moved from landing) ============================ */
+.about-team { background: radial-gradient(135% 95% at 50% 0%, #10294a, var(--navy) 58%, #050f1c); color: var(--paper); text-align: center; }
+.about-team .eyebrow { color: var(--gold-2); }
+.about-team__h { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 2.2rem); margin-block-start: 8px; }
+.about-team .ds { margin: 14px auto 10px; }
+.about-team__lead { color: rgba(236,222,201,.68); max-width: 46ch; margin: 0 auto clamp(28px, 4vw, 40px); }
+.about-team__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(16px, 2vw, 24px); text-align: start; }
+@media (max-width: 1100px) { .about-team__grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 800px)  { .about-team__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .about-team__grid { grid-template-columns: 1fr; } }
+/* the cards keep their site.css look; just let them fill grid cells instead of the rail's flex-basis */
+.about-team__grid .tcard { flex: none !important; width: auto; margin: 0; }
+.about-team__empty { color: rgba(236,222,201,.6); grid-column: 1 / -1; text-align: center; }
+/* the render markup uses .tcard__name; site.css styles .tcard__plate — mirror it so the name plate shows */
+.tcard__name { position: absolute; inset-inline: 14px; inset-block-end: 16px; z-index: 6; text-align: center; color: var(--paper); }
+.tcard__name .fa { font-weight: 800; font-size: 1.2rem; line-height: 1.2; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.tcard__name .en { font-family: var(--ff-en); font-size: .6rem; letter-spacing: .2em; color: var(--gold-2); margin-block-start: 4px; }
+
 /* ============================ REVEAL ANIMATION ============================ */
 .dorian-anim .post-card, .dorian-anim .value-card, .dorian-anim .about__visual,
 .dorian-anim .contact__card, .dorian-anim .contact__formwrap, .dorian-anim .single__hero,

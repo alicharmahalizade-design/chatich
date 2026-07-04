@@ -42,6 +42,7 @@ class Dorian_Frontend {
             'nonce'     => wp_create_nonce('dorian_booking'),
             'settings'  => array(
                 'depositRate' => (int) $s['deposit_rate'],
+                'payAmount'   => isset($s['pay_amount']) ? $s['pay_amount'] : 'full',
                 'currency'    => $s['currency'],
             ),
         ));
@@ -49,6 +50,8 @@ class Dorian_Frontend {
 
     public static function shortcode($atts) {
         self::enqueue();
+        $s = dorian_settings();
+        $has_credit = isset($s['credit_codes']) && trim($s['credit_codes']) !== '';
         ob_start(); ?>
 <div class="bk-homewrap">
   <a class="bk-home" href="<?php echo esc_url(home_url('/')); ?>" aria-label="بازگشت به خانهٔ دوریان">
@@ -114,6 +117,15 @@ class Dorian_Frontend {
       <div class="payform">
         <label class="field"><span>نام و نام خانوادگی</span><input type="text" id="custName" placeholder="نام شما"></label>
         <label class="field"><span>شمارهٔ موبایل</span><input type="tel" id="custPhone" placeholder="09xxxxxxxxx" inputmode="numeric"></label>
+        <?php if ($has_credit) : ?>
+        <div class="bk-credit">
+          <button type="button" class="bk-credit__toggle" id="bkCreditToggle">کد اعتبار دارید؟</button>
+          <div class="bk-credit__box" id="bkCreditBox" hidden>
+            <label class="field"><span>کد اعتبار</span><input type="text" id="custCode" placeholder="کد را وارد کنید" autocomplete="off"></label>
+            <p class="bk-credit__note">با کد اعتبار معتبر، پرداخت آنلاین لازم نیست و مبلغ را هنگام حضور در آرایشگاه پرداخت می‌کنید.</p>
+          </div>
+        </div>
+        <?php endif; ?>
       </div>
     </section>
   </main>

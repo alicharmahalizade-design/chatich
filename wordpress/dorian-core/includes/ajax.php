@@ -91,12 +91,23 @@ class Dorian_Ajax {
         $providers = array($pid);
 
         $s = dorian_settings();
-        $deposit = (int) round($c['price'] * ((int) $s['deposit_rate']) / 100 / 1000) * 1000;
+        // how much is paid online: the full price, or a deposit percentage
+        if (isset($s['pay_amount']) && $s['pay_amount'] === 'deposit') {
+            $payable = (int) round($c['price'] * ((int) $s['deposit_rate']) / 100 / 1000) * 1000;
+        } else {
+            $payable = (int) $c['price'];
+        }
+
+        // credit code: holders skip online payment and pay at the salon
+        $code_in = isset($_POST['code']) ? sanitize_text_field(wp_unslash($_POST['code'])) : '';
+        $code_valid = ($code_in !== '' && self::code_is_valid($code_in, $s));
+        if ($code_valid) $payable = 0;
+
         $start = $date . ' ' . $time . ':00';
 
         $id = Dorian_DB::insert(array(
             'created_at'     => current_time('mysql'),
-            'status'         => 'confirmed',
+            'status'         => $code_valid ? 'at_salon' : 'confirmed',
             'customer_name'  => $name,
             'customer_phone' => $phone,
             'provider_ids'   => implode(',', $providers),
@@ -106,7 +117,8 @@ class Dorian_Ajax {
             'duration_min'   => $c['dur'],
             'recurrence_weeks' => max(0, $weeks),
             'total_price'    => $c['price'],
-            'deposit_price'  => $deposit,
+            'deposit_price'  => $payable,
+            'credit_code'    => $code_valid ? $code_in : null,
         ));
         if (!$id) wp_send_json_error('ثبت نوبت ناموفق بود.');
 
@@ -120,26 +132,39 @@ class Dorian_Ajax {
         $remind_at = strtotime($start) - $rh * 3600;
         if ($remind_at > time()) wp_schedule_single_event($remind_at, 'dorian_send_reminder', array($id));
 
-        // payment
-        if ($s['pay_mode'] === 'woocommerce' && class_exists('WooCommerce') && $deposit > 0) {
-            $url = self::wc_deposit_order($booking, $deposit);
+        // payment (skipped entirely when a valid credit code was used)
+        if (!$code_valid && $s['pay_mode'] === 'woocommerce' && class_exists('WooCommerce') && $payable > 0) {
+            $url = self::wc_payment_order($booking, $payable);
             if ($url) wp_send_json_success(array('redirect' => $url, 'id' => $id));
         }
-        wp_send_json_success(array('id' => $id, 'event' => self::gcal($booking)));
+        wp_send_json_success(array('id' => $id, 'event' => self::gcal($booking), 'atSalon' => $code_valid));
     }
 
-    protected static function wc_deposit_order($booking, $deposit) {
+    /** True when $code matches one of the admin's credit codes (case-insensitive). */
+    protected static function code_is_valid($code, $s) {
+        $raw = isset($s['credit_codes']) ? (string) $s['credit_codes'] : '';
+        $list = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $raw)));
+        if (!$list) return false;
+        $code = function_exists('mb_strtolower') ? mb_strtolower(trim($code)) : strtolower(trim($code));
+        foreach ($list as $valid) {
+            $v = function_exists('mb_strtolower') ? mb_strtolower($valid) : strtolower($valid);
+            if ($v === $code) return true;
+        }
+        return false;
+    }
+
+    protected static function wc_payment_order($booking, $amount) {
         try {
             $order = wc_create_order();
             $fee = new WC_Order_Item_Fee();
-            $fee->set_name('بیعانهٔ نوبت دوریان #' . $booking->id);
-            $fee->set_amount($deposit);
-            $fee->set_total($deposit);
+            $fee->set_name('پرداخت نوبت دوریان #' . $booking->id);
+            $fee->set_amount($amount);
+            $fee->set_total($amount);
             $order->add_item($fee);
             $order->set_address(array('first_name' => $booking->customer_name, 'phone' => $booking->customer_phone), 'billing');
             $order->update_meta_data('_dorian_booking_id', $booking->id);
             $order->calculate_totals();
-            $order->update_status('pending', 'Dorian booking deposit');
+            $order->update_status('pending', 'Dorian booking payment');
             $order->save();
             return $order->get_checkout_payment_url();
         } catch (Exception $e) {

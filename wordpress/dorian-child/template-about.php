@@ -58,6 +58,29 @@ dorian_page_hero(
   </div>
 </section>
 
+<?php if (function_exists('dorian_render_characters')) : ?>
+<section class="about-team">
+  <div class="wrap">
+    <span class="eyebrow c">The Gentlemen</span>
+    <h2 class="about-team__h">شخصیت‌های دوریان</h2>
+    <div class="ds"><i></i><em></em><i></i></div>
+    <p class="about-team__lead">تیمی از بهترین متخصصان مو، پوست و آرامش؛ هر چهره، یک کاراکتر.</p>
+    <div class="about-team__grid">
+      <?php
+      ob_start();
+      $has_team = dorian_render_characters();
+      $team_html = ob_get_clean();
+      if ($has_team) {
+          echo $team_html; // .tcard articles, styled by site.css + internal.css
+      } else {
+          echo '<p class="about-team__empty">به‌زودی اعضای تیم معرفی می‌شوند.</p>';
+      }
+      ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
 <?php if ($values) : ?>
 <section class="values">
   <div class="wrap">

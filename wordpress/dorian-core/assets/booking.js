@@ -36,6 +36,7 @@
   function money(n) { return toFa(Number(n || 0).toLocaleString("en-US")) + " " + CUR; }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   var DEPOSIT_RATE = (DATA.settings.depositRate != null ? DATA.settings.depositRate : 30) / 100;
+  var PAY_AMOUNT = DATA.settings.payAmount || "full"; // "full" | "deposit"
   var PROVIDERS = DATA.providers || [];
 
   function api(action, extra) {
@@ -58,6 +59,8 @@
   function totalPrice() { return chosenSubs().reduce(function (s, x) { return s + x.price; }, 0); }
   function totalDur() { return chosenSubs().reduce(function (s, x) { return s + x.dur; }, 0); }
   function depositPrice() { return Math.round(totalPrice() * DEPOSIT_RATE / 1000) * 1000; }
+  function payablePrice() { return PAY_AMOUNT === "deposit" ? depositPrice() : totalPrice(); }
+  function creditCode() { var e = document.getElementById("custCode"); return e ? e.value.trim() : ""; }
   function subIdList() { return Object.keys(state.subs); }
   function refreshTotal() { document.getElementById("grandTotal").textContent = money(totalPrice()); }
 
@@ -177,14 +180,21 @@
     chosenSubs().forEach(function (x) { rows += '<div class="sumrow sumrow--sub"><span>' + x.name + "</span><b>" + money(x.price) + "</b></div>"; });
     var dateStr = state.date ? (jWeekday(state.date.jy, state.date.jm, state.date.jd) + " " + toFa(state.date.jd) + " " + J_MONTHS[state.date.jm - 1] + " " + toFa(state.date.jy)) : "—";
     var recur = state.weeks ? (state.weeks === 1 ? "هر هفته" : "هر " + toFa(state.weeks) + " هفته") : "یک‌بار";
-    var dep = depositPrice(), rest = totalPrice() - dep;
+    var payRows;
+    if (PAY_AMOUNT === "deposit") {
+      var dep = depositPrice(), rest = totalPrice() - dep;
+      payRows =
+        '<div class="sumrow sumrow--deposit"><span>بیعانه (' + toFa(Math.round(DEPOSIT_RATE * 100)) + "٪) — اکنون</span><b>" + money(dep) + "</b></div>" +
+        '<div class="sumrow sumrow--rest"><span>باقی‌مانده هنگام حضور</span><b>' + money(rest) + "</b></div>";
+    } else {
+      payRows = '<div class="sumrow sumrow--deposit"><span>مبلغ قابل پرداخت (کامل)</span><b>' + money(totalPrice()) + "</b></div>";
+    }
     box.innerHTML = '<div class="sumcard">' + rows +
       '<div class="sumrow sumrow--meta"><span>زمان</span><b>' + dateStr + " · " + toFa(state.time || "—") + "</b></div>" +
       '<div class="sumrow sumrow--meta"><span>تکرار</span><b>' + recur + "</b></div>" +
       '<div class="sumrow sumrow--meta"><span>مدت کل</span><b>' + toFa(totalDur()) + " دقیقه</b></div>" +
       '<div class="sumrow sumrow--total"><span>جمع کل</span><b>' + money(totalPrice()) + "</b></div>" +
-      '<div class="sumrow sumrow--deposit"><span>بیعانه (' + toFa(Math.round(DEPOSIT_RATE * 100)) + "٪) — اکنون</span><b>" + money(dep) + "</b></div>" +
-      '<div class="sumrow sumrow--rest"><span>باقی‌مانده هنگام حضور</span><b>' + money(rest) + "</b></div></div>";
+      payRows + "</div>";
   }
 
   /* ---------- navigation ---------- */
@@ -193,7 +203,7 @@
     document.querySelectorAll(".bk-step").forEach(function (s) { s.classList.toggle("is-active", +s.dataset.step === n); });
     document.querySelectorAll(".bk-steps__item").forEach(function (s) { var i = +s.dataset.stepdot; s.classList.toggle("is-active", i === n); s.classList.toggle("is-done", i < n); });
     document.getElementById("btnBack").hidden = n === 1;
-    document.getElementById("btnNext").textContent = n === 4 ? ("پرداخت بیعانه · " + money(depositPrice())) : "ادامه";
+    document.getElementById("btnNext").textContent = n === 4 ? ("پرداخت · " + money(payablePrice())) : "ادامه";
     if (n === 1) renderProviders();
     if (n === 2) renderServices();
     if (n === 3) { renderCalendar(); state.date ? fetchSlots(state.time) : (document.getElementById("slots").innerHTML = '<p class="slots__empty">ابتدا یک روز را انتخاب کنید.</p>'); renderRecurNote(); }
@@ -217,20 +227,26 @@
     var btn = document.getElementById("btnNext"); btn.disabled = true; btn.textContent = "در حال ثبت…";
     api("book", {
       date: greg(state.date.jy, state.date.jm, state.date.jd), time: state.time, weeks: state.weeks,
-      name: document.getElementById("custName").value.trim(), phone: document.getElementById("custPhone").value.trim()
+      name: document.getElementById("custName").value.trim(), phone: document.getElementById("custPhone").value.trim(),
+      code: creditCode()
     }).then(function (res) {
-      btn.disabled = false; btn.textContent = "پرداخت بیعانه · " + money(depositPrice());
+      btn.disabled = false; btn.textContent = "پرداخت · " + money(payablePrice());
       if (!res || !res.success) { toast(res && res.data ? res.data : "ثبت نوبت ناموفق بود."); return; }
       if (res.data && res.data.redirect) { window.location.href = res.data.redirect; return; }
       var cal = document.getElementById("doneCal");
       if (res.data && res.data.event) cal.innerHTML = '<a class="bk-cal" target="_blank" rel="noopener" href="' + res.data.event + '">افزودن به Google Calendar</a>';
-      document.getElementById("doneMsg").textContent = "پیامک تأیید ارسال می‌شود؛ یادآوری هم پیش از نوبت ارسال خواهد شد.";
+      var atSalon = res.data && res.data.atSalon;
+      document.getElementById("doneMsg").textContent = atSalon
+        ? "نوبت شما با کد اعتبار ثبت شد؛ مبلغ را هنگام حضور در آرایشگاه پرداخت می‌کنید. پیامک تأیید ارسال می‌شود."
+        : "پیامک تأیید ارسال می‌شود؛ یادآوری هم پیش از نوبت ارسال خواهد شد.";
       document.getElementById("bkDone").hidden = false;
     });
   }
   function reset() {
     state.provider = null; state.subs = {}; state.date = null; state.time = null; state.weeks = 0;
     document.getElementById("custName").value = ""; document.getElementById("custPhone").value = "";
+    var code = document.getElementById("custCode"); if (code) code.value = "";
+    var cbox = document.getElementById("bkCreditBox"); if (cbox) cbox.hidden = true;
     document.querySelectorAll(".recur__opt").forEach(function (o, i) { o.classList.toggle("is-active", i === 0); });
     document.getElementById("bkDone").hidden = true; refreshTotal(); gotoStep(1);
   }
@@ -240,6 +256,11 @@
     document.getElementById("btnBack").addEventListener("click", function () { if (state.step > 1) gotoStep(state.step - 1); });
     document.getElementById("btnReset").addEventListener("click", reset);
     document.getElementById("firstFree").addEventListener("click", firstAvailable);
+    var ct = document.getElementById("bkCreditToggle");
+    if (ct) ct.addEventListener("click", function () {
+      var box = document.getElementById("bkCreditBox");
+      if (box) { box.hidden = !box.hidden; ct.classList.toggle("is-open", !box.hidden); }
+    });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

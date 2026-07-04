@@ -2,7 +2,7 @@
 /**
  * Plugin Name: هسته دوریان (Dorian Core)
  * Description: هستهٔ دوریان + ماژولِ «رزرو دوریان»: نوبت‌دهی با تقویم شمسی، خدمات/قیمت/زمان، متخصص‌ها، پیامکِ فراز و پرداخت (WooCommerce). شورت‌کد و ویجت المنتور.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Ronakads
  * Text Domain: dorian-core
  * Requires PHP: 7.2
@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('DORIAN_VER', '1.0.5');
+define('DORIAN_VER', '1.0.6');
 define('DORIAN_FILE', __FILE__);
 define('DORIAN_DIR', plugin_dir_path(__FILE__));
 define('DORIAN_URL', plugin_dir_url(__FILE__));
@@ -52,6 +52,12 @@ function dorian_booking_url() {
 add_action('admin_init', function () {
     if (!get_option('dorian_seeded')) Dorian_Seed::run();
     Dorian_Seed::ensure_page(); // idempotent; also applies the Canvas (no header/footer) template
+    // DB migration: re-run dbDelta when the plugin version changes so new columns
+    // (e.g. credit_code) are added to the bookings table without a re-activation.
+    if (get_option('dorian_db_ver') !== DORIAN_VER) {
+        Dorian_DB::install();
+        update_option('dorian_db_ver', DORIAN_VER);
+    }
 });
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();
@@ -65,7 +71,9 @@ function dorian_settings() {
         'work_end'       => '22:00',
         'slot_min'       => 30,
         'off_days'       => array(6),     // 0=Sat .. 6=Fri  (Friday off)
-        'deposit_rate'   => 30,           // %
+        'deposit_rate'   => 30,           // % (used only when pay_amount = deposit)
+        'pay_amount'     => 'full',        // full | deposit — how much is paid online
+        'credit_codes'   => '',            // one code per line; holders pay at the salon
         'reminder_hours' => 3,
         'currency'       => 'تومان',
         'pay_mode'       => 'woocommerce', // woocommerce | none

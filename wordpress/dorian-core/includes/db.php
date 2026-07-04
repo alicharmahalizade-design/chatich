@@ -27,6 +27,7 @@ class Dorian_DB {
             recurrence_weeks INT NOT NULL DEFAULT 0,
             total_price BIGINT NOT NULL DEFAULT 0,
             deposit_price BIGINT NOT NULL DEFAULT 0,
+            credit_code VARCHAR(60) NULL,
             reminded TINYINT NOT NULL DEFAULT 0,
             PRIMARY KEY (id),
             KEY start_dt (start_dt)

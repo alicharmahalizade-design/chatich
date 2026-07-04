@@ -190,15 +190,22 @@
     });
   }
 
-  /* ---------------- sound toggle ---------------- */
-  function initSoundToggle() {
-    var btn = document.getElementById("soundToggle"), label = document.getElementById("soundLabel");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      var on = Sound.toggle();
-      btn.classList.toggle("is-on", on);
-      btn.setAttribute("aria-pressed", String(on));
-      if (label) label.textContent = on ? "صدا روشن" : "صدا خاموش";
+  /* ---------------- sound: ON by default ----------------
+     Browsers block audio until a user gesture, so we arm the sound engine and
+     enable it on the first interaction (pointer / key / scroll / touch). No
+     on-screen toggle — sound is simply on. Respects reduced-motion preference. */
+  function initSound() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var armed = false;
+    function arm() {
+      if (armed) return; armed = true;
+      Sound.enable();
+      ["pointerdown", "keydown", "touchstart", "wheel"].forEach(function (ev) {
+        window.removeEventListener(ev, arm);
+      });
+    }
+    ["pointerdown", "keydown", "touchstart", "wheel"].forEach(function (ev) {
+      window.addEventListener(ev, arm, { once: false, passive: true });
     });
   }
 
@@ -234,7 +241,7 @@
     initStoryVideo();
     initGift();
     initElevator();
-    initSoundToggle();
+    initSound();
     initMiniCart();
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }

@@ -210,3 +210,15 @@ body.dorian-booking-page .bk{margin:clamp(16px,4vw,48px) auto}
 
 /* back-to-home button above the booking form */
 .bk-homewrap { width: min(960px, 100%); margin: 0 auto 14px; }
+
+/* credit code (optional; holders pay at the salon) */
+.bk-credit { grid-column: 1 / -1; margin-top: 2px; }
+.bk-credit__toggle {
+  background: none; border: none; padding: 4px 0; cursor: pointer;
+  font-family: var(--ff); font-size: .88rem; color: var(--blue);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.bk-credit__toggle:hover { color: var(--blue-deep); }
+.bk-credit__toggle.is-open { color: var(--ink); }
+.bk-credit__box { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.bk-credit__note { font-size: .8rem; color: var(--muted); line-height: 1.7; margin: 0; }
