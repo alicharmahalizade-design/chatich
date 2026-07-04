@@ -34,12 +34,6 @@ dorian_page_hero(
         <p><?php echo esc_html($p); ?></p>
       <?php endforeach; ?>
 
-      <?php if (have_posts()) : while (have_posts()) : the_post();
-        if (trim(get_the_content()) !== '') : ?>
-          <div class="prose about__editor"><?php the_content(); ?></div>
-        <?php endif;
-      endwhile; endif; ?>
-
       <?php if ($stats) : ?>
         <div class="about__stats">
           <?php foreach ($stats as $s) : ?>
