@@ -215,6 +215,7 @@
       });
       gsap.ticker.add(function(t){lenis.raf(t*1000);});
       gsap.ticker.lagSmoothing(0);
+      window.__dorianLenis=lenis;   // expose so the elevator can freeze/resume page scroll
     }else{
       window.addEventListener('scroll',function(){onScrollY(window.scrollY);},{passive:true});
     }

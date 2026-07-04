@@ -91,7 +91,7 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 }
 .pagehero--slim { padding-block: clamp(18px, 3vw, 28px); text-align: start; }
 .pagehero__inner { position: relative; z-index: 2; }
-.crumbs { font-family: var(--ff-en); font-size: .8rem; letter-spacing: .04em; color: var(--ink-soft); display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-block-end: 14px; }
+.crumbs { font-family: var(--ff-fa); font-size: .9rem; color: var(--ink-soft); display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-block-end: 14px; }
 .pagehero--slim .crumbs { justify-content: flex-start; margin-block-end: 0; }
 .crumbs a { color: var(--gold-soft); transition: color .3s; }
 .crumbs a:hover { color: var(--blue); }
@@ -319,17 +319,31 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
   box-shadow: 0 8px 18px -8px rgba(217,182,90,.8);
 }
 
-/* buttons — gold, and hard-guarded so a narrow container can never stack the text */
+/* buttons — simple solid blue (not gold), hard-guarded so a narrow container
+   can never stack the text. Broad selectors so it also covers Elementor's Woo widgets. */
 .woocommerce a.button, .woocommerce button.button, .woocommerce input.button,
 .woocommerce #respond input#submit, .woocommerce .button.alt,
-.woocommerce div.product form.cart .button, .woocommerce ul.products li.product .button {
+.woocommerce div.product form.cart .button, .woocommerce ul.products li.product .button,
+.single_add_to_cart_button, .add_to_cart_button, .product_type_simple.button {
   display: inline-block; width: auto; max-width: 100%; white-space: nowrap;
-  background: var(--gold-grad); color: #241803; border: none; border-radius: 999px;
+  background: var(--blue); color: #fff; border: none; border-radius: 12px;
   font-family: var(--ff-fa); font-weight: 700; font-size: .96rem; padding: 12px 26px; line-height: 1.4;
-  box-shadow: 0 14px 32px -16px rgba(217,182,90,.75); transition: transform .35s var(--ease); cursor: pointer;
+  box-shadow: 0 12px 26px -16px rgba(0,102,179,.7); transition: background .25s, transform .3s var(--ease), box-shadow .3s; cursor: pointer;
 }
 .woocommerce a.button:hover, .woocommerce button.button:hover, .woocommerce .button.alt:hover,
-.woocommerce #respond input#submit:hover, .woocommerce div.product form.cart .button:hover { transform: translateY(-2px); }
+.woocommerce #respond input#submit:hover, .woocommerce div.product form.cart .button:hover,
+.single_add_to_cart_button:hover, .add_to_cart_button:hover {
+  background: var(--blue-deep, #004B85); transform: translateY(-2px); color: #fff;
+}
+
+/* WooCommerce's own breadcrumb (when the product page uses it): match the theme,
+   drop any blue band, use the Persian font */
+.woocommerce-breadcrumb, .woo .woocommerce-breadcrumb {
+  font-family: var(--ff-fa); font-size: .9rem; color: var(--ink-soft);
+  background: transparent; padding: 0; margin-block-end: 18px;
+}
+.woocommerce-breadcrumb a { color: var(--gold-soft); }
+.woocommerce-breadcrumb a:hover { color: var(--blue); }
 .woocommerce div.product form.cart .quantity { margin-inline-end: 10px; }
 .woocommerce .quantity .qty {
   width: 4.5em; padding: 11px 8px; border-radius: 12px; border: 1px solid rgba(168,128,26,.35);
@@ -361,6 +375,10 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 /* notices */
 .woocommerce-message, .woocommerce-info, .woocommerce-error { border-block-start-color: var(--gold-2); border-radius: 12px; }
 .woocommerce-message::before, .woocommerce-info::before { color: var(--gold-soft); }
+
+/* tighten the top of the product page (no big empty gap under the breadcrumb) */
+.woo { padding-block-start: clamp(20px, 3vw, 36px); }
+.pagehero--slim + .woo { padding-block-start: clamp(16px, 2.4vw, 28px); }
 
 /* ---- single product: premium touches (creative pass) ---- */
 /* framed gallery on a paper mat with gold hairline + corner ticks */

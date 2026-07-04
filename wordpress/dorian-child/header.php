@@ -29,8 +29,6 @@ $home = home_url('/');
 <div id="tone" aria-hidden="true"></div>
 <div id="fx" aria-hidden="true"></div>
 <div class="dust" id="dust" aria-hidden="true"></div>
-<div class="cursor__ring" id="curRing" aria-hidden="true"></div>
-<div class="cursor__dot" id="curDot" aria-hidden="true"></div>
 
 <a class="skip-link screen-reader-text" href="#dorian-main">پرش به محتوا</a>
 
@@ -45,7 +43,6 @@ $home = home_url('/');
       } else { ?>
         <a href="<?php echo esc_url($home); ?>">خانه</a>
         <a href="<?php echo esc_url(home_url('/about')); ?>">دربارهٔ دوریان</a>
-        <a href="<?php echo esc_url(get_permalink(get_option('page_for_posts')) ?: home_url('/blog')); ?>">مقالات</a>
         <a href="<?php echo esc_url(home_url('/contact')); ?>">تماس با ما</a>
       <?php } ?>
       <?php if ($cta_show) : ?>

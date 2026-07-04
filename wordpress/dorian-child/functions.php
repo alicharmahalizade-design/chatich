@@ -188,7 +188,7 @@ function dorian_opts_defaults() {
         'aparat_url'    => '',
         // footer
         'footer_about'  => 'دوریان؛ مجموعه‌ی لاکچری دامادسرا و آرایشگاه تخصصی آقایان در اهواز — سه طبقه خدمات حرفه‌ای مو، پوست، ماساژ و مراقبت شخصی.',
-        'footer_links'  => "درباره ما|/about\nمقالات|/blog\nتماس با ما|/contact\nرزرو نوبت|",
+        'footer_links'  => "درباره ما|/about\nتماس با ما|/contact\nرزرو نوبت|",
         'footer_copy'   => '© 2026 Designed by Ronakads | All rights reserved for Dorianstudio',
         // about page
         'about_eyebrow' => 'The Story',
