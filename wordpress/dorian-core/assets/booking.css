@@ -211,14 +211,33 @@ body.dorian-booking-page .bk{margin:clamp(16px,4vw,48px) auto}
 /* back-to-home button above the booking form */
 .bk-homewrap { width: min(960px, 100%); margin: 0 auto 14px; }
 
-/* credit code (optional; holders pay at the salon) */
-.bk-credit { grid-column: 1 / -1; margin-top: 2px; }
-.bk-credit__toggle {
-  background: none; border: none; padding: 4px 0; cursor: pointer;
-  font-family: var(--ff); font-size: .88rem; color: var(--blue);
-  text-decoration: underline; text-underline-offset: 3px;
+/* credit code — prominent section in the confirm step (holders pay at the salon) */
+.bk-credit {
+  margin-top: 16px; padding: 16px 18px; border-radius: 14px;
+  background: rgba(0, 102, 179, .05); border: 1px solid var(--line);
 }
-.bk-credit__toggle:hover { color: var(--blue-deep); }
-.bk-credit__toggle.is-open { color: var(--ink); }
-.bk-credit__box { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.bk-credit__note { font-size: .8rem; color: var(--muted); line-height: 1.7; margin: 0; }
+.bk-credit__head { display: flex; align-items: flex-start; gap: 12px; }
+.bk-credit__ic {
+  flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px;
+  background: var(--blue-grad); color: #fff; font-family: var(--ff-en); font-weight: 700; font-size: 1.1rem;
+}
+.bk-credit__title { margin: 0 0 3px; font-family: var(--ff); font-weight: 800; font-size: 1.02rem; color: var(--ink); }
+.bk-credit__note { font-size: .82rem; color: var(--muted); line-height: 1.7; margin: 0; }
+.bk-credit__note b { color: var(--ink); font-weight: 700; }
+.bk-credit__row { display: flex; gap: 8px; margin-top: 12px; }
+.bk-credit__row input {
+  flex: 1; padding: 12px 14px; border-radius: 11px; border: 1px solid var(--line);
+  background: #fff; color: var(--ink); font-family: var(--ff); font-size: 1rem; min-width: 0;
+}
+.bk-credit__row input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 102, 179, .12); }
+.bk-credit__apply {
+  flex: none; padding: 0 20px; border: none; border-radius: 11px; cursor: pointer;
+  background: var(--blue-grad); color: #fff; font-family: var(--ff); font-weight: 700; font-size: .92rem;
+  transition: transform .25s var(--ease), opacity .25s;
+}
+.bk-credit__apply:hover { transform: translateY(-2px); }
+.bk-credit__apply:disabled { opacity: .6; cursor: default; transform: none; }
+.bk-credit__status { margin: 10px 0 0; font-size: .86rem; font-weight: 700; }
+.bk-credit__status.is-ok { color: #1c7a44; }
+.bk-credit__status.is-err { color: #b32d2e; }
+@media (max-width: 480px) { .bk-credit__row { flex-direction: column; } .bk-credit__apply { padding: 12px; } }

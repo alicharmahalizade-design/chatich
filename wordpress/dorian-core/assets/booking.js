@@ -51,7 +51,7 @@
   }
 
   /* ---------- state ---------- */
-  var state = { step: 1, provider: null, subs: {}, date: null, time: null, weeks: 0 };
+  var state = { step: 1, provider: null, subs: {}, date: null, time: null, weeks: 0, codeValid: false };
   var today = (function () { var d = new Date(); return toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate()); })();
   var view = { jy: today.jy, jm: today.jm };
 
@@ -61,6 +61,26 @@
   function depositPrice() { return Math.round(totalPrice() * DEPOSIT_RATE / 1000) * 1000; }
   function payablePrice() { return PAY_AMOUNT === "deposit" ? depositPrice() : totalPrice(); }
   function creditCode() { var e = document.getElementById("custCode"); return e ? e.value.trim() : ""; }
+  function payLabel() { return state.codeValid ? "ثبت نوبت" : ("پرداخت · " + money(payablePrice())); }
+  function setCodeStatus(msg, ok) {
+    var s = document.getElementById("bkCreditStatus"); if (!s) return;
+    if (!msg) { s.hidden = true; s.textContent = ""; s.className = "bk-credit__status"; return; }
+    s.hidden = false; s.textContent = msg; s.className = "bk-credit__status " + (ok ? "is-ok" : "is-err");
+  }
+  function refreshPayUI() {
+    if (state.step === 4) { renderSummary(); document.getElementById("btnNext").textContent = payLabel(); }
+  }
+  function applyCode() {
+    var code = creditCode();
+    if (!code) { setCodeStatus("کد اعتبار را وارد کنید.", false); return; }
+    var btn = document.getElementById("bkCreditApply"); if (btn) { btn.disabled = true; btn.textContent = "بررسی…"; }
+    api("checkcode", { code: code }).then(function (res) {
+      if (btn) { btn.disabled = false; btn.textContent = "اعمال کد"; }
+      if (res && res.success) { state.codeValid = true; setCodeStatus("کد اعتبار تأیید شد — پرداخت هنگام حضور در آرایشگاه.", true); }
+      else { state.codeValid = false; setCodeStatus("کد اعتبار نامعتبر است.", false); }
+      refreshPayUI();
+    });
+  }
   function subIdList() { return Object.keys(state.subs); }
   function refreshTotal() { document.getElementById("grandTotal").textContent = money(totalPrice()); }
 
@@ -181,7 +201,9 @@
     var dateStr = state.date ? (jWeekday(state.date.jy, state.date.jm, state.date.jd) + " " + toFa(state.date.jd) + " " + J_MONTHS[state.date.jm - 1] + " " + toFa(state.date.jy)) : "—";
     var recur = state.weeks ? (state.weeks === 1 ? "هر هفته" : "هر " + toFa(state.weeks) + " هفته") : "یک‌بار";
     var payRows;
-    if (PAY_AMOUNT === "deposit") {
+    if (state.codeValid) {
+      payRows = '<div class="sumrow sumrow--deposit"><span>پرداخت</span><b>هنگام حضور در آرایشگاه</b></div>';
+    } else if (PAY_AMOUNT === "deposit") {
       var dep = depositPrice(), rest = totalPrice() - dep;
       payRows =
         '<div class="sumrow sumrow--deposit"><span>بیعانه (' + toFa(Math.round(DEPOSIT_RATE * 100)) + "٪) — اکنون</span><b>" + money(dep) + "</b></div>" +
@@ -203,7 +225,7 @@
     document.querySelectorAll(".bk-step").forEach(function (s) { s.classList.toggle("is-active", +s.dataset.step === n); });
     document.querySelectorAll(".bk-steps__item").forEach(function (s) { var i = +s.dataset.stepdot; s.classList.toggle("is-active", i === n); s.classList.toggle("is-done", i < n); });
     document.getElementById("btnBack").hidden = n === 1;
-    document.getElementById("btnNext").textContent = n === 4 ? ("پرداخت · " + money(payablePrice())) : "ادامه";
+    document.getElementById("btnNext").textContent = n === 4 ? payLabel() : "ادامه";
     if (n === 1) renderProviders();
     if (n === 2) renderServices();
     if (n === 3) { renderCalendar(); state.date ? fetchSlots(state.time) : (document.getElementById("slots").innerHTML = '<p class="slots__empty">ابتدا یک روز را انتخاب کنید.</p>'); renderRecurNote(); }
@@ -230,7 +252,7 @@
       name: document.getElementById("custName").value.trim(), phone: document.getElementById("custPhone").value.trim(),
       code: creditCode()
     }).then(function (res) {
-      btn.disabled = false; btn.textContent = "پرداخت · " + money(payablePrice());
+      btn.disabled = false; btn.textContent = payLabel();
       if (!res || !res.success) { toast(res && res.data ? res.data : "ثبت نوبت ناموفق بود."); return; }
       if (res.data && res.data.redirect) { window.location.href = res.data.redirect; return; }
       var cal = document.getElementById("doneCal");
@@ -243,10 +265,10 @@
     });
   }
   function reset() {
-    state.provider = null; state.subs = {}; state.date = null; state.time = null; state.weeks = 0;
+    state.provider = null; state.subs = {}; state.date = null; state.time = null; state.weeks = 0; state.codeValid = false;
     document.getElementById("custName").value = ""; document.getElementById("custPhone").value = "";
     var code = document.getElementById("custCode"); if (code) code.value = "";
-    var cbox = document.getElementById("bkCreditBox"); if (cbox) cbox.hidden = true;
+    setCodeStatus("", null);
     document.querySelectorAll(".recur__opt").forEach(function (o, i) { o.classList.toggle("is-active", i === 0); });
     document.getElementById("bkDone").hidden = true; refreshTotal(); gotoStep(1);
   }
@@ -256,10 +278,12 @@
     document.getElementById("btnBack").addEventListener("click", function () { if (state.step > 1) gotoStep(state.step - 1); });
     document.getElementById("btnReset").addEventListener("click", reset);
     document.getElementById("firstFree").addEventListener("click", firstAvailable);
-    var ct = document.getElementById("bkCreditToggle");
-    if (ct) ct.addEventListener("click", function () {
-      var box = document.getElementById("bkCreditBox");
-      if (box) { box.hidden = !box.hidden; ct.classList.toggle("is-open", !box.hidden); }
+    var applyBtn = document.getElementById("bkCreditApply");
+    if (applyBtn) applyBtn.addEventListener("click", applyCode);
+    var codeInput = document.getElementById("custCode");
+    if (codeInput) codeInput.addEventListener("input", function () {
+      if (state.codeValid) { state.codeValid = false; refreshPayUI(); }
+      setCodeStatus("", null);
     });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();

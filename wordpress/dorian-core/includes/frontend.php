@@ -117,15 +117,20 @@ class Dorian_Frontend {
       <div class="payform">
         <label class="field"><span>نام و نام خانوادگی</span><input type="text" id="custName" placeholder="نام شما"></label>
         <label class="field"><span>شمارهٔ موبایل</span><input type="tel" id="custPhone" placeholder="09xxxxxxxxx" inputmode="numeric"></label>
-        <?php if ($has_credit) : ?>
-        <div class="bk-credit">
-          <button type="button" class="bk-credit__toggle" id="bkCreditToggle">کد اعتبار دارید؟</button>
-          <div class="bk-credit__box" id="bkCreditBox" hidden>
-            <label class="field"><span>کد اعتبار</span><input type="text" id="custCode" placeholder="کد را وارد کنید" autocomplete="off"></label>
-            <p class="bk-credit__note">با کد اعتبار معتبر، پرداخت آنلاین لازم نیست و مبلغ را هنگام حضور در آرایشگاه پرداخت می‌کنید.</p>
+      </div>
+      <div class="bk-credit" id="bkCredit">
+        <div class="bk-credit__head">
+          <span class="bk-credit__ic" aria-hidden="true">%</span>
+          <div>
+            <h3 class="bk-credit__title">کد اعتبار</h3>
+            <p class="bk-credit__note">اگر کد اعتبار دارید وارد کنید؛ در این صورت نیازی به پرداخت آنلاین نیست و مبلغ را <b>هنگام حضور در آرایشگاه</b> پرداخت می‌کنید.</p>
           </div>
         </div>
-        <?php endif; ?>
+        <div class="bk-credit__row">
+          <input type="text" id="custCode" placeholder="کد اعتبار (اختیاری)" autocomplete="off">
+          <button type="button" class="bk-credit__apply" id="bkCreditApply">اعمال کد</button>
+        </div>
+        <p class="bk-credit__status" id="bkCreditStatus" hidden></p>
       </div>
     </section>
   </main>

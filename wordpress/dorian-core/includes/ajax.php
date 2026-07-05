@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 class Dorian_Ajax {
 
     public static function boot() {
-        foreach (array('slots', 'firstfree', 'book') as $a) {
+        foreach (array('slots', 'firstfree', 'book', 'checkcode') as $a) {
             add_action('wp_ajax_dorian_' . $a, array(__CLASS__, $a));
             add_action('wp_ajax_nopriv_dorian_' . $a, array(__CLASS__, $a));
         }
@@ -138,6 +138,17 @@ class Dorian_Ajax {
             if ($url) wp_send_json_success(array('redirect' => $url, 'id' => $id));
         }
         wp_send_json_success(array('id' => $id, 'event' => self::gcal($booking), 'atSalon' => $code_valid));
+    }
+
+    /** Validate a credit code on demand (so the UI can switch to "pay at salon"). */
+    public static function checkcode() {
+        self::verify();
+        $code = isset($_POST['code']) ? sanitize_text_field(wp_unslash($_POST['code'])) : '';
+        $s = dorian_settings();
+        if ($code !== '' && self::code_is_valid($code, $s)) {
+            wp_send_json_success(array('valid' => true));
+        }
+        wp_send_json_error('invalid');
     }
 
     /** True when $code matches one of the admin's credit codes (case-insensitive). */

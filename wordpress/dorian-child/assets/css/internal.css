@@ -21,12 +21,13 @@ body.dorian-inner {
   color: var(--ink);
   font-size: var(--fs);
   line-height: var(--line);
-  overflow-x: hidden;
+  overflow-x: clip;   /* clip (not hidden) so it doesn't break the sticky header */
 }
 body.dorian-inner #tone { background: var(--paper); }
 body.dorian-inner .dust { opacity: .4; }
-/* content is offset by the header height so nothing ever hides beneath it */
-.dorian-inner .dorian-main { display: block; min-height: 50vh; padding-block-start: var(--head-h); }
+/* the header is sticky and sits IN the flow, so the main needs no top padding
+   (this is the "76px" the header offset used to add) */
+.dorian-inner .dorian-main { display: block; min-height: 50vh; padding-block-start: 0; }
 
 /* heading scale variants (from the panel) */
 .dorian-scale-compact { --h1: clamp(1.9rem, 4vw, 2.7rem); --h2: clamp(1.5rem, 3vw, 2rem); }
@@ -39,22 +40,22 @@ body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4re
 
 /* ============================ INTERNAL HEADER (redesigned) ============================
    The landing keeps its cinematic fade-out header. Internal pages get a solid,
-   standards-compliant bar: real background, fixed height, hairline + soft shadow,
-   compacts on scroll. Content is pushed down by --head-h (above), so no overlap. */
+   standards-compliant bar that is STICKY and sits in the flow — so it needs no
+   manual top offset (no empty gap), never overlaps content, and stays on scroll. */
 .dorian-inner .head {
-  position: fixed; inset-block-start: 0; inset-inline: 0; z-index: 200;
+  position: sticky; inset-block-start: 0; inset-inline: 0; z-index: 200;
   height: var(--head-h); padding-block: 0; padding-inline: clamp(16px, 4vw, 52px);
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   color: var(--ink);
-  background: rgba(246, 239, 224, .9);
+  background: rgba(246, 239, 224, .92);
   -webkit-backdrop-filter: blur(12px) saturate(1.1); backdrop-filter: blur(12px) saturate(1.1);
   border-block-end: 1px solid rgba(168, 128, 26, .2);
   box-shadow: 0 8px 30px -22px rgba(20, 17, 10, .55);
   transition: height .35s var(--ease), background .35s, box-shadow .35s;
 }
 .dorian-inner .head::before { display: none; }           /* kill the landing fade mask */
-.dorian-inner .head.compact { height: var(--head-h-c); background: rgba(246, 239, 224, .96); box-shadow: 0 12px 30px -18px rgba(20, 17, 10, .6); }
-.dorian-inner .head.head--static { position: absolute; } /* when the "sticky header" option is off */
+.dorian-inner .head.compact { height: var(--head-h-c); background: rgba(246, 239, 224, .97); box-shadow: 0 12px 30px -18px rgba(20, 17, 10, .6); }
+.dorian-inner .head.head--static { position: relative; } /* when the "sticky header" option is off */
 .dorian-inner .head__start { display: flex; align-items: center; gap: clamp(16px, 3vw, 40px); min-width: 0; }
 .dorian-inner .head__end { display: flex; align-items: center; gap: 14px; }
 .dorian-inner .head__logo { height: 40px; width: auto; transition: height .35s var(--ease); }
