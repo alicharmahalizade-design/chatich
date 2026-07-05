@@ -167,8 +167,8 @@
        each gesture advances exactly one floor. At the first/last floor a further
        gesture releases the pin so the page scrolls normally to the next section. */
     var section = document.getElementById("floors");
-    var lenis = window.__dorianLenis || null;
-    var current = 0, animating = false, locked = false, cool = 0;
+    function L() { return window.__dorianLenis || null; }   // read Lenis lazily (app.js sets it)
+    var current = 0, animating = false, locked = false, cool = 0, justLeft = 0;
 
     function paint(idx, dir) {
       idx = Math.max(0, Math.min(2, idx));
@@ -189,9 +189,10 @@
     setActive(0);
 
     function lock() {
-      if (locked) return; locked = true;
+      if (locked || Date.now() - justLeft < 900) return;   // don't re-lock right after leaving
+      locked = true;
       section.classList.add("is-locked");
-      if (lenis) lenis.stop();
+      var l = L(); if (l) l.stop();
       window.addEventListener("wheel", onWheel, { passive: false });
       window.addEventListener("keydown", onKey);
       window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -200,26 +201,29 @@
     function unlock() {
       if (!locked) return; locked = false;
       section.classList.remove("is-locked");
-      if (lenis) lenis.start();
+      var l = L(); if (l) l.start();
       window.removeEventListener("wheel", onWheel, { passive: false });
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove, { passive: false });
     }
     function leave(dir) {
-      // release the pin and glide to the neighbouring section
+      // release and glide to the neighbouring section (never gets stuck)
+      justLeft = Date.now();
       unlock();
       var targets = section.parentNode.querySelectorAll(".screen");
       var i = Array.prototype.indexOf.call(targets, section);
       var next = targets[i + (dir > 0 ? 1 : -1)];
-      if (next) { if (lenis) lenis.scrollTo(next, { duration: 1.1 }); else next.scrollIntoView({ behavior: "smooth" }); }
+      var l = L();
+      if (next) { if (l) l.scrollTo(next, { duration: 1.0, lock: true }); else next.scrollIntoView({ behavior: "smooth" }); }
     }
     function step(dir) {
-      var now = Date.now();
-      if (animating || now - cool < 720) return;   // one step per gesture
-      cool = now;
+      if (animating) return;
+      // at the first/last floor a further gesture LEAVES immediately (no cooldown) so it never sticks
       if (dir > 0 && current >= 2) { leave(1); return; }
       if (dir < 0 && current <= 0) { leave(-1); return; }
+      if (Date.now() - cool < 560) return;   // one step per gesture between floors
+      cool = Date.now();
       paint(current + (dir > 0 ? 1 : -1), dir);
     }
     function onWheel(e) { e.preventDefault(); if (Math.abs(e.deltaY) < 4) return; step(e.deltaY > 0 ? 1 : -1); }
@@ -244,9 +248,10 @@
       onLeaveBack: function () { unlock(); },
     });
     function align() {
-      // pin the section flush to the top so it fills the viewport while locked
-      var y = section.getBoundingClientRect().top + (lenis ? lenis.scroll : window.scrollY);
-      if (lenis) lenis.scrollTo(y, { immediate: true }); else window.scrollTo(0, y);
+      // snap the section flush to the top so it fills the viewport while locked
+      var l = L();
+      var y = section.getBoundingClientRect().top + (l ? l.scroll : window.scrollY);
+      if (l) l.scrollTo(y, { immediate: true }); else window.scrollTo(0, y);
     }
     function paintInstant(idx) {
       current = idx; setActive(idx);

@@ -15,7 +15,7 @@ $reserve = function_exists('dorian_reserve_link') ? dorian_reserve_link() : home
 
 $cards = array(
     array('id'=>'card-1',  'slug'=>'gentle','en'=>'Gentle','fa'=>'کارت نجیب',   'amount'=>'۱٬۰۰۰٬۰۰۰',  'opt'=>'dorian_gift_url_1',
-          'bg'=>'#9a8b74','bg2'=>'#746a58','tone'=>'dark',
+          'bg'=>'#cbb88f','bg2'=>'#9a7f52','tone'=>'dark',
           'desc'=>'شروعی برازنده؛ یک نوبتِ کاملِ آراستگی برای هدیه‌ای کوچک اما به‌یادماندنی.',
           'feats'=>array('یک جلسه خدمات مو و صورت','مناسبِ تجربهٔ نخستِ دوریان')),
     array('id'=>'card-2',  'slug'=>'duke',  'en'=>'Duke',  'fa'=>'کارت دوک',    'amount'=>'۲٬۰۰۰٬۰۰۰',  'opt'=>'dorian_gift_url_2',
