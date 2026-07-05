@@ -123,7 +123,7 @@ class Dorian_Frontend {
           <span class="bk-credit__ic" aria-hidden="true">%</span>
           <div>
             <h3 class="bk-credit__title">کد اعتبار</h3>
-            <p class="bk-credit__note">اگر کد اعتبار دارید وارد کنید؛ در این صورت نیازی به پرداخت آنلاین نیست و مبلغ را <b>هنگام حضور در آرایشگاه</b> پرداخت می‌کنید.</p>
+            <p class="bk-credit__note">اگر کد اعتبار دارید وارد کنید.</p>
           </div>
         </div>
         <div class="bk-credit__row">

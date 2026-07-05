@@ -280,14 +280,20 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
       <p class="anim" style="--i:2">چهار کارت هدیه‌ی دوریان؛ تجربه‌ای کامل از مراقبت و آرامش را به عزیزانتان هدیه دهید.</p>
       <div class="giftcard-row anim" style="--i:3">
         <?php
-        $gl = function ($k) { return function_exists('dorian_link') ? dorian_link($k) : ''; };
-        dorian_giftcard("$tpl_uri/assets/img/gift-gentle-front.jpg", "$tpl_uri/assets/img/gift-gentle-back.jpg", 'گیفت‌کارت یک میلیون تومان', $gl('dorian_gift_url_1'));
-        dorian_giftcard("$tpl_uri/assets/img/gift-duke-front.jpg",   "$tpl_uri/assets/img/gift-duke-back.jpg",   'گیفت‌کارت دو میلیون تومان', $gl('dorian_gift_url_2'));
-        dorian_giftcard("$tpl_uri/assets/img/gift-noble-front.jpg",  "$tpl_uri/assets/img/gift-noble-back.jpg",  'گیفت‌کارت پنج میلیون تومان', $gl('dorian_gift_url_3'));
-        dorian_giftcard("$tpl_uri/assets/img/gift-royal-front.jpg",  "$tpl_uri/assets/img/gift-royal-back.jpg",  'گیفت‌کارت ده میلیون تومان', $gl('dorian_gift_url_4'));
+        // each card links to its section on the dedicated gift-cards page
+        // (overridable per card from «تنظیمات دوریان → لینک‌ها»)
+        $gift_page = function_exists('dorian_giftcards_url') ? dorian_giftcards_url() : home_url('/gift-cards');
+        $gl = function ($k, $anchor) use ($gift_page) {
+            $u = function_exists('dorian_link') ? dorian_link($k) : '';
+            return $u ? $u : $gift_page . $anchor;
+        };
+        dorian_giftcard("$tpl_uri/assets/img/gift-gentle-front.jpg", "$tpl_uri/assets/img/gift-gentle-back.jpg", 'کارت هدیهٔ یک میلیون تومان', $gl('dorian_gift_url_1', '#card-1'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-duke-front.jpg",   "$tpl_uri/assets/img/gift-duke-back.jpg",   'کارت هدیهٔ دو میلیون تومان',  $gl('dorian_gift_url_2', '#card-2'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-noble-front.jpg",  "$tpl_uri/assets/img/gift-noble-back.jpg",  'کارت هدیهٔ پنج میلیون تومان', $gl('dorian_gift_url_3', '#card-5'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-royal-front.jpg",  "$tpl_uri/assets/img/gift-royal-back.jpg",  'کارت هدیهٔ ده میلیون تومان',  $gl('dorian_gift_url_4', '#card-10'));
         ?>
       </div>
-      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="<?php echo esc_url(dorian_link('dorian_gift_cta_url', $reserve_url)); ?>">هدیه بدهید</a></div>
+      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="<?php echo esc_url(dorian_link('dorian_gift_cta_url', $gift_page)); ?>">مشاهدهٔ کارت‌های هدیه</a></div>
     </div>
   </section>
 

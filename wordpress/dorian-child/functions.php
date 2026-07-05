@@ -380,6 +380,19 @@ function dorian_field($key, $label, $type = 'text', $extra = array()) {
    Shared "chrome" helpers used by header.php / footer.php / page templates.
    ========================================================================= */
 
+/** URL of the dedicated gift-cards page (found by its template, so the slug is free). */
+function dorian_giftcards_url() {
+    $ids = get_posts(array(
+        'post_type'   => 'page',
+        'post_status' => 'publish',
+        'numberposts' => 1,
+        'fields'      => 'ids',
+        'meta_key'    => '_wp_page_template',
+        'meta_value'  => 'template-giftcards.php',
+    ));
+    return $ids ? get_permalink($ids[0]) : home_url('/gift-cards');
+}
+
 /** URL of the brand logo (settings override → bundled default). */
 function dorian_logo_url() {
     $u = dorian_opt('header_logo');
