@@ -40,7 +40,7 @@
         if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-    var sel = '.post-card, .value-card, .about__visual, .contact__card, .contact__formwrap, .single__hero, .pagehero__inner';
+    var sel = '.post-card, .value-card, .about__visual, .contact__card, .contact__formwrap, .single__hero, .pagehero__inner, .giftband__visual, .giftband__body, .gift-step';
     doc.querySelectorAll(sel).forEach(function (el) { io.observe(el); });
   }
 
