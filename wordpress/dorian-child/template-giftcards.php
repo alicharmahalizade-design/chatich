@@ -53,38 +53,70 @@ $cards = array(
   </div>
 </section>
 
-<?php foreach ($cards as $i => $c) :
-  $buy = function_exists('dorian_link') ? dorian_link($c['opt'], $reserve) : $reserve; ?>
-  <section class="giftband" id="<?php echo esc_attr($c['id']); ?>" data-tone="<?php echo esc_attr($c['tone']); ?>"
-           style="--gbg:<?php echo esc_attr($c['bg']); ?>;--gbg2:<?php echo esc_attr($c['bg2']); ?>">
-    <span class="giftband__wm lat" aria-hidden="true"><?php echo esc_html($c['en']); ?></span>
-    <div class="wrap giftband__inner<?php echo $i % 2 ? ' is-reverse' : ''; ?>">
-      <div class="giftband__visual">
-        <div class="giftcard giftcard--lg">
-          <div class="giftcard__inner">
-            <div class="giftcard__face giftcard__front"><img src="<?php echo esc_url($img.'gift-'.$c['slug'].'-front.jpg'); ?>" alt="<?php echo esc_attr($c['fa']); ?>" loading="lazy"></div>
-            <div class="giftcard__face giftcard__back"><img src="<?php echo esc_url($img.'gift-'.$c['slug'].'-back.jpg'); ?>" alt="<?php echo esc_attr($c['fa']); ?>" loading="lazy"></div>
-          </div>
-        </div>
-      </div>
-      <div class="giftband__body">
-        <span class="giftband__eyebrow lat"><?php echo esc_html($c['en']); ?></span>
-        <h2 class="giftband__title"><?php echo esc_html($c['fa']); ?></h2>
-        <div class="giftband__amount"><span class="lat"><?php echo esc_html($c['amount']); ?></span><small>تومان</small></div>
-        <p class="giftband__desc"><?php echo esc_html($c['desc']); ?></p>
-        <ul class="giftband__feats">
-          <?php foreach ($c['feats'] as $f) : ?>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg><?php echo esc_html($f); ?></li>
-          <?php endforeach; ?>
-          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>بدونِ تاریخِ انقضا</li>
-        </ul>
-        <div class="giftband__cta">
-          <a class="btn btn--gold" href="<?php echo esc_url($buy); ?>">هدیه بدهید</a>
-        </div>
-      </div>
+<!-- preview row: click a card to jump the slider to it -->
+<section class="giftshow">
+  <div class="wrap giftshow__head">
+    <span class="eyebrow c">Choose</span>
+    <h2 class="giftshow__h">کارتِ خود را انتخاب کنید</h2>
+    <p class="giftshow__sub">روی هر کارت بزنید تا جزئیات و خریدش را ببینید.</p>
+  </div>
+  <div class="wrap">
+    <div class="giftthumbs" role="tablist" aria-label="کارت‌های هدیه">
+      <?php foreach ($cards as $i => $c) : ?>
+        <button class="giftthumb<?php echo $i === 0 ? ' is-active' : ''; ?>" type="button" role="tab" data-go="<?php echo $i; ?>"
+                aria-controls="<?php echo esc_attr($c['id']); ?>" style="--gbg:<?php echo esc_attr($c['bg']); ?>">
+          <span class="giftthumb__img"><img src="<?php echo esc_url($img.'gift-'.$c['slug'].'-front.jpg'); ?>" alt="<?php echo esc_attr($c['fa']); ?>" loading="lazy"></span>
+          <span class="giftthumb__fa"><?php echo esc_html($c['fa']); ?></span>
+          <span class="giftthumb__amt lat"><?php echo esc_html($c['amount']); ?></span>
+        </button>
+      <?php endforeach; ?>
     </div>
-  </section>
-<?php endforeach; ?>
+  </div>
+
+  <div class="giftslider-wrap">
+    <button class="giftslider-nav giftslider-nav--prev" type="button" aria-label="کارت قبلی"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="giftslider" id="giftSlider" tabindex="0">
+      <?php foreach ($cards as $i => $c) :
+        $buy = function_exists('dorian_link') ? dorian_link($c['opt'], $reserve) : $reserve; ?>
+        <article class="giftslide" id="<?php echo esc_attr($c['id']); ?>" data-i="<?php echo $i; ?>" data-tone="<?php echo esc_attr($c['tone']); ?>"
+                 style="--gbg:<?php echo esc_attr($c['bg']); ?>;--gbg2:<?php echo esc_attr($c['bg2']); ?>">
+          <span class="giftband__wm lat" aria-hidden="true"><?php echo esc_html($c['en']); ?></span>
+          <div class="giftslide__inner">
+            <div class="giftband__visual">
+              <div class="giftcard giftcard--lg">
+                <div class="giftcard__inner">
+                  <div class="giftcard__face giftcard__front"><img src="<?php echo esc_url($img.'gift-'.$c['slug'].'-front.jpg'); ?>" alt="<?php echo esc_attr($c['fa']); ?>" loading="lazy"></div>
+                  <div class="giftcard__face giftcard__back"><img src="<?php echo esc_url($img.'gift-'.$c['slug'].'-back.jpg'); ?>" alt="<?php echo esc_attr($c['fa']); ?>" loading="lazy"></div>
+                </div>
+              </div>
+            </div>
+            <div class="giftband__body">
+              <span class="giftband__eyebrow lat"><?php echo esc_html($c['en']); ?></span>
+              <h2 class="giftband__title"><?php echo esc_html($c['fa']); ?></h2>
+              <div class="giftband__amount"><span class="lat"><?php echo esc_html($c['amount']); ?></span><small>تومان</small></div>
+              <p class="giftband__desc"><?php echo esc_html($c['desc']); ?></p>
+              <ul class="giftband__feats">
+                <?php foreach ($c['feats'] as $f) : ?>
+                  <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg><?php echo esc_html($f); ?></li>
+                <?php endforeach; ?>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>بدونِ تاریخِ انقضا</li>
+              </ul>
+              <div class="giftband__cta">
+                <a class="btn btn--gold" href="<?php echo esc_url($buy); ?>">هدیه بدهید</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+    <button class="giftslider-nav giftslider-nav--next" type="button" aria-label="کارت بعدی"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+
+  <div class="giftdots" aria-hidden="true">
+    <?php foreach ($cards as $i => $c) : ?><span class="giftdot<?php echo $i === 0 ? ' is-active' : ''; ?>"></span><?php endforeach; ?>
+  </div>
+</section>
+<?php // (bands are now horizontal slides above) ?>
 
 <section class="gift-why">
   <div class="wrap gift-why__inner">
