@@ -527,7 +527,7 @@ body.dorian-inner { margin-block-start: 0; }
 .gift-step p { color: var(--ink-soft); font-size: .95rem; }
 
 /* ----- preview row: pick a card ----- */
-.giftshow { padding-block: clamp(20px, 3vw, 40px) 0; overflow: hidden; }
+.giftshow { padding-block: clamp(28px, 4vw, 52px) clamp(30px, 5vw, 64px); overflow: hidden; }
 .giftshow__head { text-align: center; margin-block-end: clamp(20px, 3vw, 34px); }
 .giftshow__head .eyebrow { color: var(--gold-soft); }
 .giftshow__h { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2); margin-block: 8px 6px; }

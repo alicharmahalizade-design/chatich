@@ -43,16 +43,6 @@ $cards = array(
   </div>
 </section>
 
-<section class="gift-how">
-  <div class="wrap">
-    <div class="gift-how__grid">
-      <div class="gift-step"><span class="gift-step__n lat">۱</span><h3>انتخاب کنید</h3><p>کارتی متناسب با سلیقه و مناسبت انتخاب کنید.</p></div>
-      <div class="gift-step"><span class="gift-step__n lat">۲</span><h3>خرید کنید</h3><p>پرداختِ آنلاینِ امن، تنها در چند لحظه.</p></div>
-      <div class="gift-step"><span class="gift-step__n lat">۳</span><h3>هدیه دهید</h3><p>کارت را به دوستان و عزیزانتان تقدیم کنید.</p></div>
-    </div>
-  </div>
-</section>
-
 <!-- preview row: click a card to jump the slider to it -->
 <section class="giftshow">
   <div class="wrap giftshow__head">
@@ -117,15 +107,5 @@ $cards = array(
   </div>
 </section>
 <?php // (bands are now horizontal slides above) ?>
-
-<section class="gift-why">
-  <div class="wrap gift-why__inner">
-    <img class="gift-why__seal" src="<?php echo esc_url($img.'badge.png'); ?>" alt="" aria-hidden="true">
-    <span class="eyebrow c">Why Dorian</span>
-    <h2>هدیه‌ای که فراموش نمی‌شود</h2>
-    <p>کارت هدیهٔ دوریان تاریخِ انقضا ندارد و برای همهٔ خدماتِ مجموعه قابل استفاده است. کافی است کارت را تهیه کنید و کدِ آن را به عزیزتان بدهید؛ باقیِ کار با ماست.</p>
-    <div class="gift-why__cta"><a class="btn btn--blue" href="<?php echo esc_url($reserve); ?>">رزرو نوبت</a></div>
-  </div>
-</section>
 
 <?php get_footer();
