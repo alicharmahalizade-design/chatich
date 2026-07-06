@@ -1,251 +1,667 @@
 /* =========================================================================
-   DORIAN — INNER PAGES (everything except the landing template)
-   Cosmetic theme ONLY. We never impose display:grid/flex on WooCommerce or
-   Elementor markup — layout stays with the plugin/theme, we only restyle
-   colour, type, buttons, cards and add overflow guards. This keeps the shop,
-   single-product, cart, checkout, About & Contact pages robust.
-
-   Selectors are anchored on `body.dorian-inner` + the WooCommerce component
-   class (NOT a separate `.woocommerce` ancestor, because Woo puts that class
-   on <body> itself). Key button/title/price props use !important so they
-   reliably beat WooCommerce's own high-specificity defaults and can never be
-   squished by a stray parent grid.
+   DORIAN — internal pages layer
+   Shared "light & fast" chrome + layouts for About / Contact / Blog / Page /
+   WooCommerce single-product. Loaded AFTER site.css; reuses all of its tokens
+   (paper / navy / gold / blue / ff-fa / wrap, plus .btn .eyebrow .ds .corner).
+   No GSAP/Lenis — motion is CSS + a tiny IntersectionObserver.
    ========================================================================= */
 
-@font-face{
-  font-family:'Pinar';
-  src:url("../fonts/Pinar-VF.woff2") format('woff2');
-  font-weight:100 900; font-display:swap;
+/* Diet Didot — elegant serif for English display text & Latin prices (gift cards). */
+@font-face {
+  font-family: 'Diet Didot';
+  src: url("../fonts/DietDidot-Bold.woff2") format('woff2'),
+       url("../fonts/DietDidot-Bold.woff") format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
-:root{
-  --d-paper:#ECDEC9; --d-paper-2:#F6EFE0; --d-paper-3:#E1D0B3; --d-paper-deep:#D8C4A2;
-  --d-ink:#15110A;   --d-ink-2:#2A2316;   --d-ink-soft:#5A5140;
-  --d-blue:#0066B3;  --d-blue-deep:#004B85; --d-blue-bright:#1E86D6;
-  --d-navy:#081726;  --d-navy-2:#0C2138;
-  --d-gold-1:#A8801A; --d-gold-2:#D9B65A; --d-gold-3:#F4E1A0; --d-gold-deep:#6b4f12;
-  --d-gold-grad:linear-gradient(135deg,#A8801A,#D9B65A 45%,#F4E1A0 72%,#D9B65A);
-  --d-line:rgba(10,40,70,.14);
-  --d-ff-fa:'Pinar',Tahoma,sans-serif;
-  --d-ff-en:'Space Grotesk',system-ui,-apple-system,sans-serif;
-  --d-r:16px; --d-r-lg:22px; --d-r-pill:999px;
-  --d-shadow:0 30px 70px -50px rgba(30,20,5,.55);
+:root {
+  --ff-didot: 'Diet Didot', 'Times New Roman', serif;
+  --fs: var(--dorian-fs, 17px);
+  --line: 1.9;
+  --rr: 18px;
+  --head-h: 76px;                        /* fixed header height on internal pages */
+  --head-h-c: 62px;                      /* compacted (scrolled) height */
+  --section-y: clamp(56px, 8vw, 104px);  /* one vertical rhythm for every section */
 }
 
-/* ---- base canvas & type (header/footer are Elementor templates → left alone) */
-body.dorian-inner{
-  background:radial-gradient(130% 120% at 50% -10%,#F3EAD7 0%,#ECDEC9 45%,#E1D0B3 100%);
-  color:var(--d-ink);
-  font-family:var(--d-ff-fa);
-  overflow-x:hidden;                 /* kills the horizontal bleed on Contact */
-}
-body.dorian-inner img,
-body.dorian-inner video,
-body.dorian-inner iframe{max-width:100%;height:auto}
-body.dorian-inner ::selection{background:var(--d-gold-2);color:var(--d-navy)}
+/* Internal pages reserve a STABLE scrollbar gutter (and show a subtle bar) so the
+   centred content never jumps sideways when the page becomes scrollable. This is
+   the classic RTL "content shifts right after scroll" fix. The landing is
+   untouched (it hides the scrollbar for its Lenis experience). */
+html { scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: rgba(168,128,26,.5) transparent; }
+html::-webkit-scrollbar { display: block; width: 10px; height: 10px; }
+html::-webkit-scrollbar-thumb { background: rgba(168,128,26,.45); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+html::-webkit-scrollbar-thumb:hover { background: rgba(168,128,26,.7); background-clip: padding-box; }
+html::-webkit-scrollbar-track { background: transparent; }
 
-/* latin runs (prices, SKUs, breadcrumbs) read better in the display face */
-body.dorian-inner .price,
-body.dorian-inner .woocommerce-Price-amount,
-body.dorian-inner .sku,
-body.dorian-inner .woocommerce-breadcrumb{font-family:var(--d-ff-en)}
-
-/* =========================================================================
-   Shared breadcrumb
-   ========================================================================= */
-body.dorian-inner .woocommerce-breadcrumb{
-  max-width:1180px;margin:0 auto 22px;padding:14px 20px;
-  color:var(--d-ink-soft);font-size:.86rem;letter-spacing:.02em;
+/* ---- base page surface (paper, readable, RTL) ---- */
+body.dorian-inner {
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--fs);
+  line-height: var(--line);
+  overflow-x: clip;   /* clip (not hidden) so it doesn't break the sticky header */
 }
-body.dorian-inner .woocommerce-breadcrumb a{color:var(--d-blue);text-decoration:none}
-body.dorian-inner .woocommerce-breadcrumb a:hover{color:var(--d-blue-deep)}
+body.dorian-inner #tone { background: var(--paper); }
+body.dorian-inner .dust { opacity: .4; }
+/* the header is sticky and sits IN the flow, so the main needs no top padding
+   (this is the "76px" the header offset used to add) */
+.dorian-inner .dorian-main { display: block; min-height: 50vh; padding-block-start: 0; }
 
-/* =========================================================================
-   WooCommerce — SINGLE PRODUCT (cosmetic only; Woo owns the two columns)
-   ========================================================================= */
-body.dorian-inner div.product{max-width:1180px;margin-inline:auto}
+/* heading scale variants (from the panel) */
+.dorian-scale-compact { --h1: clamp(1.9rem, 4vw, 2.7rem); --h2: clamp(1.5rem, 3vw, 2rem); }
+.dorian-scale-comfort { --h1: clamp(2.2rem, 5vw, 3.4rem); --h2: clamp(1.7rem, 3.4vw, 2.4rem); }
+.dorian-scale-roomy   { --h1: clamp(2.6rem, 6vw, 4rem);   --h2: clamp(2rem, 4vw, 2.9rem); }
+body.dorian-inner:not([class*="dorian-scale-"]) { --h1: clamp(2.2rem, 5vw, 3.4rem); --h2: clamp(1.7rem, 3.4vw, 2.4rem); }
 
-/* overflow guard: let the two Woo columns shrink instead of pushing the page */
-body.dorian-inner div.product > .summary,
-body.dorian-inner div.product > .woocommerce-product-gallery,
-body.dorian-inner .woocommerce-tabs,
-body.dorian-inner .entry-content{min-width:0}
+.skip-link { position: fixed; inset-block-start: -60px; inset-inline-start: 12px; z-index: 500; background: var(--navy); color: var(--paper); padding: 10px 16px; border-radius: 10px; transition: inset-block-start .2s; }
+.skip-link:focus { inset-block-start: 12px; }
 
-body.dorian-inner div.product .product_title{
-  font-family:var(--d-ff-fa);font-weight:800;color:var(--d-ink) !important;
-  font-size:clamp(1.6rem,3.2vw,2.4rem);line-height:1.25;letter-spacing:-.01em;
+/* ============================ INTERNAL HEADER (redesigned) ============================
+   The landing keeps its cinematic fade-out header. Internal pages get a solid,
+   standards-compliant bar that is STICKY and sits in the flow — so it needs no
+   manual top offset (no empty gap), never overlaps content, and stays on scroll. */
+.dorian-inner .head {
+  position: sticky; inset-block-start: 0; inset-inline: 0; z-index: 200;
+  height: var(--head-h); padding-block: 0; padding-inline: clamp(16px, 4vw, 52px);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  color: var(--ink);
+  background: rgba(246, 239, 224, .92);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1); backdrop-filter: blur(12px) saturate(1.1);
+  border-block-end: 1px solid rgba(168, 128, 26, .2);
+  box-shadow: 0 8px 30px -22px rgba(20, 17, 10, .55);
+  transition: height .35s var(--ease), background .35s, box-shadow .35s;
 }
-body.dorian-inner div.product p.price,
-body.dorian-inner div.product span.price,
-body.dorian-inner div.product .price{
-  color:var(--d-gold-deep) !important;font-weight:700;font-size:1.5rem;
-}
-body.dorian-inner div.product p.price del{color:var(--d-ink-soft) !important;opacity:.6;font-weight:400}
-body.dorian-inner div.product p.price ins{text-decoration:none}
+.dorian-inner .head::before { display: none; }           /* kill the landing fade mask */
+/* the header must sit flush to the very top — nothing may reserve space above it */
+body.dorian-inner { margin-block-start: 0; }
+.dorian-inner .head { margin-block: 0; }
+.dorian-inner .head.compact { height: var(--head-h-c); background: rgba(246, 239, 224, .97); box-shadow: 0 12px 30px -18px rgba(20, 17, 10, .6); }
+.dorian-inner .head.head--static { position: relative; } /* when the "sticky header" option is off */
+.dorian-inner .head__start { display: flex; align-items: center; gap: clamp(16px, 3vw, 40px); min-width: 0; }
+.dorian-inner .head__end { display: flex; align-items: center; gap: 14px; }
+.dorian-inner .head__logo { height: 40px; width: auto; transition: height .35s var(--ease); }
+.dorian-inner .head.compact .head__logo { height: 32px; }
+.dorian-inner .nav { display: flex; align-items: center; gap: clamp(14px, 2vw, 30px); }
+.dorian-inner .nav a { font-family: var(--ff-fa); font-weight: 600; font-size: 1rem; color: var(--ink-2); opacity: 1; }
+.dorian-inner .nav a::after { background: var(--gold-2); }
+.dorian-inner .nav a:hover { color: var(--blue); }
+.dorian-inner .head__cta { padding: 10px 22px; font-size: .95rem; }
 
-body.dorian-inner div.product .woocommerce-product-gallery{
-  background:linear-gradient(180deg,#FBF6EC,#F1E7D4);
-  border:1px solid var(--d-line);border-radius:var(--d-r-lg);
-  padding:14px;box-shadow:var(--d-shadow);
-}
-body.dorian-inner div.product .woocommerce-product-gallery img{border-radius:12px}
-
-body.dorian-inner div.product .woocommerce-product-details__short-description{
-  color:var(--d-ink-soft);line-height:2;
-}
-body.dorian-inner div.product .product_meta{
-  color:var(--d-ink-soft);font-size:.86rem;border-top:1px solid var(--d-line);padding-top:14px;margin-top:16px;
-}
-body.dorian-inner div.product .product_meta a{color:var(--d-blue);text-decoration:none}
-
-/* quantity + add-to-cart row */
-body.dorian-inner div.product form.cart{
-  display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:18px 0;
-}
-body.dorian-inner div.product form.cart .quantity{margin:0;float:none}
-body.dorian-inner .quantity .qty{
-  width:88px;height:52px;text-align:center;
-  border:1px solid var(--d-line);border-radius:12px;background:#fff;
-  font-family:var(--d-ff-en);font-size:1rem;color:var(--d-ink);
+/* the reserve CTA that lives inside the mobile menu: hidden on desktop
+   (desktop shows the one in .head__end), shown only in the open mobile nav */
+.head__cta--mobile { display: none !important; }
+@media (max-width: 920px) {
+  .dorian-inner .head__cta { display: none; }             /* desktop CTA hidden on mobile */
+  .head__cta--mobile { display: inline-flex !important; margin-top: 10px; font-family: var(--ff-fa); font-size: 1rem; }
+  .dorian-inner .nav { position: fixed; inset: 0; padding-block-start: var(--head-h); }
 }
 
-/* =========================================================================
-   Buttons — the piece that was collapsing. !important + width:auto + nowrap so
-   a parent grid can never crush them into vertical single-character strips.
-   ========================================================================= */
-body.dorian-inner a.button,
-body.dorian-inner button.button,
-body.dorian-inner input.button,
-body.dorian-inner a.button.alt,
-body.dorian-inner button.button.alt,
-body.dorian-inner .single_add_to_cart_button,
-body.dorian-inner ul.products li.product .button,
-body.dorian-inner .add_to_cart_button,
-body.dorian-inner .checkout-button,
-body.dorian-inner #place_order{
-  display:inline-flex !important;align-items:center;justify-content:center;gap:8px;
-  width:auto !important;min-width:0;max-width:100%;white-space:nowrap !important;float:none !important;
-  padding:.9em 1.8em !important;min-height:52px;line-height:1.1 !important;
-  font-family:var(--d-ff-fa);font-weight:700;font-size:1rem;
-  border:0 !important;border-radius:var(--d-r-pill) !important;cursor:pointer;text-decoration:none !important;
-  background:var(--d-gold-grad) !important;color:var(--d-navy) !important;
-  box-shadow:0 18px 30px -20px rgba(120,90,20,.7);
-  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease;
+/* ============================ PAGE HERO ============================ */
+.pagehero {
+  position: relative;
+  padding-block: clamp(40px, 6vw, 72px) clamp(30px, 5vw, 54px);
+  text-align: center;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(0,102,179,.10), transparent 60%),
+    linear-gradient(180deg, var(--paper-2), var(--paper));
+  border-block-end: 1px solid rgba(168,128,26,.18);
+  overflow: hidden;
 }
-body.dorian-inner a.button:hover,
-body.dorian-inner button.button:hover,
-body.dorian-inner input.button:hover,
-body.dorian-inner .single_add_to_cart_button:hover,
-body.dorian-inner ul.products li.product .button:hover,
-body.dorian-inner .add_to_cart_button:hover,
-body.dorian-inner .checkout-button:hover,
-body.dorian-inner #place_order:hover{
-  transform:translateY(-2px);filter:brightness(1.04);
-  box-shadow:0 24px 40px -22px rgba(120,90,20,.8);color:var(--d-navy) !important;
+.pagehero::before {
+  content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; height: 1px;
+  background: var(--gold-line);
 }
-/* the little “View cart” link Woo appends after an ajax add */
-body.dorian-inner a.added_to_cart{
-  display:inline-flex;align-items:center;margin-inline-start:10px;
-  padding:.7em 1.3em;border-radius:var(--d-r-pill);white-space:nowrap;
-  background:transparent;border:1px solid var(--d-blue);color:var(--d-blue);
-  font-family:var(--d-ff-fa);font-weight:700;text-decoration:none;
+.pagehero--slim { padding-block: clamp(18px, 3vw, 28px); text-align: start; }
+.pagehero__inner { position: relative; z-index: 2; }
+.crumbs { font-family: var(--ff-fa); font-size: .9rem; color: var(--ink-soft); display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-block-end: 14px; }
+.pagehero--slim .crumbs { justify-content: flex-start; margin-block-end: 0; }
+.crumbs a { color: var(--gold-soft); transition: color .3s; }
+.crumbs a:hover { color: var(--blue); }
+.crumbs .sep { opacity: .4; }
+.crumbs .here { color: var(--ink); }
+.pagehero .eyebrow { color: var(--gold-soft); }
+.pagehero__title {
+  font-family: var(--ff-fa); font-weight: 800; line-height: 1.15;
+  font-size: var(--h1, clamp(2.2rem, 5vw, 3.4rem)); margin-block: 12px 0; color: var(--ink);
 }
-body.dorian-inner a.added_to_cart:hover{background:var(--d-blue);color:#fff}
+.pagehero__title .serif { color: var(--blue); }
+.pagehero .ds { margin: 16px auto 0; }
+.pagehero--slim .ds { display: none; }
+.pagehero__sub { max-width: 60ch; margin: 12px auto 0; color: var(--ink-soft); }
 
-/* =========================================================================
-   WooCommerce — TABS
-   ========================================================================= */
-body.dorian-inner div.product .woocommerce-tabs ul.tabs{
-  display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0 0 18px;border:0;
+/* ============================ SECTION RHYTHM ============================ */
+.listing, .about, .values, .contact, .single, .about-team, .related, .comments-section, .woo, .about-cta, .notfound {
+  padding-block: var(--section-y);
 }
-body.dorian-inner div.product .woocommerce-tabs ul.tabs::before,
-body.dorian-inner div.product .woocommerce-tabs ul.tabs li::before,
-body.dorian-inner div.product .woocommerce-tabs ul.tabs li::after{display:none;border:0}
-body.dorian-inner div.product .woocommerce-tabs ul.tabs li{
-  background:#fff;border:1px solid var(--d-line) !important;border-radius:var(--d-r-pill);
-  margin:0;padding:0;
-}
-body.dorian-inner div.product .woocommerce-tabs ul.tabs li a{
-  display:block;padding:.6em 1.4em;color:var(--d-ink);font-family:var(--d-ff-fa);
-  font-weight:600;font-size:.95rem;text-decoration:none;
-}
-body.dorian-inner div.product .woocommerce-tabs ul.tabs li.active{
-  background:linear-gradient(135deg,var(--d-blue-bright),var(--d-blue-deep));border-color:transparent !important;
-}
-body.dorian-inner div.product .woocommerce-tabs ul.tabs li.active a{color:#fff}
-body.dorian-inner div.product .woocommerce-tabs .panel{
-  background:linear-gradient(180deg,#FBF6EC,#F3E9D6);border:1px solid var(--d-line);
-  border-radius:var(--d-r);padding:22px 24px;color:var(--d-ink-soft);line-height:2;
-}
-body.dorian-inner #reviews h2,
-body.dorian-inner div.product .woocommerce-tabs h2{color:var(--d-ink)}
+.related, .comments-section { padding-block-start: clamp(34px, 5vw, 60px); }
+.values, .about-cta { background: linear-gradient(180deg, var(--paper), var(--paper-3)); }
 
-/* =========================================================================
-   WooCommerce — PRODUCT GRID (shop + related / up-sells). Woo owns the columns.
-   ========================================================================= */
-body.dorian-inner ul.products li.product{
-  background:linear-gradient(180deg,#FBF6EC,#F3E9D6);
-  border:1px solid var(--d-line);border-radius:var(--d-r-lg);
-  padding:16px 16px 20px;box-shadow:var(--d-shadow);text-align:center;
+/* ============================ BLOG / ARCHIVE GRID ============================ */
+.post-grid { display: grid; gap: clamp(20px, 2.6vw, 34px); }
+.post-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.post-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .post-grid.cols-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .post-grid.cols-2, .post-grid.cols-3 { grid-template-columns: 1fr; } }
+
+.post-card {
+  position: relative; background: #fff; border-radius: var(--rr); overflow: hidden;
+  border: 1px solid rgba(168,128,26,.16);
+  box-shadow: 0 18px 44px -30px rgba(20,17,10,.5);
+  transition: transform .5s var(--ease), box-shadow .5s var(--ease), border-color .5s;
+  display: flex; flex-direction: column;
 }
-body.dorian-inner ul.products li.product a{text-decoration:none}
-body.dorian-inner ul.products li.product a img{
-  border-radius:12px;margin-bottom:12px;background:#fff;
+.post-card:hover { transform: translateY(-6px); box-shadow: 0 30px 60px -32px rgba(20,17,10,.55); border-color: rgba(168,128,26,.4); }
+.post-card__media { position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--paper-3); }
+.post-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
+.post-card:hover .post-card__media img { transform: scale(1.06); }
+.post-card__ph { display: grid; place-items: center; width: 100%; height: 100%; }
+.post-card__ph img { width: 64px; height: auto; opacity: .5; object-fit: contain; }
+.post-card__cat {
+  position: absolute; inset-block-start: 12px; inset-inline-start: 12px; z-index: 2;
+  font-family: var(--ff-fa); font-size: .74rem; font-weight: 700; color: #241803;
+  background: var(--gold-grad); padding: 5px 12px; border-radius: 999px; box-shadow: 0 6px 16px -8px rgba(217,182,90,.8);
 }
-body.dorian-inner ul.products li.product .woocommerce-loop-product__title{
-  font-family:var(--d-ff-fa);font-weight:700;color:var(--d-ink);font-size:1.05rem;padding:6px 0;
+.post-card__body { padding: 18px clamp(16px, 2vw, 22px) 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.post-card__title { font-family: var(--ff-fa); font-weight: 800; font-size: 1.2rem; line-height: 1.5; }
+.post-card__title a { transition: color .3s; }
+.post-card__title a:hover { color: var(--blue); }
+.post-card__excerpt { color: var(--ink-soft); font-size: .96rem; line-height: 1.85; flex: 1; }
+.post-card__foot { display: flex; align-items: center; justify-content: space-between; padding-block-start: 8px; border-block-start: 1px solid rgba(20,17,10,.08); }
+.post-card__date { font-family: var(--ff-en); font-size: .78rem; color: var(--ink-soft); }
+.post-card__more { font-weight: 700; font-size: .9rem; color: var(--gold-soft); transition: color .3s, gap .3s; display: inline-flex; gap: 4px; }
+.post-card__more:hover { color: var(--blue); }
+
+.listing__empty { text-align: center; color: var(--ink-soft); padding-block: 40px; }
+.listing__search { max-width: 520px; margin: 0 auto clamp(28px, 4vw, 44px); }
+
+/* ---- pagination ---- */
+.pager { margin-block-start: clamp(34px, 5vw, 56px); }
+.pager ul { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.pager__link {
+  display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0 12px;
+  border-radius: 12px; border: 1px solid rgba(168,128,26,.28); font-family: var(--ff-en); font-weight: 600;
+  color: var(--ink); transition: .3s; background: #fff;
 }
-body.dorian-inner ul.products li.product .price{
-  color:var(--d-gold-deep) !important;font-weight:700;display:block;margin-bottom:12px;
+.pager__link:hover { border-color: var(--gold-2); color: var(--blue); }
+.pager .current .pager__link, span.pager__link.current { background: var(--gold-grad); color: #241803; border-color: transparent; }
+
+/* ============================ SINGLE POST / PAGE ============================ */
+.single__wrap { max-width: 820px; }
+.single__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--ink-soft); font-size: .88rem; margin-block-end: 20px; justify-content: center; }
+.single__meta .sep { opacity: .4; }
+.single__meta a { color: var(--gold-soft); }
+.single__meta a:hover { color: var(--blue); }
+.single__hero { position: relative; border-radius: var(--rr); overflow: hidden; margin-block-end: clamp(24px, 4vw, 40px); border: 1px solid rgba(168,128,26,.2); }
+.single__hero img { width: 100%; height: auto; display: block; }
+.single__hero .corner { opacity: .9; }
+
+/* readable long-form prose */
+.prose { font-size: 1.06rem; line-height: 2; color: var(--ink-2); }
+.prose > * + * { margin-block-start: 1.15em; }
+.prose h2 { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 1.9rem); line-height: 1.4; margin-block-start: 1.6em; color: var(--ink); }
+.prose h3 { font-family: var(--ff-fa); font-weight: 700; font-size: 1.35rem; margin-block-start: 1.4em; color: var(--ink); }
+.prose h2::after { content: ""; display: block; width: 54px; height: 2px; background: var(--gold-line); margin-block-start: .5em; }
+.prose a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(0,102,179,.35); }
+.prose a:hover { text-decoration-color: var(--blue); }
+.prose ul, .prose ol { padding-inline-start: 1.4em; }
+.prose ul { list-style: none; }
+.prose ul li { position: relative; padding-inline-start: 4px; }
+.prose ul li::before { content: ""; position: absolute; inset-inline-start: -1.1em; inset-block-start: .8em; width: 7px; height: 7px; background: var(--gold-grad); transform: rotate(45deg); }
+.prose ol { list-style: decimal; }
+.prose blockquote {
+  border-inline-start: 3px solid var(--gold-2); padding: 4px 18px; margin-inline: 0;
+  background: rgba(217,182,90,.08); border-radius: 8px; font-size: 1.12rem; color: var(--ink);
 }
-body.dorian-inner ul.products li.product .onsale{
-  background:var(--d-blue) !important;color:#fff !important;border-radius:var(--d-r-pill);
-  min-height:auto;padding:.3em .9em;font-family:var(--d-ff-fa);
+.prose img { border-radius: 14px; height: auto; }
+.prose code { font-family: var(--ff-en); background: rgba(20,17,10,.06); padding: 2px 7px; border-radius: 6px; font-size: .9em; }
+.prose pre { background: var(--navy); color: var(--paper); padding: 18px; border-radius: 14px; overflow-x: auto; direction: ltr; }
+.prose pre code { background: none; padding: 0; color: inherit; }
+.prose hr { border: none; height: 1px; background: var(--gold-line); margin-block: 2em; }
+.prose table { width: 100%; border-collapse: collapse; }
+.prose th, .prose td { border: 1px solid rgba(20,17,10,.14); padding: 10px 12px; text-align: start; }
+.prose th { background: rgba(217,182,90,.12); }
+.prose__pages { margin-block-start: 1.6em; font-weight: 700; display: flex; gap: 8px; }
+.prose__pages a { color: var(--blue); }
+
+.single__tags { margin-block-start: 30px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; max-width: 820px; margin-inline: auto; }
+.single__tags-h { color: var(--ink-soft); font-size: .9rem; }
+.single__tags a { font-size: .85rem; padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(168,128,26,.3); color: var(--gold-soft); transition: .3s; }
+.single__tags a:hover { background: var(--gold-grad); color: #241803; border-color: transparent; }
+.single__share { margin-block-start: 22px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 820px; margin-inline: auto; padding-block-start: 20px; border-block-start: 1px solid rgba(20,17,10,.1); }
+.single__share-h { color: var(--ink-soft); font-size: .9rem; }
+.single__share a { font-weight: 700; font-size: .88rem; color: var(--blue); }
+.single__share a:hover { color: var(--gold-soft); }
+
+.related__h { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 2rem); text-align: center; margin-block-start: 8px; }
+.related .eyebrow { display: block; text-align: center; color: var(--gold-soft); }
+.related .ds { margin: 14px auto 34px; }
+
+/* ============================ ABOUT ============================ */
+.about__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(30px, 5vw, 64px); align-items: start; }
+.about__grid > * { min-width: 0; }
+@media (max-width: 860px) { .about__grid { grid-template-columns: 1fr; } .about__visual { order: -1; } }
+.about__copy p { color: var(--ink-2); margin-block-end: 1.1em; font-size: 1.05rem; }
+.about__editor { margin-block: 1.2em; }
+.about__stats { display: flex; gap: clamp(20px, 4vw, 48px); flex-wrap: wrap; margin-block-start: 28px; padding-block-start: 24px; border-block-start: 1px solid rgba(168,128,26,.2); }
+.about__stats .stat .n { font-family: var(--ff-en); font-weight: 800; font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--blue); line-height: 1; }
+.about__stats .stat .l { color: var(--ink-soft); font-size: .9rem; margin-block-start: 6px; }
+.about__visual { position: relative; border-radius: var(--rr); overflow: hidden; border: 1px solid rgba(168,128,26,.24); box-shadow: 0 30px 60px -34px rgba(20,17,10,.5); }
+.about__visual img { width: 100%; height: 100%; object-fit: cover; }
+
+.values__h { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 2.2rem); text-align: center; margin-block-start: 8px; }
+.values .eyebrow { display: block; text-align: center; color: var(--gold-soft); }
+.values .ds { margin: 14px auto 36px; }
+.values__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(18px, 2.5vw, 28px); }
+@media (max-width: 780px) { .values__grid { grid-template-columns: 1fr; } }
+.value-card { position: relative; background: #fff; border: 1px solid rgba(168,128,26,.18); border-radius: var(--rr); padding: 30px 26px; text-align: center; transition: transform .5s var(--ease), box-shadow .5s; }
+.value-card:hover { transform: translateY(-5px); box-shadow: 0 26px 52px -32px rgba(20,17,10,.5); }
+.value-card__mark { display: block; width: 14px; height: 14px; margin: 0 auto 16px; background: var(--gold-grad); transform: rotate(45deg); box-shadow: 0 0 0 6px rgba(217,182,90,.14); }
+.value-card__t { font-family: var(--ff-fa); font-weight: 800; font-size: 1.35rem; margin-block-end: 8px; }
+.value-card__d { color: var(--ink-soft); font-size: .98rem; }
+
+/* about CTA band */
+.about-cta__inner { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.about-cta__seal { width: 90px; margin-block-end: 8px; filter: drop-shadow(0 16px 30px rgba(0,0,0,.25)); }
+.about-cta__inner h2 { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 2rem); }
+.about-cta__inner p { color: var(--ink-soft); margin-block-end: 14px; }
+
+/* ============================ CONTACT ============================ */
+.contact .wrap { max-width: var(--maxw); }
+.contact__grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(22px, 3.4vw, 46px); align-items: start; }
+.contact__grid > * { min-width: 0; }                 /* stop grid items overflowing the container */
+.contact__info { display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 880px) { .contact__grid { grid-template-columns: 1fr; } }
+.contact__card { background: #fff; border: 1px solid rgba(168,128,26,.18); border-radius: var(--rr); padding: 22px 24px; }
+.contact__card-h { font-family: var(--ff-fa); font-weight: 800; font-size: 1.1rem; margin-block-end: 14px; color: var(--ink); }
+.contact__card-h::after { content: ""; display: block; width: 40px; height: 2px; background: var(--gold-line); margin-block-start: 8px; }
+.contact__row { display: flex; align-items: center; gap: 14px; padding-block: 8px; transition: color .3s; }
+.contact__row:hover { color: var(--blue); }
+.contact__ic { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(168,128,26,.3); color: var(--gold-soft); }
+.contact__ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.contact__meta { display: flex; flex-direction: column; }
+.contact__meta .k { font-size: .8rem; color: var(--ink-soft); }
+.contact__meta .v { font-weight: 700; }
+.contact__hours { display: flex; flex-direction: column; gap: 6px; color: var(--ink-2); }
+.contact__hours li { position: relative; padding-inline-start: 16px; }
+.contact__hours li::before { content: ""; position: absolute; inset-inline-start: 0; inset-block-start: .7em; width: 6px; height: 6px; background: var(--gold-grad); transform: rotate(45deg); }
+.contact__social { margin-block-start: 6px; }
+.contact__social .foot__soc a { color: var(--gold-soft); border-color: rgba(168,128,26,.3); }
+
+.contact__formwrap { background: linear-gradient(160deg, var(--navy), #06101e); color: var(--paper); border-radius: var(--rr); padding: clamp(24px, 3.4vw, 40px); box-shadow: 0 30px 70px -34px rgba(8,23,38,.8); }
+.contact__form-h { font-family: var(--ff-fa); font-weight: 800; font-size: 1.5rem; margin-block-end: 18px; }
+.contact__form-h::after { content: ""; display: block; width: 54px; height: 2px; background: var(--gold-line); margin-block-start: 10px; }
+.contact-form { display: flex; flex-direction: column; gap: 16px; }
+.contact-form .field { display: flex; flex-direction: column; gap: 7px; }
+.contact-form .field > span { font-size: .88rem; color: rgba(236,222,201,.8); }
+.contact-form input, .contact-form textarea {
+  width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(217,182,90,.28);
+  border-radius: 12px; padding: 12px 14px; color: var(--paper); font-family: var(--ff-fa); font-size: 1rem; transition: border-color .3s, background .3s;
 }
-body.dorian-inner .related.products > h2,
-body.dorian-inner .up-sells > h2,
-body.dorian-inner .cross-sells > h2,
-body.dorian-inner .products > h2{
-  font-family:var(--d-ff-fa);font-weight:800;color:var(--d-ink);
-  font-size:clamp(1.4rem,2.6vw,1.9rem);margin:36px 0 20px;
+.contact-form input:focus, .contact-form textarea:focus { outline: none; border-color: var(--gold-2); background: rgba(255,255,255,.1); }
+.contact-form textarea { resize: vertical; min-height: 120px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 520px) { .field-row { grid-template-columns: 1fr; } }
+.contact-form__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.contact-form .btn { align-self: flex-start; margin-block-start: 4px; }
+.contact__note { padding: 12px 16px; border-radius: 12px; margin-block-end: 16px; font-weight: 600; }
+.contact__note--ok { background: rgba(46,160,90,.16); border: 1px solid rgba(46,160,90,.5); color: #d9f7e5; }
+.contact__note--err { background: rgba(200,60,60,.16); border: 1px solid rgba(200,60,60,.5); color: #ffdada; }
+.contact__map { margin-block-start: clamp(30px, 5vw, 54px); border-radius: var(--rr); overflow: hidden; border: 1px solid rgba(168,128,26,.24); box-shadow: 0 24px 54px -34px rgba(20,17,10,.5); line-height: 0; }
+.contact__map iframe { width: 100%; min-height: 360px; border: 0; display: block; }
+
+/* ============================ WOOCOMMERCE (single product + shop) ============================
+   Cosmetic ONLY. We deliberately do NOT override WooCommerce's own layout — its
+   two-column single product and product grid already work (incl. RTL). Earlier
+   we forced `display:grid` on div.product, which pushed the related products into
+   a half-width cell and collapsed the add-to-cart button into vertical text.
+   Here we restyle colours/type/buttons and guard buttons so they never stack. */
+.woo__wrap { color: var(--ink-2); }
+.woocommerce .woo__wrap a, .woocommerce-page .woo__wrap a { color: var(--blue); }
+.woo__wrap .wrap, .woo { max-width: 100%; }
+
+/* title + short description */
+.woocommerce div.product .product_title {
+  font-family: var(--ff-fa); font-weight: 800; color: var(--ink); line-height: 1.3;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+}
+.woocommerce div.product .woocommerce-product-details__short-description { color: var(--ink-soft); }
+.woocommerce div.product .woocommerce-product-rating { margin-block-end: 10px; }
+
+/* price (single + loop) */
+.woocommerce div.product p.price, .woocommerce div.product span.price,
+.woocommerce ul.products li.product .price { color: var(--blue); font-weight: 800; }
+.woocommerce div.product p.price { font-size: 1.5rem; }
+.woocommerce div.product p.price del, .woocommerce ul.products li.product .price del { color: var(--ink-soft); font-weight: 400; }
+.woocommerce div.product p.price ins, .woocommerce ul.products li.product .price ins { text-decoration: none; }
+
+/* on-sale badge */
+.woocommerce span.onsale {
+  background: var(--gold-grad); color: #241803; border-radius: 999px; min-height: 0; min-width: 0;
+  padding: 4px 14px; font-family: var(--ff-fa); font-weight: 700; line-height: 1.6;
+  box-shadow: 0 8px 18px -8px rgba(217,182,90,.8);
 }
 
-/* =========================================================================
-   WooCommerce — CART / CHECKOUT / NOTICES (light, safe theming)
-   ========================================================================= */
-body.dorian-inner table.shop_table{
-  border:1px solid var(--d-line);border-radius:var(--d-r);overflow:hidden;background:#fff;
+/* buttons — simple solid blue (not gold), hard-guarded so a narrow container
+   can never stack the text. Broad selectors so it also covers Elementor's Woo widgets. */
+.woocommerce a.button, .woocommerce button.button, .woocommerce input.button,
+.woocommerce #respond input#submit, .woocommerce .button.alt,
+.woocommerce div.product form.cart .button, .woocommerce ul.products li.product .button,
+.single_add_to_cart_button, .add_to_cart_button, .product_type_simple.button {
+  display: inline-block; width: auto; max-width: 100%; white-space: nowrap;
+  background: var(--blue); color: #fff; border: none; border-radius: 12px;
+  font-family: var(--ff-fa); font-weight: 700; font-size: .96rem; padding: 12px 26px; line-height: 1.4;
+  box-shadow: 0 12px 26px -16px rgba(0,102,179,.7); transition: background .25s, transform .3s var(--ease), box-shadow .3s; cursor: pointer;
 }
-body.dorian-inner table.shop_table th{color:var(--d-ink);font-family:var(--d-ff-fa)}
-body.dorian-inner .cart_totals h2,
-body.dorian-inner .woocommerce-checkout h3,
-body.dorian-inner form.checkout h3{color:var(--d-ink);font-family:var(--d-ff-fa)}
-body.dorian-inner form .form-row input.input-text,
-body.dorian-inner form .form-row textarea,
-body.dorian-inner .select2-container--default .select2-selection--single{
-  border:1px solid var(--d-line);border-radius:10px;background:#fff;padding:10px 12px;min-height:48px;
+.woocommerce a.button:hover, .woocommerce button.button:hover, .woocommerce .button.alt:hover,
+.woocommerce #respond input#submit:hover, .woocommerce div.product form.cart .button:hover,
+.single_add_to_cart_button:hover, .add_to_cart_button:hover {
+  background: var(--blue-deep, #004B85); transform: translateY(-2px); color: #fff;
 }
-body.dorian-inner .woocommerce-message,
-body.dorian-inner .woocommerce-info,
-body.dorian-inner .woocommerce-error{
-  border-top-color:var(--d-gold-2);border-radius:12px;background:#FBF6EC;color:var(--d-ink);
-}
-body.dorian-inner .woocommerce-message::before,
-body.dorian-inner .woocommerce-info::before{color:var(--d-blue)}
 
-/* =========================================================================
-   Generic content (About, Contact & other pages) — typography + guards only.
-   No layout is imposed; Elementor keeps its own structure.
-   ========================================================================= */
-body.dorian-inner .entry-content h1,
-body.dorian-inner .entry-content h2,
-body.dorian-inner .entry-content h3,
-body.dorian-inner .page-header .entry-title{
-  font-family:var(--d-ff-fa);color:var(--d-ink);font-weight:800;letter-spacing:-.01em;
+/* WooCommerce's own breadcrumb (when the product page uses it): match the theme,
+   drop any blue band, use the Persian font */
+.woocommerce-breadcrumb, .woo .woocommerce-breadcrumb {
+  font-family: var(--ff-fa); font-size: .9rem; color: var(--ink-soft);
+  background: transparent; padding: 0; margin-block-end: 18px;
 }
-body.dorian-inner .entry-content a{color:var(--d-blue)}
-body.dorian-inner .entry-content a:hover{color:var(--d-blue-deep)}
-body.dorian-inner .entry-content{line-height:2;color:var(--d-ink-2)}
+.woocommerce-breadcrumb a { color: var(--gold-soft); }
+.woocommerce-breadcrumb a:hover { color: var(--blue); }
+.woocommerce div.product form.cart .quantity { margin-inline-end: 10px; }
+.woocommerce .quantity .qty {
+  width: 4.5em; padding: 11px 8px; border-radius: 12px; border: 1px solid rgba(168,128,26,.35);
+  background: #fff; font-family: var(--ff-en); text-align: center;
+}
 
-/* any bare table inside content shouldn't blow past the viewport */
-body.dorian-inner .entry-content table{display:block;max-width:100%;overflow-x:auto}
+/* product tabs — pill look, flow untouched */
+.woocommerce div.product .woocommerce-tabs ul.tabs { padding: 0; border: none; }
+.woocommerce div.product .woocommerce-tabs ul.tabs::before { display: none; }
+.woocommerce div.product .woocommerce-tabs ul.tabs li {
+  background: #fff; border: 1px solid rgba(168,128,26,.24); border-radius: 999px; margin: 0 0 8px 8px;
+}
+.woocommerce div.product .woocommerce-tabs ul.tabs li::before,
+.woocommerce div.product .woocommerce-tabs ul.tabs li::after { display: none; }
+.woocommerce div.product .woocommerce-tabs ul.tabs li a { color: var(--ink); font-weight: 700; }
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active { background: var(--gold-grad); border-color: transparent; }
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active a { color: #241803; }
+.woocommerce div.product .woocommerce-Tabs-panel h2 { font-family: var(--ff-fa); font-weight: 800; color: var(--ink); }
+
+/* product cards (shop archive + related + upsells) — cosmetic only, keep Woo's grid */
+.woocommerce ul.products li.product .woocommerce-loop-product__title {
+  font-family: var(--ff-fa); font-weight: 700; font-size: 1.05rem; color: var(--ink);
+}
+.woocommerce .related > h2, .woocommerce .upsells > h2 {
+  font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 1.8rem); color: var(--ink);
+  margin-block: 8px 22px;
+}
+
+/* notices */
+.woocommerce-message, .woocommerce-info, .woocommerce-error { border-block-start-color: var(--gold-2); border-radius: 12px; }
+.woocommerce-message::before, .woocommerce-info::before { color: var(--gold-soft); }
+
+/* no empty gap at the top of the single-product page */
+.dorian-inner .woo { padding-block-start: 0; }
+.dorian-inner .pagehero--slim { padding-block: 8px 0; }
+/* if the product page is built with Elementor, drop the first section's top pad too */
+.single-product .dorian-main { padding-block-start: 0 !important; }
+.single-product .dorian-main > .elementor:first-child .elementor-section-wrap > .elementor-section:first-child,
+.single-product .dorian-main .elementor-top-section:first-of-type { padding-block-start: 0 !important; margin-block-start: 0 !important; }
+
+/* ---- single product: premium touches (creative pass) ---- */
+/* framed gallery on a paper mat with gold hairline + corner ticks */
+.woo .woocommerce div.product .woocommerce-product-gallery {
+  position: relative; background: linear-gradient(160deg, #fff, var(--paper-2));
+  border: 1px solid rgba(168,128,26,.28); border-radius: var(--rr);
+  padding: clamp(14px, 2vw, 26px); box-shadow: 0 34px 70px -40px rgba(20,17,10,.5);
+}
+.woo .woocommerce div.product .woocommerce-product-gallery__wrapper { border-radius: 12px; overflow: hidden; }
+.woo .woocommerce div.product .woocommerce-product-gallery::before,
+.woo .woocommerce div.product .woocommerce-product-gallery::after {
+  content: ""; position: absolute; width: 22px; height: 22px; border: 2px solid var(--gold-2); opacity: .8;
+}
+.woo .woocommerce div.product .woocommerce-product-gallery::before { inset-block-start: 10px; inset-inline-start: 10px; border-inline-end: 0; border-block-end: 0; }
+.woo .woocommerce div.product .woocommerce-product-gallery::after { inset-block-end: 10px; inset-inline-end: 10px; border-inline-start: 0; border-block-start: 0; }
+
+/* summary: category as gold eyebrow, gold divider under the title */
+.woo .woocommerce div.product .product_title { position: relative; padding-block-end: 14px; margin-block-end: 4px; }
+.woo .woocommerce div.product .product_title::after {
+  content: ""; position: absolute; inset-block-end: 0; inset-inline-start: 0; width: 60px; height: 2px; background: var(--gold-line);
+}
+.woo .woocommerce div.product .price { margin-block: 6px 14px; }
+.woo .woocommerce div.product .price .woocommerce-Price-currencySymbol { font-size: .7em; margin-inline-start: 3px; color: var(--ink-soft); }
+
+/* trust / benefits strip (injected by dorian_product_benefits) */
+.dorian-benefits { list-style: none; display: grid; gap: 12px; margin: 22px 0 0; padding: 18px 20px; border: 1px solid rgba(168,128,26,.2); border-radius: 14px; background: rgba(255,255,255,.5); }
+.dorian-benefits li { display: flex; align-items: center; gap: 12px; }
+.dorian-benefits__ic { flex: none; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: var(--gold-grad); color: #241803; }
+.dorian-benefits__ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.dorian-benefits__t { display: flex; flex-direction: column; line-height: 1.5; }
+.dorian-benefits__t b { font-weight: 800; color: var(--ink); font-size: 1rem; }
+.dorian-benefits__t em { font-style: normal; color: var(--ink-soft); font-size: .86rem; }
+.woocommerce div.product .product_meta { margin-block-start: 16px; padding-block-start: 14px; border-block-start: 1px solid rgba(20,17,10,.1); color: var(--ink-soft); font-size: .88rem; }
+
+/* related products: gentle card lift + gold heading rule */
+.woo .woocommerce .related { border-block-start: 1px solid rgba(168,128,26,.2); padding-block-start: clamp(34px,5vw,56px); }
+.woo .woocommerce .related > h2 { position: relative; display: inline-block; }
+.woo .woocommerce .related > h2::after { content: ""; display: block; width: 54px; height: 2px; margin-block-start: 8px; background: var(--gold-line); }
+.woocommerce ul.products li.product { transition: transform .5s var(--ease); }
+.woocommerce ul.products li.product:hover { transform: translateY(-5px); }
+
+/* ============================ COMMENTS ============================ */
+.comments-section { background: linear-gradient(180deg, var(--paper), var(--paper-3)); }
+.comments { max-width: 820px; margin-inline: auto; }
+.comments__title, .comments__reply-h { font-family: var(--ff-fa); font-weight: 800; font-size: 1.5rem; margin-block-end: 20px; color: var(--ink); }
+.comments__list { display: flex; flex-direction: column; gap: 18px; margin-block-end: 30px; }
+.comments__list ol.children { padding-inline-start: 22px; margin-block-start: 18px; display: flex; flex-direction: column; gap: 18px; }
+.comments .comment-body { background: #fff; border: 1px solid rgba(168,128,26,.16); border-radius: 14px; padding: 18px 20px; }
+.comments .comment-author { font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.comments .comment-author img { border-radius: 50%; }
+.comments .comment-meta { font-size: .8rem; color: var(--ink-soft); margin-block: 4px 10px; }
+.comments .comment-meta a { color: var(--gold-soft); }
+.comments__closed { color: var(--ink-soft); }
+.comment-form { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid rgba(168,128,26,.18); border-radius: var(--rr); padding: clamp(20px, 3vw, 32px); }
+.comment-form input:not([type=submit]):not([type=checkbox]), .comment-form textarea {
+  width: 100%; border: 1px solid rgba(168,128,26,.3); border-radius: 12px; padding: 12px 14px;
+  font-family: var(--ff-fa); font-size: 1rem; background: var(--paper-2);
+}
+.comment-form input:focus, .comment-form textarea:focus { outline: none; border-color: var(--gold-2); }
+.comment-form .form-submit input { background: var(--gold-grad); color: #241803; border: none; border-radius: 999px; padding: 12px 30px; font-family: var(--ff-fa); font-weight: 700; cursor: pointer; }
+
+/* ============================ SEARCH FORM ============================ */
+.search-form { display: flex; gap: 8px; }
+.search-form .search-field {
+  flex: 1; border: 1px solid rgba(168,128,26,.3); border-radius: 999px; padding: 12px 18px;
+  font-family: var(--ff-fa); font-size: 1rem; background: #fff;
+}
+.search-form .search-field:focus { outline: none; border-color: var(--gold-2); }
+.search-form .search-submit { background: var(--gold-grad); color: #241803; border: none; border-radius: 999px; padding: 0 22px; font-family: var(--ff-fa); font-weight: 700; cursor: pointer; }
+
+/* ============================ 404 ============================ */
+.notfound { text-align: center; }
+.notfound__inner { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.notfound__code { font-family: var(--ff-en); font-weight: 800; font-size: clamp(5rem, 18vw, 11rem); line-height: .9; color: transparent; -webkit-text-stroke: 2px var(--gold-2); }
+.notfound__title { font-family: var(--ff-fa); font-weight: 800; font-size: clamp(1.6rem, 4vw, 2.4rem); }
+.notfound__text { color: var(--ink-soft); max-width: 46ch; }
+.notfound__search { max-width: 420px; width: 100%; margin-block: 10px; }
+
+/* ============================ FOOTER ============================ */
+.site-foot { background: linear-gradient(180deg, var(--navy), #06101e); color: var(--paper); position: relative; }
+.site-foot::before { content: ""; position: absolute; inset-inline: 0; inset-block-start: 0; height: 1px; background: var(--gold-line); }
+.site-foot__grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(28px, 4vw, 60px); padding-block: clamp(44px, 6vw, 72px); }
+.site-foot__grid > * { min-width: 0; }
+@media (max-width: 820px) { .site-foot__grid { grid-template-columns: 1fr; gap: 34px; } }
+.site-foot__brand .foot__logo { height: 44px; margin-block-end: 16px; }
+.site-foot__about { color: rgba(236,222,201,.72); font-size: .95rem; line-height: 1.9; margin-block-end: 18px; max-width: 44ch; }
+.site-foot__h { font-family: var(--ff-fa); font-weight: 800; font-size: 1.05rem; margin-block-end: 16px; color: var(--gold-3); }
+.site-foot__links ul { display: flex; flex-direction: column; gap: 10px; }
+.site-foot__links a { color: rgba(236,222,201,.78); transition: color .3s, padding-inline-start .3s; }
+.site-foot__links a:hover { color: var(--gold-2); padding-inline-start: 6px; }
+.site-foot__phone { display: flex; flex-direction: column; margin-block-end: 12px; }
+.site-foot__phone .k { font-size: .8rem; color: rgba(236,222,201,.6); }
+.site-foot__phone .v { font-weight: 700; color: var(--paper); }
+.site-foot__phone:hover .v { color: var(--gold-2); }
+.site-foot__addr { display: flex; gap: 8px; color: rgba(236,222,201,.72); font-size: .92rem; margin-block-start: 10px; }
+.site-foot__addr svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--gold-2); stroke-width: 1.6; }
+.site-foot .foot__soc a { color: var(--gold-2); border-color: rgba(217,182,90,.3); }
+.site-foot__bar { border-block-start: 1px solid rgba(217,182,90,.16); padding-block: 18px; text-align: center; }
+.site-foot__bar .foot__copy { color: rgba(236,222,201,.55); }
+
+/* ============================ ABOUT · TEAM (moved from landing) ============================ */
+.about-team { background: radial-gradient(135% 95% at 50% 0%, #10294a, var(--navy) 58%, #050f1c); color: var(--paper); text-align: center; }
+.about-team .eyebrow { color: var(--gold-2); }
+.about-team__h { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2, 2.2rem); margin-block-start: 8px; }
+.about-team .ds { margin: 14px auto 10px; }
+.about-team__lead { color: rgba(236,222,201,.68); max-width: 46ch; margin: 0 auto clamp(28px, 4vw, 40px); }
+.about-team__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(16px, 2vw, 24px); text-align: start; }
+@media (max-width: 1100px) { .about-team__grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 800px)  { .about-team__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .about-team__grid { grid-template-columns: 1fr; } }
+/* the cards keep their site.css look; just let them fill grid cells instead of the rail's flex-basis */
+.about-team__grid .tcard { flex: none !important; width: auto; margin: 0; }
+.about-team__empty { color: rgba(236,222,201,.6); grid-column: 1 / -1; text-align: center; }
+/* the render markup uses .tcard__name; site.css styles .tcard__plate — mirror it so the name plate shows */
+.tcard__name { position: absolute; inset-inline: 14px; inset-block-end: 16px; z-index: 6; text-align: center; color: var(--paper); }
+.tcard__name .fa { font-weight: 800; font-size: 1.2rem; line-height: 1.2; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.tcard__name .en { font-family: var(--ff-en); font-size: .6rem; letter-spacing: .2em; color: var(--gold-2); margin-block-start: 4px; }
+
+/* ============================ GIFT CARDS PAGE ============================ */
+/* how it works */
+.gift-how { padding-block: clamp(44px, 6vw, 80px); }
+.gift-how__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(18px, 3vw, 32px); }
+.gift-how__grid > * { min-width: 0; }
+@media (max-width: 760px) { .gift-how__grid { grid-template-columns: 1fr; } }
+.gift-step { text-align: center; background: #fff; border: 1px solid rgba(168,128,26,.16); border-radius: var(--rr); padding: 30px 24px; box-shadow: 0 20px 44px -34px rgba(20,17,10,.4); }
+.gift-step__n { display: grid; place-items: center; width: 48px; height: 48px; margin: 0 auto 14px; border-radius: 50%; background: var(--gold-grad); color: #241803; font-family: var(--ff-en); font-weight: 800; font-size: 1.1rem; box-shadow: 0 10px 22px -10px rgba(217,182,90,.8); }
+.gift-step h3 { font-family: var(--ff-fa); font-weight: 800; font-size: 1.25rem; margin-block-end: 6px; }
+.gift-step p { color: var(--ink-soft); font-size: .95rem; }
+
+/* ----- preview row: pick a card (minimal) ----- */
+.giftshow { padding-block: clamp(30px, 5vw, 66px) clamp(34px, 5vw, 74px); overflow: hidden; }
+.giftshow__head { text-align: center; margin-block-end: clamp(24px, 3.6vw, 44px); }
+.giftshow__head .eyebrow { color: var(--gold-soft); }
+.giftshow__h { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2); margin-block: 10px 6px; }
+.giftshow__sub { color: var(--ink-soft); }
+.giftthumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 2.6vw, 34px); }
+@media (max-width: 640px) { .giftthumbs { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
+.giftthumb { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px 4px 8px; cursor: pointer;
+  -webkit-appearance: none; appearance: none; color: var(--ink); background: transparent !important; border: 0;
+  transition: transform .45s var(--ease); }
+/* neutralise hello-elementor's default button :hover/:focus/:active (pink) states */
+.giftthumb:hover, .giftthumb:focus, .giftthumb:focus-visible, .giftthumb:active { background: transparent !important; color: var(--ink); }
+.giftthumb:hover { transform: translateY(-6px); }
+.giftthumb:focus { outline: none; }
+.giftthumb:focus-visible .giftthumb__img { outline: 2px solid var(--gold-2); outline-offset: 3px; }
+.giftthumb__img { width: 100%; aspect-ratio: 673/1051; border-radius: 14px; overflow: hidden; filter: saturate(.97);
+  box-shadow: 0 20px 44px -26px rgba(20,17,10,.72); transition: box-shadow .45s, filter .45s; }
+.giftthumb__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.giftthumb:hover .giftthumb__img { box-shadow: 0 30px 56px -26px rgba(20,17,10,.82); }
+.giftthumb.is-active .giftthumb__img { box-shadow: 0 0 0 2px var(--gold-2), 0 26px 52px -24px rgba(20,17,10,.8); }
+.giftthumb__en { font-family: var(--ff-didot); font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  font-size: 1.04rem; color: var(--ink); line-height: 1.1; position: relative; padding-block-end: 5px; }
+.giftthumb__en::after { content: ""; position: absolute; inset-inline: 50% 50%; inset-block-end: 0; height: 1.5px; background: var(--gold-2); transition: inset-inline .45s var(--ease); }
+.giftthumb.is-active .giftthumb__en::after { inset-inline: 15% 15%; }
+.giftthumb__label { font-family: var(--ff-fa); font-weight: 600; font-size: .8rem; color: var(--ink-soft); }
+
+/* ----- horizontal slider ----- */
+.giftslider-wrap { position: relative; margin-block-start: clamp(24px, 3vw, 44px); }
+.giftslider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  -ms-overflow-style: none; scrollbar-width: none; }
+.giftslider::-webkit-scrollbar { display: none; }
+.giftslide { position: relative; overflow: hidden; flex: 0 0 100%; scroll-snap-align: center; scroll-margin-top: 90px;
+  display: flex; align-items: center; min-height: min(76vh, 720px); padding-block: clamp(44px, 6vw, 88px);
+  background: linear-gradient(150deg, var(--gbg), var(--gbg2));
+  --gt: #f4ede0; --gt-soft: rgba(244,237,224,.68); --gline: rgba(244,237,224,.22); }
+.giftslide::before { content: ""; position: absolute; inset: 0; background-image: var(--grain); background-size: 170px; opacity: .05; mix-blend-mode: overlay; pointer-events: none; }
+.giftslide::after  { content: ""; position: absolute; inset-block-start: -25%; inset-inline-end: -12%; width: 55%; height: 150%;
+  background: radial-gradient(closest-side, rgba(255,255,255,.06), transparent 70%); pointer-events: none; }
+.giftslide__inner { position: relative; z-index: 2; width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: clamp(22px, 4vw, 48px);
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 84px); align-items: center; }
+.giftslide__inner > * { min-width: 0; }
+@media (max-width: 860px) {
+  .giftslide__inner { grid-template-columns: 1fr; gap: 34px; }
+  .giftslide__inner .giftband__visual { order: -1; }
+  .giftslide { min-height: 0; }
+}
+
+/* arrows + dots */
+.giftslider-nav { position: absolute; inset-block-start: 50%; transform: translateY(-50%); z-index: 5;
+  width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background: rgba(255,255,255,.9) !important; border: 0; color: var(--ink) !important;
+  box-shadow: 0 12px 30px -14px rgba(20,17,10,.5); transition: transform .3s var(--ease), background .3s; }
+/* neutralise hello-elementor's default button hover/focus/active (pink) */
+.giftslider-nav:hover, .giftslider-nav:focus, .giftslider-nav:focus-visible, .giftslider-nav:active { background: #fff !important; color: var(--ink) !important; }
+.giftslider-nav:hover { transform: translateY(-50%) scale(1.06); }
+.giftslider-nav:focus { outline: none; }
+.giftslider-nav:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+.giftslider-nav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.giftslider-nav--prev { inset-inline-start: clamp(8px, 2vw, 22px); }
+.giftslider-nav--next { inset-inline-end: clamp(8px, 2vw, 22px); }
+@media (max-width: 640px) { .giftslider-nav { width: 42px; height: 42px; } }
+.giftdots { display: flex; justify-content: center; gap: 10px; padding-block: 24px; }
+.giftdot { width: 8px; height: 8px; border-radius: 50%; background: rgba(168,128,26,.3); transition: .3s; }
+.giftdot.is-active { background: var(--gold-grad); transform: scale(1.35); box-shadow: 0 0 0 4px rgba(217,182,90,.14); }
+
+/* the full portrait card (no gold stroke — just a soft shadow; flips on hover) */
+.giftband__visual { display: flex; justify-content: center; }
+.giftcard--lg { width: min(348px, 80%); perspective: 1600px; }
+.giftcard--lg .giftcard__inner { position: relative; transform-style: preserve-3d; transition: transform 1s var(--ease); aspect-ratio: 673 / 1051; }
+.giftcard--lg:hover .giftcard__inner, .giftcard--lg:focus-within .giftcard__inner { transform: rotateY(180deg); }
+.giftcard--lg .giftcard__face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 18px; overflow: hidden; box-shadow: 0 46px 92px -34px rgba(0,0,0,.7); }
+.giftcard--lg .giftcard__face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.giftcard--lg .giftcard__back { transform: rotateY(180deg); }
+
+/* left column — everything aligned to one edge, tidy rhythm */
+.giftband__body { color: var(--gt); display: flex; flex-direction: column; align-items: flex-start; text-align: start; }
+.giftband__name { font-family: var(--ff-didot); font-weight: 700; text-transform: uppercase; letter-spacing: .045em;
+  font-size: clamp(2.6rem, 5.4vw, 4rem); line-height: 1; color: var(--gt); margin: 0; }
+.giftband__label { font-family: var(--ff-fa); font-weight: 700; font-size: clamp(1.05rem, 2vw, 1.32rem); color: var(--gt);
+  margin-block-start: 18px; padding-block-end: 18px; position: relative; }
+.giftband__label::after { content: ""; position: absolute; inset-inline-start: 0; inset-block-end: 0; width: 54px; height: 1px; background: var(--gline); }
+.giftband__desc { color: var(--gt-soft); max-width: 44ch; margin-block-start: 18px; line-height: 2; font-size: 1rem; }
+.giftband__meta { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; margin-block-start: 20px; }
+.giftband__meta li { display: inline-flex; align-items: center; color: var(--gt-soft); font-size: .9rem; }
+.giftband__meta li:not(:last-child)::after { content: "·"; margin-inline: 10px; color: var(--gt); opacity: .5; }
+.giftbuy { display: inline-flex; align-items: center; gap: .55em; margin-block-start: 30px; text-decoration: none;
+  font-family: var(--ff-fa); font-weight: 600; font-size: .92rem; color: var(--gt);
+  padding: .72em 1.5em; border-radius: 999px; border: 1px solid var(--gline); background: transparent;
+  -webkit-appearance: none; appearance: none; transition: background .35s var(--ease), color .35s, border-color .35s, transform .35s; }
+.giftbuy:hover, .giftbuy:focus { background: var(--gt); color: var(--gbg); border-color: var(--gt); transform: translateY(-2px); }
+.giftbuy:focus-visible { outline: 2px solid var(--gt); outline-offset: 3px; }
+.giftbuy__cart { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.giftbuy__cart circle { fill: currentColor; stroke: none; }
+@media (max-width: 860px) {
+  .giftband__body { align-items: center; text-align: center; }
+  .giftband__label::after { inset-inline: 50% 50%; width: 54px; transform: translateX(-50%); }
+  .giftband__meta { justify-content: center; }
+  .giftband__desc { margin-inline: auto; }
+}
+
+/* why dorian */
+.gift-why { text-align: center; background: linear-gradient(180deg, var(--paper), var(--paper-3)); }
+.gift-why__inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.gift-why__seal { width: 92px; margin-block-end: 8px; filter: drop-shadow(0 16px 30px rgba(0,0,0,.25)); }
+.gift-why__inner h2 { font-family: var(--ff-fa); font-weight: 800; font-size: var(--h2); }
+.gift-why__inner p { color: var(--ink-soft); max-width: 52ch; }
+.gift-why__cta { margin-block-start: 16px; }
+
+/* ============================ REVEAL ANIMATION ============================ */
+.dorian-anim .post-card, .dorian-anim .value-card, .dorian-anim .about__visual,
+.dorian-anim .contact__card, .dorian-anim .contact__formwrap, .dorian-anim .single__hero,
+.dorian-anim .gift-step,
+.dorian-anim .pagehero__inner > * {
+  opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .7s var(--ease);
+}
+.dorian-anim .is-in, .dorian-anim .pagehero__inner.is-in > * { opacity: 1; transform: none; }
+.dorian-anim .pagehero__inner > *:nth-child(2) { transition-delay: .08s; }
+.dorian-anim .pagehero__inner > *:nth-child(3) { transition-delay: .16s; }
+.dorian-anim .pagehero__inner > *:nth-child(4) { transition-delay: .24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dorian-anim .post-card, .dorian-anim .value-card, .dorian-anim .about__visual,
+  .dorian-anim .contact__card, .dorian-anim .contact__formwrap, .dorian-anim .single__hero,
+  .dorian-anim .pagehero__inner > * { opacity: 1 !important; transform: none !important; }
+  .post-card, .value-card, .woocommerce ul.products li.product { transition: none; }
+}

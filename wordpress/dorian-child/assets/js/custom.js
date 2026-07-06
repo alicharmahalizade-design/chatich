@@ -162,43 +162,122 @@
       return;
     }
 
+    /* ---- DISCRETE STEPPER: one scroll / swipe / arrow = one floor ----
+       The section pins to the viewport; while pinned, page scroll is frozen and
+       each gesture advances exactly one floor. At the first/last floor a further
+       gesture releases the pin so the page scrolls normally to the next section. */
+    var section = document.getElementById("floors");
+    function L() { return window.__dorianLenis || null; }   // read Lenis lazily (app.js sets it)
+    var current = 0, animating = false, locked = false, cool = 0, justLeft = 0;
+
+    function paint(idx, dir) {
+      idx = Math.max(0, Math.min(2, idx));
+      current = idx;
+      setActive(idx);
+      Sound.play("ding");
+      var floor = FLOOR_ORDER[idx];
+      var top = CELL_CENTER[0] - (idx / 2) * (CELL_CENTER[0] - CELL_CENTER[2]);
+      if (cabin) gsap.to(cabin, { top: top + "%", duration: 0.7, ease: "power2.inOut" });
+      gsap.killTweensOf(panels);
+      panels.forEach(function (q) { gsap.set(q, { opacity: +q.dataset.panel === floor ? 1 : 0 }); });
+      animating = true;
+      gsap.fromTo('.floor-panel[data-panel="' + floor + '"]',
+        { y: (dir < 0 ? -38 : 38), filter: "blur(6px)" },
+        { y: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out", overwrite: true,
+          onComplete: function () { animating = false; } });
+    }
     setActive(0);
-    var current = 0;
+
+    function lock() {
+      if (locked || Date.now() - justLeft < 900) return;   // don't re-lock right after leaving
+      locked = true;
+      section.classList.add("is-locked");
+      var l = L(); if (l) l.stop();
+      window.addEventListener("wheel", onWheel, { passive: false });
+      window.addEventListener("keydown", onKey);
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+    }
+    function unlock() {
+      if (!locked) return; locked = false;
+      section.classList.remove("is-locked");
+      var l = L(); if (l) l.start();
+      window.removeEventListener("wheel", onWheel, { passive: false });
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove, { passive: false });
+    }
+    function leave(dir) {
+      // release and glide to the neighbouring section (never gets stuck)
+      justLeft = Date.now();
+      unlock();
+      var targets = section.parentNode.querySelectorAll(".screen");
+      var i = Array.prototype.indexOf.call(targets, section);
+      var next = targets[i + (dir > 0 ? 1 : -1)];
+      var l = L();
+      if (next) { if (l) l.scrollTo(next, { duration: 1.0, lock: true }); else next.scrollIntoView({ behavior: "smooth" }); }
+    }
+    function step(dir) {
+      if (animating) return;
+      // at the first/last floor a further gesture LEAVES immediately (no cooldown) so it never sticks
+      if (dir > 0 && current >= 2) { leave(1); return; }
+      if (dir < 0 && current <= 0) { leave(-1); return; }
+      if (Date.now() - cool < 560) return;   // one step per gesture between floors
+      cool = Date.now();
+      paint(current + (dir > 0 ? 1 : -1), dir);
+    }
+    function onWheel(e) { e.preventDefault(); if (Math.abs(e.deltaY) < 4) return; step(e.deltaY > 0 ? 1 : -1); }
+    function onKey(e) {
+      if (e.key === "ArrowDown" || e.key === "PageDown") { e.preventDefault(); step(1); }
+      else if (e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); step(-1); }
+    }
+    var tY = 0;
+    function onTouchStart(e) { tY = e.touches[0].clientY; }
+    function onTouchMove(e) {
+      var dy = tY - e.touches[0].clientY;
+      if (Math.abs(dy) < 24) return;
+      e.preventDefault(); step(dy > 0 ? 1 : -1); tY = e.touches[0].clientY;
+    }
+
+    // engage the stepper exactly when the shaft snaps to the top of the viewport
     ScrollTrigger.create({
-      trigger: "#floors", start: "top top", end: "+=300%",
-      pin: "#floors", scrub: 1, invalidateOnRefresh: true,
-      refreshPriority: 2,   // middle pin: after story, before team
-      onUpdate: function (self) {
-        var p = self.progress;
-        var top = CELL_CENTER[0] - p * (CELL_CENTER[0] - CELL_CENTER[2]);
-        if (cabin) cabin.style.top = top + "%";
-        var idx = Math.min(2, Math.floor(p * 3 + 0.0001));
-        if (idx !== current) {
-          current = idx;
-          setActive(idx);
-          Sound.play("ding");
-          var floor = FLOOR_ORDER[idx];
-          gsap.killTweensOf(panels);
-          panels.forEach(function (q) { gsap.set(q, { opacity: +q.dataset.panel === floor ? 1 : 0 }); });
-          gsap.fromTo(
-            '.floor-panel[data-panel="' + floor + '"]',
-            { y: 40, filter: "blur(6px)" },
-            { y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out", overwrite: true }
-          );
-        }
-      },
+      trigger: "#floors", start: "top top", end: "bottom top",
+      onEnter: function () { current = 0; paintInstant(0); align(); lock(); },
+      onEnterBack: function () { current = 2; paintInstant(2); align(); lock(); },
+      onLeave: function () { unlock(); },
+      onLeaveBack: function () { unlock(); },
     });
+    function align() {
+      // snap the section flush to the top so it fills the viewport while locked
+      var l = L();
+      var y = section.getBoundingClientRect().top + (l ? l.scroll : window.scrollY);
+      if (l) l.scrollTo(y, { immediate: true }); else window.scrollTo(0, y);
+    }
+    function paintInstant(idx) {
+      current = idx; setActive(idx);
+      var floor = FLOOR_ORDER[idx];
+      var top = CELL_CENTER[0] - (idx / 2) * (CELL_CENTER[0] - CELL_CENTER[2]);
+      if (cabin) cabin.style.top = top + "%";
+      panels.forEach(function (q) { gsap.set(q, { opacity: +q.dataset.panel === floor ? 1 : 0 }); });
+    }
   }
 
-  /* ---------------- sound toggle ---------------- */
-  function initSoundToggle() {
-    var btn = document.getElementById("soundToggle"), label = document.getElementById("soundLabel");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      var on = Sound.toggle();
-      btn.classList.toggle("is-on", on);
-      btn.setAttribute("aria-pressed", String(on));
-      if (label) label.textContent = on ? "صدا روشن" : "صدا خاموش";
+  /* ---------------- sound: ON by default ----------------
+     Browsers block audio until a user gesture, so we arm the sound engine and
+     enable it on the first interaction (pointer / key / scroll / touch). No
+     on-screen toggle — sound is simply on. Respects reduced-motion preference. */
+  function initSound() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var armed = false;
+    function arm() {
+      if (armed) return; armed = true;
+      Sound.enable();
+      ["pointerdown", "keydown", "touchstart", "wheel"].forEach(function (ev) {
+        window.removeEventListener(ev, arm);
+      });
+    }
+    ["pointerdown", "keydown", "touchstart", "wheel"].forEach(function (ev) {
+      window.addEventListener(ev, arm, { once: false, passive: true });
     });
   }
 
@@ -234,7 +313,7 @@
     initStoryVideo();
     initGift();
     initElevator();
-    initSoundToggle();
+    initSound();
     initMiniCart();
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }

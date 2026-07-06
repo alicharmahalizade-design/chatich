@@ -50,8 +50,8 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
       } else { ?>
       <a href="#story" data-go="1">دربارهٔ دوریان</a>
       <a href="#services" data-go="3">خدمات</a>
-      <a href="#team" data-go="4">تیم</a>
-      <a href="#gift" data-go="5">گیفت‌کارت</a>
+      <a href="#gift" data-go="4">گیفت‌کارت</a>
+      <a href="<?php echo esc_url(home_url('/about')); ?>">درباره ما</a>
       <?php } ?>
     </nav>
   </div>
@@ -272,54 +272,28 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
     </div>
   </section>
 
-  <!-- TEAM -->
-  <section class="screen team" id="team" data-theme="dark" data-name="تیم">
-    <div class="team__inner wrap">
-      <div class="team__head">
-        <div>
-          <span class="eyebrow anim" style="--i:0">The Gentlemen</span>
-          <h2 class="anim" style="--i:1">شخصیت‌های دوریان</h2>
-          <p class="lead-fa anim" style="--i:2">تیمی از بهترین متخصصان مو، پوست و آرامش؛ هر چهره، یک کاراکتر.</p>
-        </div>
-        <div class="team__nav anim" style="--i:2">
-          <button id="teamPrev" aria-label="قبلی"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <button id="teamNext" aria-label="بعدی"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
-        </div>
-      </div>
-      <div class="rail anim" style="--i:3" id="teamRail">
-        <?php if (!function_exists('dorian_render_characters') || !dorian_render_characters()) : ?>
-        <article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Master</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-01.jpg" alt="آرمان کاراگاه" loading="lazy"></div><div class="tcard__name"><div class="fa">آرمان کاراگاه</div><div class="en lat">Arman Karagah</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>اکستنشن طبیعی مو</li><li>پروتز مو</li><li>کراتین مو</li><li>گریم تخصصی داماد</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-02.jpg" alt="احسان حسن‌یاری" loading="lazy"></div><div class="tcard__name"><div class="fa">احسان حسن‌یاری</div><div class="en lat">Ehsan Hasanyari</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li><li>مانیکور و پدیکور</li><li>گریم داماد</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-03.jpg" alt="ارسلان پورفضل" loading="lazy"></div><div class="tcard__name"><div class="fa">ارسلان پورفضل</div><div class="en lat">Arsalan Pourfazl</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-04.jpg" alt="اشکان محمدی" loading="lazy"></div><div class="tcard__name"><div class="fa">اشکان محمدی</div><div class="en lat">Ashkan Mohammadi</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>ماسک صورت</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-05.jpg" alt="حسین لویمی" loading="lazy"></div><div class="tcard__name"><div class="fa">حسین لویمی</div><div class="en lat">Hossein Loyami</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-06.jpg" alt="مجتبی میراحمدی" loading="lazy"></div><div class="tcard__name"><div class="fa">مجتبی میراحمدی</div><div class="en lat">Mojtaba Mirahmadi</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Hair Artist</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-07.jpg" alt="احمد سرخه" loading="lazy"></div><div class="tcard__name"><div class="fa">احمد سرخه</div><div class="en lat">Ahmad Sorkheh</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>کوتاهی مو و ریش</li><li>سشوار و استایل مو</li><li>شمع و ماسک صورت</li><li>رنگ مو</li><li>کراتین مو</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Massage</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-08.jpg" alt="احمدرضا جلالی" loading="lazy"></div><div class="tcard__name"><div class="fa">احمدرضا جلالی</div><div class="en lat">Ahmadreza Jalali</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>ماساژ درمانی</li><li>ماساژ ریلکسی</li></ul></div></div></article>
-<article class="tcard"><div class="tcard__inner"><span class="tcard__corner tl"></span><span class="tcard__corner tr"></span><span class="tcard__corner bl"></span><span class="tcard__corner br"></span><span class="tcard__role lat">Facial</span><div class="tcard__photo"><img src="<?php echo $tpl_uri; ?>/assets/img/team-09.jpg" alt="حمید جوهری" loading="lazy"></div><div class="tcard__name"><div class="fa">حمید جوهری</div><div class="en lat">Hamid Johari</div></div><div class="tcard__skills"><div class="h">Specialties</div><ul><li>پاکسازی تخصصی</li><li>رنگ مو و ریش</li><li>ویتامینه مو</li><li>مانیکور و پدیکور</li><li>شمع صورت</li></ul></div></div></article>
-        <?php endif; ?>
-      </div>
-      <div class="team__progress" aria-hidden="true"><i id="teamProg"></i></div>
-      <p class="team__hint">DRAG · SWIPE</p>
-    </div>
-  </section>
-
   <!-- GIFT -->
   <section class="screen gift" id="gift" data-theme="light" data-name="گیفت‌کارت">
     <div class="gift__inner wrap">
       <span class="eyebrow c anim" style="--i:0">Gift Cards</span>
-      <h2 class="anim" style="--i:1">هدیه‌ای در شأن یک نجیب‌زاده</h2>
+      <h2 class="anim" style="--i:1">کارت هدیه</h2>
       <p class="anim" style="--i:2">چهار کارت هدیه‌ی دوریان؛ تجربه‌ای کامل از مراقبت و آرامش را به عزیزانتان هدیه دهید.</p>
       <div class="giftcard-row anim" style="--i:3">
         <?php
-        $gl = function ($k) { return function_exists('dorian_link') ? dorian_link($k) : ''; };
-        dorian_giftcard("$tpl_uri/assets/img/gift-gentle-front.jpg", "$tpl_uri/assets/img/gift-gentle-back.jpg", 'گیفت‌کارت یک میلیون تومان', $gl('dorian_gift_url_1'));
-        dorian_giftcard("$tpl_uri/assets/img/gift-duke-front.jpg",   "$tpl_uri/assets/img/gift-duke-back.jpg",   'گیفت‌کارت دو میلیون تومان', $gl('dorian_gift_url_2'));
-        dorian_giftcard("$tpl_uri/assets/img/gift-noble-front.jpg",  "$tpl_uri/assets/img/gift-noble-back.jpg",  'گیفت‌کارت پنج میلیون تومان', $gl('dorian_gift_url_3'));
-        dorian_giftcard("$tpl_uri/assets/img/gift-royal-front.jpg",  "$tpl_uri/assets/img/gift-royal-back.jpg",  'گیفت‌کارت ده میلیون تومان', $gl('dorian_gift_url_4'));
+        // each card links to its section on the dedicated gift-cards page
+        // (overridable per card from «تنظیمات دوریان → لینک‌ها»)
+        $gift_page = function_exists('dorian_giftcards_url') ? dorian_giftcards_url() : home_url('/gift-cards');
+        $gl = function ($k, $anchor) use ($gift_page) {
+            $u = function_exists('dorian_link') ? dorian_link($k) : '';
+            return $u ? $u : $gift_page . $anchor;
+        };
+        dorian_giftcard("$tpl_uri/assets/img/gift-gentle-front.jpg", "$tpl_uri/assets/img/gift-gentle-back.jpg", 'کارت هدیهٔ یک میلیون تومان', $gl('dorian_gift_url_1', '#card-1'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-duke-front.jpg",   "$tpl_uri/assets/img/gift-duke-back.jpg",   'کارت هدیهٔ دو میلیون تومان',  $gl('dorian_gift_url_2', '#card-2'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-noble-front.jpg",  "$tpl_uri/assets/img/gift-noble-back.jpg",  'کارت هدیهٔ پنج میلیون تومان', $gl('dorian_gift_url_3', '#card-5'));
+        dorian_giftcard("$tpl_uri/assets/img/gift-royal-front.jpg",  "$tpl_uri/assets/img/gift-royal-back.jpg",  'کارت هدیهٔ ده میلیون تومان',  $gl('dorian_gift_url_4', '#card-10'));
         ?>
       </div>
-      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="<?php echo esc_url(dorian_link('dorian_gift_cta_url', $reserve_url)); ?>">هدیه بدهید</a></div>
+      <div class="gift__cta anim" style="--i:4"><a class="btn btn--blue" href="<?php echo esc_url(dorian_link('dorian_gift_cta_url', $gift_page)); ?>">مشاهدهٔ کارت‌های هدیه</a></div>
     </div>
   </section>
 
@@ -337,7 +311,7 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
   <section class="screen shop" id="shop" data-theme="light" data-name="فروشگاه">
     <div class="shop__inner wrap">
       <span class="eyebrow c anim" style="--i:0">The Boutique</span>
-      <h2 class="anim" style="--i:1">آیینِ آراستگی، در خلوتِ <span class="serif">خانه</span></h2>
+      <h2 class="anim" style="--i:1">آیین آراستگی</h2>
       <p class="anim" style="--i:2">برگزیده‌ای از بهترین محصولات مراقبت و آراستگیِ مردانه؛ همان اصالتی که در دوریان تجربه می‌کنید، اکنون در خانه‌ی شما.</p>
       <div class="shop__grid anim" style="--i:3">
         <?php foreach ( $dorian_products as $product ) :
@@ -407,13 +381,6 @@ $reserve_url = function_exists('dorian_reserve_link') ? dorian_reserve_link() : 
   </section>
 
 </main>
-
-<!-- sound toggle (elevator ding / card tick) -->
-<button class="snd" id="soundToggle" aria-pressed="false" aria-label="روشن/خاموش کردن صدا">
-  <span class="snd__ring" aria-hidden="true"></span>
-  <span class="snd__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-  <span class="snd__label" id="soundLabel">صدا خاموش</span>
-</button>
 
 <?php if ( class_exists( 'WooCommerce' ) && function_exists( 'WC' ) && WC()->cart ) : ?>
 <!-- floating cart (live count via WooCommerce fragments) -->
