@@ -629,18 +629,16 @@ body.dorian-inner { margin-block-start: 0; }
 .giftband__body { color: var(--gt); display: flex; flex-direction: column; align-items: flex-start; text-align: start; }
 /* gold display title */
 .giftband__name { font-family: var(--ff-didot); font-weight: 700; text-transform: uppercase; letter-spacing: .045em;
-  font-size: clamp(2.6rem, 5.4vw, 4rem); line-height: 1; margin: 0;
-  background: linear-gradient(180deg, var(--gold-3) 6%, var(--gold-2) 46%, var(--gold-1));
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--gold-2); }
+  font-size: clamp(2.6rem, 5.4vw, 4rem); line-height: 1; margin: 0; color: var(--gold-2); }
 /* numeric price + full-width gold rule under it */
-.giftband__label { width: 100%; max-width: 480px; font-family: var(--ff-fa); font-weight: 600;
+.giftband__label { width: 100%; max-width: 480px; font-family: var(--ff-fa); font-weight: 300;
   font-size: clamp(1.25rem, 2.4vw, 1.7rem); color: var(--gt);
   margin-block-start: 14px; padding-block-end: 22px; position: relative; }
 .giftband__num { font-family: var(--ff-didot); font-weight: 700; letter-spacing: .01em;
   direction: ltr; unicode-bidi: isolate; margin-inline-end: .28em; }
 .giftband__label::after { content: ""; position: absolute; inset-inline: 0 auto; inset-block-end: 0;
   width: 100%; height: 1.5px; background: linear-gradient(to left, var(--gold-2), var(--gold-1) 62%, rgba(168,128,26,.22)); }
-.giftband__desc { color: var(--gt-soft); max-width: 46ch; margin-block-start: 20px; line-height: 2; font-size: 1rem; }
+.giftband__desc { color: var(--gt-soft); max-width: 100%; margin-block-start: 20px; line-height: 2; font-size: 1rem; }
 /* features as a single gold-tinted pill with gold dot separators */
 .giftband__meta { list-style: none; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 0;
   align-self: flex-start; margin-block-start: 24px; padding: .6em 1.2em; border-radius: 999px;

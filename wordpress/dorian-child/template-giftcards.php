@@ -74,7 +74,7 @@ $cards = array(
             <div class="giftband__body">
               <h2 class="giftband__name lat"><?php echo esc_html($c['en']); ?></h2>
               <p class="giftband__label"><span class="giftband__num"><?php echo esc_html($c['amount']); ?></span> تومان</p>
-              <p class="giftband__desc"><?php echo esc_html($c['desc']); ?></p>
+              <p class="giftband__desc">کارت هدیه <?php echo esc_html($c['label']); ?>، <?php echo esc_html($c['desc']); ?></p>
               <ul class="giftband__meta">
                 <?php foreach ($c['feats'] as $f) : ?><li><?php echo esc_html($f); ?></li><?php endforeach; ?>
                 <li>بدونِ تاریخِ انقضا</li>
