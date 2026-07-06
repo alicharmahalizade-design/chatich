@@ -6,7 +6,18 @@
    No GSAP/Lenis — motion is CSS + a tiny IntersectionObserver.
    ========================================================================= */
 
+/* Diet Didot — elegant serif for English display text & Latin prices (gift cards). */
+@font-face {
+  font-family: 'Diet Didot';
+  src: url("../fonts/DietDidot-Bold.woff2") format('woff2'),
+       url("../fonts/DietDidot-Bold.woff") format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --ff-didot: 'Diet Didot', 'Times New Roman', serif;
   --fs: var(--dorian-fs, 17px);
   --line: 1.9;
   --rr: 18px;
@@ -545,8 +556,9 @@ body.dorian-inner { margin-block-start: 0; }
 .giftthumb.is-active { background: #fff !important; border-color: var(--gold-2); box-shadow: 0 0 0 2px var(--gold-2), 0 22px 44px -30px rgba(20,17,10,.5); }
 .giftthumb__img { width: 100%; aspect-ratio: 673/1051; border-radius: 10px; overflow: hidden; box-shadow: 0 14px 30px -18px rgba(20,17,10,.6); }
 .giftthumb__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.giftthumb__fa { font-family: var(--ff-fa); font-weight: 800; font-size: 1rem; color: var(--ink); margin-block-start: 4px; }
-.giftthumb__amt { font-family: var(--ff-en); font-weight: 700; font-size: .82rem; color: var(--gold-soft); }
+.giftthumb__en { font-family: var(--ff-didot); font-weight: 700; font-size: 1.12rem; letter-spacing: .01em; color: var(--ink); margin-block-start: 6px; line-height: 1.1; }
+.giftthumb__tr { font-family: var(--ff-fa); font-weight: 700; font-size: .82rem; color: var(--ink-soft); }
+.giftthumb__amt { font-family: var(--ff-didot); font-weight: 700; font-size: .92rem; letter-spacing: .02em; color: var(--gold-soft); margin-block-start: 2px; }
 
 /* ----- horizontal slider ----- */
 .giftslider-wrap { position: relative; margin-block-start: clamp(22px, 3vw, 40px); }
@@ -562,7 +574,7 @@ body.dorian-inner { margin-block-start: 0; }
 .giftslide::after  { content: ""; position: absolute; inset-block-start: -30%; inset-inline-start: -10%; width: 60%; height: 160%;
   background: radial-gradient(closest-side, rgba(217,182,90,.16), transparent 70%); pointer-events: none; }
 .giftband__wm { position: absolute; inset-block-start: 50%; inset-inline-end: -3%; transform: translateY(-50%);
-  font-family: var(--ff-en); font-weight: 800; font-size: clamp(8rem, 22vw, 22rem); line-height: .8; letter-spacing: -.03em;
+  font-family: var(--ff-didot); font-weight: 700; font-size: clamp(8rem, 22vw, 22rem); line-height: .8; letter-spacing: -.01em;
   color: transparent; -webkit-text-stroke: 1.5px var(--gline); opacity: .16; pointer-events: none; white-space: nowrap; }
 .giftslide__inner { position: relative; z-index: 2; width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: clamp(20px, 4vw, 44px);
   display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 5vw, 76px); align-items: center; }
@@ -603,16 +615,22 @@ body.dorian-inner { margin-block-start: 0; }
 
 /* body */
 .giftband__body { color: var(--gt); }
-.giftband__eyebrow { display: inline-flex; align-items: center; gap: .8em; font-family: var(--ff-en); letter-spacing: .42em; font-size: .74rem; text-transform: uppercase; color: var(--gt-soft); }
+.giftband__eyebrow { display: inline-flex; align-items: center; gap: .8em; font-family: var(--ff-didot); letter-spacing: .3em; font-size: .82rem; text-transform: uppercase; color: var(--gt-soft); }
 .giftband__eyebrow::before { content: ""; width: 34px; height: 1px; background: var(--gline); }
-.giftband__title { font-family: var(--ff-fa); font-weight: 800; font-size: clamp(2rem, 4.6vw, 3.2rem); line-height: 1.2; margin-block: 14px 0; color: var(--gt); }
-.giftband__amount { display: flex; align-items: baseline; gap: .4em; margin-block: 12px 0; font-family: var(--ff-en); font-weight: 800; font-size: clamp(1.8rem, 3.6vw, 2.7rem); color: var(--gt); }
+.giftband__title { display: flex; flex-direction: column; gap: 4px; margin-block: 14px 0; }
+.giftband__en { font-family: var(--ff-didot); font-weight: 700; font-size: clamp(2.3rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: .01em; color: var(--gt); }
+.giftband__tr { font-family: var(--ff-fa); font-weight: 700; font-size: clamp(1rem, 2vw, 1.3rem); color: var(--gt-soft); }
+.giftband__amount { display: flex; align-items: baseline; gap: .4em; margin-block: 12px 0; font-family: var(--ff-didot); font-weight: 700; font-size: clamp(1.9rem, 3.8vw, 2.9rem); letter-spacing: .02em; color: var(--gt); }
+.giftband__amount .lat { font-family: var(--ff-didot); }
 .giftband__amount small { font-family: var(--ff-fa); font-size: .46em; font-weight: 600; color: var(--gt-soft); }
 .giftband__desc { color: var(--gt-soft); max-width: 46ch; margin-block: 16px 0; line-height: 2; }
 .giftband__feats { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-block: 22px 0; }
 .giftband__feats li { display: flex; align-items: center; gap: 10px; color: var(--gt); font-size: 1rem; }
 .giftband__feats svg { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--gold-2); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .giftband__cta { margin-block-start: 28px; }
+.giftband__buy { display: inline-flex; align-items: center; gap: .6em; }
+.giftband__cart { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.giftband__cart circle { fill: currentColor; stroke: none; }
 @media (max-width: 860px) { .giftband__eyebrow, .giftband__amount, .giftband__feats li { justify-content: center; } .giftband__desc { margin-inline: auto; } }
 
 /* why dorian */
