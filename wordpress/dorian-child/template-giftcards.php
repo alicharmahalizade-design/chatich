@@ -33,16 +33,6 @@ $cards = array(
 );
 ?>
 
-<section class="pagehero giftlp-hero">
-  <div class="wrap pagehero__inner">
-    <nav class="crumbs"><a href="<?php echo esc_url(home_url('/')); ?>">خانه</a><span class="sep">/</span><span class="here">کارت هدیه</span></nav>
-    <span class="eyebrow c">Gift Cards</span>
-    <h1 class="pagehero__title">کارت هدیهٔ <span class="serif">دوریان</span></h1>
-    <div class="ds"><i></i><em></em><i></i></div>
-    <p class="pagehero__sub">آراستگی و آرامش را به کسانی که دوستشان دارید هدیه دهید؛ تجربه‌ای در شأنِ یک نجیب‌زاده، در قابی که فراموش نمی‌شود.</p>
-  </div>
-</section>
-
 <!-- preview row: click a card to jump the slider to it -->
 <section class="giftshow">
   <div class="wrap giftshow__head">
