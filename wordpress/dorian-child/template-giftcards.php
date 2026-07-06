@@ -16,19 +16,19 @@ $img = get_stylesheet_directory_uri() . '/assets/img/';
 $reserve = function_exists('dorian_reserve_link') ? dorian_reserve_link() : home_url('/');
 
 $cards = array(
-    array('id'=>'card-1',  'slug'=>'gentle','en'=>'Gentle Card', 'label'=>'یک میلیون تومانی',  'opt'=>'dorian_gift_url_1',
+    array('id'=>'card-1',  'slug'=>'gentle','en'=>'Gentle Card', 'label'=>'یک میلیون تومانی',  'amount'=>'1,000,000',  'opt'=>'dorian_gift_url_1',
           'bg'=>'#33302b','bg2'=>'#201d18',
           'desc'=>'شروعی برازنده؛ یک نوبتِ کاملِ آراستگی برای هدیه‌ای کوچک اما به‌یادماندنی.',
           'feats'=>array('یک جلسه خدمات مو و صورت','مناسبِ تجربهٔ نخستِ دوریان')),
-    array('id'=>'card-2',  'slug'=>'duke',  'en'=>'Duke Card',   'label'=>'دو میلیون تومانی',  'opt'=>'dorian_gift_url_2',
+    array('id'=>'card-2',  'slug'=>'duke',  'en'=>'Duke Card',   'label'=>'دو میلیون تومانی',  'amount'=>'2,000,000',  'opt'=>'dorian_gift_url_2',
           'bg'=>'#243043','bg2'=>'#161e2b',
           'desc'=>'کمی بیشتر از یک نوبت؛ ترکیبی از خدمات مو، ریش و صورت برای روزی که حالِ او را خوب کند.',
           'feats'=>array('پکیجِ مو + ریش + صورت','امکانِ رزروِ اختصاصی')),
-    array('id'=>'card-5',  'slug'=>'noble', 'en'=>'Noble Card',  'label'=>'پنج میلیون تومانی', 'opt'=>'dorian_gift_url_3',
+    array('id'=>'card-5',  'slug'=>'noble', 'en'=>'Noble Card',  'label'=>'پنج میلیون تومانی', 'amount'=>'5,000,000',  'opt'=>'dorian_gift_url_3',
           'bg'=>'#3a3327','bg2'=>'#241f17',
           'desc'=>'چند جلسه مراقبت و آرامش؛ هدیه‌ای که بارها یادِ شما را زنده می‌کند.',
           'feats'=>array('چند جلسه مو، پوست و ماساژ','مشاورهٔ تخصصیِ رایگان')),
-    array('id'=>'card-10', 'slug'=>'royal', 'en'=>'Royal Card',  'label'=>'ده میلیون تومانی',  'opt'=>'dorian_gift_url_4',
+    array('id'=>'card-10', 'slug'=>'royal', 'en'=>'Royal Card',  'label'=>'ده میلیون تومانی',  'amount'=>'10,000,000', 'opt'=>'dorian_gift_url_4',
           'bg'=>'#2a231c','bg2'=>'#181310',
           'desc'=>'کامل‌ترین تجربهٔ دوریان؛ در شأنِ عزیزترین‌ها، از سر تا پا آراسته و آرام.',
           'feats'=>array('دسترسی به تمامِ خدماتِ مجموعه','تجربهٔ کاملِ VIP')),
@@ -73,14 +73,13 @@ $cards = array(
             </div>
             <div class="giftband__body">
               <h2 class="giftband__name lat"><?php echo esc_html($c['en']); ?></h2>
-              <p class="giftband__label">کارت هدیه <?php echo esc_html($c['label']); ?></p>
+              <p class="giftband__label"><span class="giftband__num"><?php echo esc_html($c['amount']); ?></span> تومان</p>
               <p class="giftband__desc"><?php echo esc_html($c['desc']); ?></p>
               <ul class="giftband__meta">
                 <?php foreach ($c['feats'] as $f) : ?><li><?php echo esc_html($f); ?></li><?php endforeach; ?>
                 <li>بدونِ تاریخِ انقضا</li>
               </ul>
               <a class="giftbuy" href="<?php echo esc_url($buy); ?>">
-                <svg class="giftbuy__cart" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h2.2l1.6 12.2a1.5 1.5 0 0 0 1.5 1.3h9.1a1.5 1.5 0 0 0 1.5-1.2L20.5 7H6"/></svg>
                 <span>افزودن به سبد خرید</span>
               </a>
             </div>

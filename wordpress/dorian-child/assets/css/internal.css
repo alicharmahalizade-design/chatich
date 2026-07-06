@@ -565,13 +565,19 @@ body.dorian-inner { margin-block-start: 0; }
 .giftthumb__label { font-family: var(--ff-fa); font-weight: 600; font-size: .8rem; color: var(--ink-soft); }
 
 /* ----- horizontal slider ----- */
-.giftslider-wrap { position: relative; margin-block-start: clamp(24px, 3vw, 44px); }
+/* the dark band is a self-contained rounded card floating on the cream page;
+   the prev/next arrows live in the side gutter, OUTSIDE the card. */
+.giftslider-wrap { position: relative; margin-block-start: clamp(24px, 3vw, 44px);
+  padding-inline: clamp(52px, 7vw, 108px); }
 .giftslider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  border-radius: clamp(22px, 2.6vw, 34px);
   -ms-overflow-style: none; scrollbar-width: none; }
 .giftslider::-webkit-scrollbar { display: none; }
 .giftslide { position: relative; overflow: hidden; flex: 0 0 100%; scroll-snap-align: center; scroll-margin-top: 90px;
-  display: flex; align-items: center; min-height: min(76vh, 720px); padding-block: clamp(44px, 6vw, 88px);
+  display: flex; align-items: center; min-height: min(64vh, 560px); padding-block: clamp(34px, 5vw, 66px);
+  border-radius: clamp(22px, 2.6vw, 34px);
   background: linear-gradient(150deg, var(--gbg), var(--gbg2));
+  box-shadow: 0 40px 90px -46px rgba(20,17,10,.6);
   --gt: #f4ede0; --gt-soft: rgba(244,237,224,.68); --gline: rgba(244,237,224,.22); }
 .giftslide::before { content: ""; position: absolute; inset: 0; background-image: var(--grain); background-size: 170px; opacity: .05; mix-blend-mode: overlay; pointer-events: none; }
 .giftslide::after  { content: ""; position: absolute; inset-block-start: -25%; inset-inline-end: -12%; width: 55%; height: 150%;
@@ -589,17 +595,23 @@ body.dorian-inner { margin-block-start: 0; }
 .giftslider-nav { position: absolute; inset-block-start: 50%; transform: translateY(-50%); z-index: 5;
   width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
   -webkit-appearance: none; appearance: none;
-  background: rgba(255,255,255,.9) !important; border: 0; color: var(--ink) !important;
-  box-shadow: 0 12px 30px -14px rgba(20,17,10,.5); transition: transform .3s var(--ease), background .3s; }
+  background: #fff !important; border: 1px solid rgba(20,17,10,.10); color: var(--ink) !important;
+  box-shadow: 0 14px 34px -16px rgba(20,17,10,.45); transition: transform .3s var(--ease), background .3s, box-shadow .3s; }
 /* neutralise hello-elementor's default button hover/focus/active (pink) */
 .giftslider-nav:hover, .giftslider-nav:focus, .giftslider-nav:focus-visible, .giftslider-nav:active { background: #fff !important; color: var(--ink) !important; }
-.giftslider-nav:hover { transform: translateY(-50%) scale(1.06); }
+.giftslider-nav:hover { transform: translateY(-50%) scale(1.06); box-shadow: 0 18px 40px -16px rgba(20,17,10,.55); }
 .giftslider-nav:focus { outline: none; }
 .giftslider-nav:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
 .giftslider-nav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
-.giftslider-nav--prev { inset-inline-start: clamp(8px, 2vw, 22px); }
-.giftslider-nav--next { inset-inline-end: clamp(8px, 2vw, 22px); }
-@media (max-width: 640px) { .giftslider-nav { width: 42px; height: 42px; } }
+/* sit in the side gutter, clear of the rounded card */
+.giftslider-nav--prev { inset-inline-start: clamp(2px, 1.2vw, 28px); }
+.giftslider-nav--next { inset-inline-end: clamp(2px, 1.2vw, 28px); }
+@media (max-width: 640px) {
+  .giftslider-wrap { padding-inline: clamp(38px, 12vw, 56px); }
+  .giftslider-nav { width: 40px; height: 40px; }
+  .giftslider-nav--prev { inset-inline-start: 0; }
+  .giftslider-nav--next { inset-inline-end: 0; }
+}
 .giftdots { display: flex; justify-content: center; gap: 10px; padding-block: 24px; }
 .giftdot { width: 8px; height: 8px; border-radius: 50%; background: rgba(168,128,26,.3); transition: .3s; }
 .giftdot.is-active { background: var(--gold-grad); transform: scale(1.35); box-shadow: 0 0 0 4px rgba(217,182,90,.14); }
@@ -615,27 +627,41 @@ body.dorian-inner { margin-block-start: 0; }
 
 /* left column — everything aligned to one edge, tidy rhythm */
 .giftband__body { color: var(--gt); display: flex; flex-direction: column; align-items: flex-start; text-align: start; }
+/* gold display title */
 .giftband__name { font-family: var(--ff-didot); font-weight: 700; text-transform: uppercase; letter-spacing: .045em;
-  font-size: clamp(2.6rem, 5.4vw, 4rem); line-height: 1; color: var(--gt); margin: 0; }
-.giftband__label { font-family: var(--ff-fa); font-weight: 700; font-size: clamp(1.05rem, 2vw, 1.32rem); color: var(--gt);
-  margin-block-start: 18px; padding-block-end: 18px; position: relative; }
-.giftband__label::after { content: ""; position: absolute; inset-inline-start: 0; inset-block-end: 0; width: 54px; height: 1px; background: var(--gline); }
-.giftband__desc { color: var(--gt-soft); max-width: 44ch; margin-block-start: 18px; line-height: 2; font-size: 1rem; }
-.giftband__meta { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; margin-block-start: 20px; }
-.giftband__meta li { display: inline-flex; align-items: center; color: var(--gt-soft); font-size: .9rem; }
-.giftband__meta li:not(:last-child)::after { content: "·"; margin-inline: 10px; color: var(--gt); opacity: .5; }
-.giftbuy { display: inline-flex; align-items: center; gap: .55em; margin-block-start: 30px; text-decoration: none;
-  font-family: var(--ff-fa); font-weight: 600; font-size: .92rem; color: var(--gt);
-  padding: .72em 1.5em; border-radius: 999px; border: 1px solid var(--gline); background: transparent;
-  -webkit-appearance: none; appearance: none; transition: background .35s var(--ease), color .35s, border-color .35s, transform .35s; }
-.giftbuy:hover, .giftbuy:focus { background: var(--gt); color: var(--gbg); border-color: var(--gt); transform: translateY(-2px); }
-.giftbuy:focus-visible { outline: 2px solid var(--gt); outline-offset: 3px; }
-.giftbuy__cart { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.giftbuy__cart circle { fill: currentColor; stroke: none; }
+  font-size: clamp(2.6rem, 5.4vw, 4rem); line-height: 1; margin: 0;
+  background: linear-gradient(180deg, var(--gold-3) 6%, var(--gold-2) 46%, var(--gold-1));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--gold-2); }
+/* numeric price + full-width gold rule under it */
+.giftband__label { width: 100%; max-width: 480px; font-family: var(--ff-fa); font-weight: 600;
+  font-size: clamp(1.25rem, 2.4vw, 1.7rem); color: var(--gt);
+  margin-block-start: 14px; padding-block-end: 22px; position: relative; }
+.giftband__num { font-family: var(--ff-didot); font-weight: 700; letter-spacing: .01em;
+  direction: ltr; unicode-bidi: isolate; margin-inline-end: .28em; }
+.giftband__label::after { content: ""; position: absolute; inset-inline: 0 auto; inset-block-end: 0;
+  width: 100%; height: 1.5px; background: linear-gradient(to left, var(--gold-2), var(--gold-1) 62%, rgba(168,128,26,.22)); }
+.giftband__desc { color: var(--gt-soft); max-width: 46ch; margin-block-start: 20px; line-height: 2; font-size: 1rem; }
+/* features as a single gold-tinted pill with gold dot separators */
+.giftband__meta { list-style: none; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 0;
+  align-self: flex-start; margin-block-start: 24px; padding: .6em 1.2em; border-radius: 999px;
+  background: rgba(217,182,90,.10); border: 1px solid rgba(217,182,90,.26); }
+.giftband__meta li { display: inline-flex; align-items: center; color: var(--gt-soft); font-size: .84rem; font-weight: 500; }
+.giftband__meta li:not(:last-child)::after { content: ""; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold-2); margin-inline: 11px; flex: none; }
+/* gold-filled add-to-cart */
+.giftbuy { display: inline-flex; align-items: center; gap: .5em; margin-block-start: 26px; text-decoration: none;
+  font-family: var(--ff-fa); font-weight: 700; font-size: .92rem; color: #241803;
+  padding: .74em 1.7em; border-radius: 999px; border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 66%, var(--gold-3));
+  box-shadow: 0 16px 34px -16px rgba(217,182,90,.7);
+  -webkit-appearance: none; appearance: none; transition: transform .35s var(--ease), box-shadow .35s, filter .35s; }
+.giftbuy:hover, .giftbuy:focus { transform: translateY(-2px); box-shadow: 0 22px 46px -16px rgba(217,182,90,.85); filter: brightness(1.05); color: #241803; }
+.giftbuy:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
 @media (max-width: 860px) {
   .giftband__body { align-items: center; text-align: center; }
-  .giftband__label::after { inset-inline: 50% 50%; width: 54px; transform: translateX(-50%); }
-  .giftband__meta { justify-content: center; }
+  .giftband__label { margin-inline: auto; }
+  .giftband__label::after { inset-inline: 0; width: 100%; }
+  .giftband__meta { align-self: center; justify-content: center; }
   .giftband__desc { margin-inline: auto; }
 }
 
