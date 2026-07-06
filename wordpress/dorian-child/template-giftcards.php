@@ -14,19 +14,19 @@ $img = get_stylesheet_directory_uri() . '/assets/img/';
 $reserve = function_exists('dorian_reserve_link') ? dorian_reserve_link() : home_url('/');
 
 $cards = array(
-    array('id'=>'card-1',  'slug'=>'gentle','en'=>'Gentle','fa'=>'کارت نجیب',   'amount'=>'۱٬۰۰۰٬۰۰۰',  'opt'=>'dorian_gift_url_1',
+    array('id'=>'card-1',  'slug'=>'gentle','en'=>'Gentle','fa'=>'کارت نجیب',   'amount'=>'1,000,000',  'opt'=>'dorian_gift_url_1',
           'bg'=>'#cbb88f','bg2'=>'#9a7f52','tone'=>'dark',
           'desc'=>'شروعی برازنده؛ یک نوبتِ کاملِ آراستگی برای هدیه‌ای کوچک اما به‌یادماندنی.',
           'feats'=>array('یک جلسه خدمات مو و صورت','مناسبِ تجربهٔ نخستِ دوریان')),
-    array('id'=>'card-2',  'slug'=>'duke',  'en'=>'Duke',  'fa'=>'کارت دوک',    'amount'=>'۲٬۰۰۰٬۰۰۰',  'opt'=>'dorian_gift_url_2',
+    array('id'=>'card-2',  'slug'=>'duke',  'en'=>'Duke',  'fa'=>'کارت دوک',    'amount'=>'2,000,000',  'opt'=>'dorian_gift_url_2',
           'bg'=>'#2c3a52','bg2'=>'#18222f','tone'=>'light',
           'desc'=>'کمی بیشتر از یک نوبت؛ ترکیبی از خدمات مو، ریش و صورت برای روزی که حالِ او را خوب کند.',
           'feats'=>array('پکیجِ مو + ریش + صورت','امکانِ رزروِ اختصاصی')),
-    array('id'=>'card-5',  'slug'=>'noble', 'en'=>'Noble', 'fa'=>'کارت اصیل',   'amount'=>'۵٬۰۰۰٬۰۰۰',  'opt'=>'dorian_gift_url_3',
+    array('id'=>'card-5',  'slug'=>'noble', 'en'=>'Noble', 'fa'=>'کارت اصیل',   'amount'=>'5,000,000',  'opt'=>'dorian_gift_url_3',
           'bg'=>'#7d6b51','bg2'=>'#574a38','tone'=>'light',
           'desc'=>'چند جلسه مراقبت و آرامش؛ هدیه‌ای که بارها یادِ شما را زنده می‌کند.',
           'feats'=>array('چند جلسه مو، پوست و ماساژ','مشاورهٔ تخصصیِ رایگان')),
-    array('id'=>'card-10', 'slug'=>'royal', 'en'=>'Royal', 'fa'=>'کارت سلطنتی', 'amount'=>'۱۰٬۰۰۰٬۰۰۰', 'opt'=>'dorian_gift_url_4',
+    array('id'=>'card-10', 'slug'=>'royal', 'en'=>'Royal', 'fa'=>'کارت سلطنتی', 'amount'=>'10,000,000', 'opt'=>'dorian_gift_url_4',
           'bg'=>'#40352a','bg2'=>'#29211a','tone'=>'light',
           'desc'=>'کامل‌ترین تجربهٔ دوریان؛ در شأنِ عزیزترین‌ها، از سر تا پا آراسته و آرام.',
           'feats'=>array('دسترسی به تمامِ خدماتِ مجموعه','تجربهٔ کاملِ VIP')),
@@ -74,7 +74,7 @@ $cards = array(
   </div>
 
   <div class="giftslider-wrap">
-    <button class="giftslider-nav giftslider-nav--prev" type="button" aria-label="کارت قبلی"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button class="giftslider-nav giftslider-nav--prev" type="button" aria-label="کارت قبلی"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
     <div class="giftslider" id="giftSlider" tabindex="0">
       <?php foreach ($cards as $i => $c) :
         $buy = function_exists('dorian_link') ? dorian_link($c['opt'], $reserve) : $reserve; ?>
@@ -109,7 +109,7 @@ $cards = array(
         </article>
       <?php endforeach; ?>
     </div>
-    <button class="giftslider-nav giftslider-nav--next" type="button" aria-label="کارت بعدی"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button class="giftslider-nav giftslider-nav--next" type="button" aria-label="کارت بعدی"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
   </div>
 
   <div class="giftdots" aria-hidden="true">
