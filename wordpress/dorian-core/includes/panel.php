@@ -351,10 +351,10 @@ class Dorian_Panel {
     public static function head($title) {
         ?><!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <meta name="theme-color" content="#E1D5C0">
+        <meta name="theme-color" content="#26241e">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="پنل دوریان">
         <title><?php echo esc_html($title); ?></title>
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -588,28 +588,30 @@ class Dorian_Panel {
           .svcrow{grid-template-columns:1fr 130px 110px;gap:10px}
         }
 
-        /* ---- automatic dark mode ---- */
-        @media (prefers-color-scheme:dark){
-          :root{--ink:#ece7dd;--muted:#a49d8c;--line:rgba(255,255,255,.12);--card:#1e1c17;--blue:#57a8e6;--blue-2:#6fb6ec;--gold:#d4b455;--ok:#43c07d;--no:#e5695f}
-          body{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
-          .appbar{background:rgba(30,28,23,.82)}
-          .iconbtn,.btn--ghost,.bk,.mini,.cbtn,.wh-day,.wh-range select,.wh-rm,.capf,.svcrow input,.blkadd select,.blkadd input,.blkitem,.cal .c,.calnav button,.search,.search input,.tab.on,.login input{background:#26231d;color:var(--ink);border-color:var(--line)}
-          .stat{background:#231f19}
-          .tile{background:linear-gradient(180deg,#272318,#201d17)}
-          .seg{background:#18160f}
-          .tabbar{background:rgba(22,20,16,.9)}
-          .bk .time{background:rgba(87,168,230,.16)}
-          .bk--done{background:#172219;border-inline-start-color:var(--ok)}
-          .bk--noshow{background:#241a19;border-inline-start-color:var(--no)}
-          .cal .c.past{background:#211e18}
-          .savebar{background:linear-gradient(180deg,rgba(20,19,16,0),rgba(20,19,16,.96) 45%)}
-          .splash{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
-          .switch .knob{background:#4a453a}
-          .hint code{background:rgba(255,255,255,.08)}
-          .saved{background:#12351f;border-color:#1f5a34;color:#a8e6c0}
-          .nbtn.on{background:#172219}
-          .gap span{background:rgba(87,168,230,.14)}
-        }
+        /* ---- dark theme: always on ----
+           These used to sit inside @media (prefers-color-scheme:dark), which made
+           the panel follow the *device's* setting — dark on a desktop in dark mode,
+           but the light base theme on a phone in light mode. The panel is meant to
+           be dark everywhere, so the overrides apply unconditionally. */
+        :root{--ink:#ece7dd;--muted:#a49d8c;--line:rgba(255,255,255,.12);--card:#1e1c17;--blue:#57a8e6;--blue-2:#6fb6ec;--gold:#d4b455;--ok:#43c07d;--no:#e5695f;color-scheme:dark}
+        body{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
+        .appbar{background:rgba(30,28,23,.82)}
+        .iconbtn,.btn--ghost,.bk,.mini,.cbtn,.wh-day,.wh-range select,.wh-rm,.capf,.svcrow input,.blkadd select,.blkadd input,.blkitem,.cal .c,.calnav button,.search,.search input,.tab.on,.login input{background:#26231d;color:var(--ink);border-color:var(--line)}
+        .stat{background:#231f19}
+        .tile{background:linear-gradient(180deg,#272318,#201d17)}
+        .seg{background:#18160f}
+        .tabbar{background:rgba(22,20,16,.9)}
+        .bk .time{background:rgba(87,168,230,.16)}
+        .bk--done{background:#172219;border-inline-start-color:var(--ok)}
+        .bk--noshow{background:#241a19;border-inline-start-color:var(--no)}
+        .cal .c.past{background:#211e18}
+        .savebar{background:linear-gradient(180deg,rgba(20,19,16,0),rgba(20,19,16,.96) 45%)}
+        .splash{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
+        .switch .knob{background:#4a453a}
+        .hint code{background:rgba(255,255,255,.08)}
+        .saved{background:#12351f;border-color:#1f5a34;color:#a8e6c0}
+        .nbtn.on{background:#172219}
+        .gap span{background:rgba(87,168,230,.14)}
         </style></head><body><div class="pw"><?php
     }
     public static function foot() { echo '</div></body></html>'; }
