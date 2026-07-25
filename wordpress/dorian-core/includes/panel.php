@@ -129,19 +129,15 @@ add_action('init', function () {
 });
 add_action('save_post_dorian_provider', function () { flush_rewrite_rules(); });
 
-/* ---------- render the panel ----------
-   Priority 0 so we run BEFORE redirect_canonical: otherwise a POST to /arman
-   gets 301-redirected to /arman/ and the form data (passcode) is dropped —
-   which looked like "nothing happens" on login. */
+/* ---------- render the panel ---------- */
 add_action('template_redirect', function () {
     $slug = get_query_var('dorian_pslug');
     if (!$slug) return;
     $provider = dorian_provider_by_slug($slug);
     if (!$provider) return; // let WP 404
-    nocache_headers();       // never let a page cache store the panel (auth + customer data)
     Dorian_Panel::handle($provider);
     exit;
-}, 0);
+});
 
 class Dorian_Panel {
 
@@ -158,6 +154,10 @@ class Dorian_Panel {
 
     public static function handle($provider) {
         $pid = $provider->ID;
+
+        // this page is login/cookie-gated; never let a page-cache plugin or CDN serve a stale copy of it
+        if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
+        nocache_headers();
 
         // login
         if (isset($_POST['dorian_login'])) {
@@ -202,11 +202,16 @@ class Dorian_Panel {
         }
         update_post_meta($pid, '_dorian_hours', $hours);
 
-        // per-service price + duration
-        $svc = array();
+        // per-service duration (price is set by management, never by the provider — preserve it)
+        $svc = get_post_meta($pid, '_dorian_svc', true);
+        if (!is_array($svc)) $svc = array();
         if (!empty($_POST['svc']) && is_array($_POST['svc'])) {
             foreach ($_POST['svc'] as $sid => $vals) {
-                $svc[(int) $sid] = array('price' => (int) ($vals['price'] ?? 0), 'dur' => max(15, (int) ($vals['dur'] ?? 30)));
+                $sid  = (int) $sid;
+                $prev = isset($svc[$sid]) && is_array($svc[$sid]) ? $svc[$sid] : array();
+                $row  = array('dur' => max(15, (int) ($vals['dur'] ?? 30)));
+                if (isset($prev['price'])) $row['price'] = (int) $prev['price']; // keep admin-set price
+                $svc[$sid] = $row;
             }
         }
         update_post_meta($pid, '_dorian_svc', $svc);
@@ -256,6 +261,24 @@ class Dorian_Panel {
         return array('c' => (int) $row->c, 's' => (int) $row->s);
     }
 
+    /** Per-day realized income for the last N days (oldest→newest), for the mini chart. */
+    protected static function revenue_by_day($pid, $days) {
+        global $wpdb;
+        $t = Dorian_DB::table();
+        $wd = array('ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج');
+        $out = array();
+        for ($i = max(1, (int) $days) - 1; $i >= 0; $i--) {
+            $ts = strtotime("-$i day", current_time('timestamp'));
+            $d  = date('Y-m-d', $ts);
+            $s  = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COALESCE(SUM(total_price),0) FROM $t WHERE status='done' AND FIND_IN_SET(%d, provider_ids) AND DATE(start_dt)=%s",
+                $pid, $d
+            ));
+            $out[] = array('s' => $s, 'x' => $wd[((int) date('w', $ts) + 1) % 7], 'today' => ($i === 0));
+        }
+        return $out;
+    }
+
     /* ---- bookings for a provider on a Y-m-d (all statuses, for display) ---- */
     protected static function bookings_on($pid, $ymd) {
         global $wpdb;
@@ -266,73 +289,328 @@ class Dorian_Panel {
         ));
     }
 
-    protected static function head($title) {
+    /* ---- all upcoming bookings for a provider from a Y-m-d onward (for the "آینده" tab) ---- */
+    protected static function upcoming($pid, $from_ymd, $limit = 200) {
+        global $wpdb;
+        $t = Dorian_DB::table();
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $t WHERE DATE(start_dt) >= %s AND FIND_IN_SET(%d, provider_ids) ORDER BY start_dt ASC LIMIT %d",
+            $from_ymd, $pid, $limit
+        ));
+    }
+
+    /* ---- inline stroke icons (currentColor) ---- */
+    public static function icon($n) {
+        $p = array(
+            'dash'  => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
+            'book'  => '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+            'rev'   => '<rect x="3" y="6" width="18" height="12.5" rx="2.5"/><path d="M3 10.5h18"/><path d="M16.3 12.4h3.7v3h-3.7a1.5 1.5 0 0 1 0-3Z"/>',
+            'set'   => '<circle cx="12" cy="12" r="3.1"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8.8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8.8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+            'cal'   => '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+            'check' => '<circle cx="12" cy="12" r="9"/><path d="M8 12.2l2.6 2.6L16 9.4"/>',
+            'coin'  => '<ellipse cx="12" cy="6.5" rx="7.5" ry="3"/><path d="M4.5 6.5v11c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-11"/><path d="M4.5 12c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3"/>',
+            'phone' => '<path d="M6.4 3.5c.5 0 .9.3 1 .8l.7 2.5c.1.4 0 .8-.3 1.1L6.3 9.2a12 12 0 0 0 5.5 5.5l1.3-1.5c.3-.3.7-.4 1.1-.3l2.5.7c.5.1.8.5.8 1v2.6a2 2 0 0 1-2.2 2A15 15 0 0 1 4.4 5.7a2 2 0 0 1 2-2.2Z"/>',
+            'sms'   => '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4 3.4V16H5.5A1.5 1.5 0 0 1 4 14.5Z"/>',
+            'bell'  => '<path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+            'search'=> '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+        );
+        $d = isset($p[$n]) ? $p[$n] : '';
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
+    }
+
+    /* ---- one booking row (shared by the day tabs and the upcoming tab) ---- */
+    protected static function render_row($r, $labels) {
+        $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
+        $lb = $labels[$st];
+        $ts = strtotime($r->start_dt);
+        $start_min = (int) date('G', $ts) * 60 + (int) date('i', $ts);
+        $ph = esc_attr($r->customer_phone);
+        $q  = function_exists('mb_strtolower') ? mb_strtolower($r->customer_name) : strtolower($r->customer_name);
+        $h  = '<div class="bk bk--' . esc_attr($st) . '" data-q="' . esc_attr($q . ' ' . $r->customer_phone) . '" data-start="' . $start_min . '" data-dur="' . (int) $r->duration_min . '">'
+            . '<span class="time">' . esc_html(date('H:i', $ts)) . '</span>'
+            . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
+            . '<span class="badge" style="background:' . esc_attr($lb[1]) . '">' . esc_html($lb[0]) . '</span>'
+            . '<span class="contact">'
+            .   '<a class="tel" href="tel:' . $ph . '">' . esc_html($r->customer_phone) . '</a>'
+            .   '<a class="cbtn call" href="tel:' . $ph . '" aria-label="تماس">' . self::icon('phone') . '</a>'
+            .   '<a class="cbtn sms" href="sms:' . $ph . '" aria-label="پیامک">' . self::icon('sms') . '</a>'
+            . '</span>'
+            . '<span class="acts">';
+        if ($st === 'confirmed' || $st === 'paid') {
+            $h .= '<button class="mini ok" name="dorian_status" value="' . (int) $r->id . ':done">✓ انجام شد</button>'
+                . '<button class="mini no" name="dorian_status" value="' . (int) $r->id . ':noshow">نیامد</button>'
+                . '<button class="mini cx" name="dorian_status" value="' . (int) $r->id . ':cancelled">لغو</button>';
+        } else {
+            $h .= '<button class="mini undo" name="dorian_status" value="' . (int) $r->id . ':confirmed">↺ بازگردانی</button>';
+        }
+        return $h . '</span></div>';
+    }
+
+    public static function head($title) {
         ?><!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#E1D5C0">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="پنل دوریان">
         <title><?php echo esc_html($title); ?></title>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
         @font-face{font-family:'Pinar';src:url('<?php echo DORIAN_URL; ?>assets/fonts/Pinar-VF.woff2') format('woff2');font-weight:100 900;font-display:swap}
-        :root{--blue:#0066B3;--gold:#C9A227;--ink:#1c160c;--muted:#736a59;--line:rgba(0,75,133,.16);--cream:#DFD2BF}
+        :root{
+          --blue:#0066B3;--blue-2:#1E86D6;--gold:#C9A227;
+          --ink:#1c160c;--muted:#736a58;--line:rgba(28,22,12,.10);
+          --card:#FEFCF7;--ok:#1f8a4c;--no:#c0392b;
+          --rad:20px;--shadow:0 10px 30px -18px rgba(40,30,10,.45),0 2px 6px -4px rgba(40,30,10,.22)
+        }
         *{box-sizing:border-box}
-        body{margin:0;font-family:'Pinar',Tahoma,sans-serif;background:radial-gradient(120% 120% at 50% 0%,#E9DFCB,#DFD2BF 60%,#D3C4A8);color:var(--ink);line-height:1.9;min-height:100vh}
-        .pw{width:min(880px,94%);margin:0 auto;padding:26px 0 60px}
-        .pcard{background:linear-gradient(180deg,#FBF6EC,#F3E9D6);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-bottom:18px;box-shadow:0 30px 70px -50px rgba(40,30,10,.5)}
-        .ptop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
-        .ptop h1{font-size:1.5rem;margin:0}
-        .ptop .role{font-family:'Space Grotesk';letter-spacing:.16em;font-size:.7rem;color:var(--blue)}
-        .btn{display:inline-flex;align-items:center;gap:6px;padding:.6em 1.3em;border-radius:999px;border:1px solid transparent;font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none}
-        .btn--blue{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff}
-        .btn--ghost{background:transparent;border-color:var(--line);color:var(--ink)}
-        .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-        .tab{padding:.5em 1.2em;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:.9rem}
-        .tab.on{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff;border-color:transparent}
+        html{-webkit-text-size-adjust:100%}
+        body{margin:0;font-family:'Pinar',Tahoma,sans-serif;background:radial-gradient(140% 120% at 50% 0%,#EEE6D4,#E1D5C0 55%,#D6C8AD);background-attachment:fixed;color:var(--ink);line-height:1.85;min-height:100vh;font-size:16px;-webkit-font-smoothing:antialiased}
+        img{max-width:100%}
+        a{color:var(--blue)}
+        :focus-visible{outline:3px solid rgba(30,134,214,.55);outline-offset:2px;border-radius:8px}
+        .pw{width:100%;max-width:720px;margin:0 auto;padding:0 14px calc(88px + env(safe-area-inset-bottom))}
+        body.view-set .pw{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+
+        /* top-level views + bottom tab bar */
+        .view{display:none}.view.on{display:block;animation:fadeUp .28s ease both}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+        .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:rgba(253,250,243,.9);backdrop-filter:saturate(1.5) blur(16px);-webkit-backdrop-filter:saturate(1.5) blur(16px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -8px 24px -20px rgba(40,30,10,.6)}
+        .tabbtn{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;padding:8px 4px;background:none;border:0;font-family:inherit;font-size:.68rem;font-weight:600;color:var(--muted);cursor:pointer;transition:color .18s}
+        .tabbtn .ic{display:flex}
+        .tabbtn .ic svg{width:25px;height:25px;display:block}
+        .tabbtn.on{color:var(--blue)}
+        .tabbtn.on .ic svg{stroke-width:2}
+        .tabbtn::before{content:"";position:absolute;top:0;left:50%;width:28px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--blue-2),var(--blue));transform:translateX(-50%) scaleX(0);transition:transform .22s cubic-bezier(.4,1.3,.5,1)}
+        .tabbtn.on::before{transform:translateX(-50%) scaleX(1)}
+
+        /* dashboard / revenue tiles */
+        .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .tile{display:flex;align-items:center;gap:11px;background:linear-gradient(180deg,#fff,#faf5ea);border:1px solid var(--line);border-radius:16px;padding:13px 13px;box-shadow:0 6px 16px -14px rgba(40,30,10,.5)}
+        .tile__ic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(0,102,179,.1);color:var(--blue)}
+        .tile__ic svg{width:22px;height:22px}
+        .tile__b{min-width:0}
+        .tile__n{display:block;font-family:'Space Grotesk';font-weight:700;font-size:1.45rem;color:var(--blue);line-height:1.12;letter-spacing:.5px}
+        .tile__l{display:block;color:var(--muted);font-size:.75rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tile--ok .tile__ic{background:rgba(31,138,76,.12);color:var(--ok)}
+        .tile--ok .tile__n{color:var(--ok)}
+        .tile--rev .tile__ic{background:rgba(168,134,42,.14);color:#a8862a}
+        .tile--rev .tile__n{color:#a8862a;font-size:1.12rem}
+
+        /* search */
+        .search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 12px;margin-bottom:14px}
+        .search__ic{display:flex;color:var(--muted)}.search__ic svg{width:18px;height:18px}
+        .search input{flex:1;min-width:0;border:0;background:none;min-height:46px;font-size:16px;font-family:inherit;color:var(--ink);outline:none}
+        .search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+        .search__x{border:0;background:none;color:var(--muted);font-size:1rem;cursor:pointer;width:30px;height:30px}
+        .pcard.searching .seg,.pcard.searching .stats,.pcard.searching .dhead,.pcard.searching .gap,.pcard.searching .nowline,.pcard.searching .empty:not(.search-empty){display:none}
+        .pcard.searching .day{display:block}
+        .bk.hidden{display:none}
+
+        /* revenue mini bar chart */
+        .chart{display:flex;align-items:flex-end;gap:6px;height:130px;padding-top:18px}
+        .chart__col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+        .chart__bar{width:66%;max-width:26px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#e3c04a,#b8901f);min-height:3px;transition:height .5s ease}
+        .chart__col.is-today .chart__bar{background:linear-gradient(180deg,var(--blue-2),var(--blue))}
+        .chart__x{font-size:.72rem;color:var(--muted)}
+        .chart__v{font-family:'Space Grotesk';font-size:.62rem;color:var(--muted);height:12px;letter-spacing:.3px}
+
+        /* timeline gaps + now marker */
+        .gap{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--muted);font-size:.76rem}
+        .gap::before,.gap::after{content:"";flex:1;border-top:1px dashed var(--line)}
+        .gap span{background:rgba(0,102,179,.08);color:var(--blue);border-radius:999px;padding:.15em .85em;white-space:nowrap}
+        .nowline{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+        .nowline::before,.nowline::after{content:"";flex:1;border-top:2px solid var(--no)}
+        .nowline span{background:var(--no);color:#fff;border-radius:999px;padding:.12em .8em;font-size:.72rem;font-weight:700;white-space:nowrap}
+
+        /* notify button + toast */
+        .nbtn{width:100%;margin-top:12px;color:var(--blue)}
+        .nbtn svg{width:18px;height:18px}
+        .nbtn.on{color:var(--ok);border-color:#bfe3ca;background:#f4fbf6}
+        .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,18px);z-index:60;background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;padding:12px 18px;border-radius:14px;box-shadow:0 16px 34px -14px rgba(0,0,0,.5);opacity:0;transition:.32s;max-width:92%;font-weight:600;text-align:center}
+        .toast.on{opacity:1;transform:translate(-50%,0)}
+
+        /* splash / app-launch */
+        .splash{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:radial-gradient(140% 120% at 50% 0%,#EEE6D4,#E1D5C0 55%,#D6C8AD);transition:opacity .4s}
+        .splash.hide{opacity:0;pointer-events:none}
+        .splash__box{display:flex;flex-direction:column;align-items:center;gap:18px}
+        .splash__ava{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 0 0 3px var(--gold),0 12px 30px -12px rgba(40,30,10,.6);animation:pop .5s ease}
+        @keyframes pop{from{transform:scale(.82);opacity:0}to{transform:scale(1);opacity:1}}
+        .splash__bar{width:120px;height:5px;border-radius:999px;background:rgba(0,75,133,.15);overflow:hidden}
+        .splash__bar i{display:block;height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg,var(--blue-2),var(--blue));animation:slide 1s ease-in-out infinite}
+        @keyframes slide{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+        .pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+
+        /* app bar */
+        .appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -14px 16px;padding:calc(10px + env(safe-area-inset-top)) 16px 12px;background:rgba(254,252,247,.82);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+        .appbar__id{display:flex;align-items:center;gap:12px;min-width:0}
+        .appbar__ava{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 2px var(--gold),0 5px 14px -6px rgba(40,30,10,.65);flex:0 0 auto}
+        .appbar__meta{min-width:0}
+        .appbar__meta h1{font-size:1.2rem;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .role{display:inline-block;font-family:'Space Grotesk';letter-spacing:.14em;font-size:.66rem;color:var(--blue);text-transform:uppercase;margin-top:1px}
+        .iconbtn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:.35em 1em;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-weight:700;font-size:.85rem;text-decoration:none;flex:0 0 auto}
+        .iconbtn:active{transform:translateY(1px)}
+
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:.5em 1.4em;border-radius:14px;border:1px solid transparent;font-family:inherit;font-weight:700;font-size:.98rem;cursor:pointer;text-decoration:none;transition:transform .12s ease,box-shadow .2s ease,filter .2s ease}
+        .btn:active{transform:translateY(1px)}
+        .btn--blue{background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;box-shadow:0 14px 26px -14px rgba(0,102,179,.95)}
+        .btn--blue:hover{filter:brightness(1.05)}
+        .btn--ghost{background:#fff;border-color:var(--line);color:var(--ink);border-radius:999px}
+        .btn--ghost:hover{background:#fbfbfb}
+
+        h2{font-size:1.08rem;margin:0 0 12px;position:relative;padding-inline-start:13px}
+        h2::before{content:"";position:absolute;inset-inline-start:0;top:.18em;bottom:.18em;width:4px;border-radius:4px;background:linear-gradient(var(--blue-2),var(--blue))}
+        .hint{color:var(--muted);font-size:.85rem;margin:0 0 12px;line-height:1.7}
+        .hint code{background:rgba(0,0,0,.05);padding:.1em .4em;border-radius:5px;direction:ltr;display:inline-block}
+
+        /* segmented control */
+        .seg{display:flex;gap:4px;background:#ece2d0;border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:16px}
+        .tab{flex:1 1 0;min-width:0;min-height:40px;padding:.3em .4em;border-radius:11px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:600;color:var(--muted);white-space:nowrap;transition:background .18s,color .18s,box-shadow .18s}
+        .tab.on{background:#fff;color:var(--blue);box-shadow:0 2px 8px -2px rgba(40,30,10,.28);font-weight:700}
         .day{display:none}.day.on{display:block}
-        .bk{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;flex-wrap:wrap}
-        .bk .time{font-family:'Space Grotesk';font-weight:700;color:var(--blue);min-width:56px}
-        .bk .who{font-weight:700}.bk .svc{color:var(--muted);font-size:.9rem}
-        .bk .tel{color:var(--blue);text-decoration:none;font-family:'Space Grotesk'}
-        .bk--cancelled{opacity:.55}.bk--cancelled .who{text-decoration:line-through}
-        .bk--done{background:#f2fbf5}.bk--noshow{background:#fdf3f3}
-        .badge{color:#fff;border-radius:999px;padding:.15em .8em;font-size:.72rem;white-space:nowrap;margin-inline-start:auto}
-        .acts{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:8px}
-        .mini{border:1px solid var(--line);background:#fff;border-radius:999px;padding:.35em .95em;font-family:inherit;font-size:.78rem;cursor:pointer}
-        .mini.ok{color:#1f8a4c;border-color:#bfe3ca}.mini.no{color:#b23b3b;border-color:#e8c4c4}.mini.cx{color:#8a8a8a}.mini.undo{color:var(--blue)}
-        .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-        .stat{background:#fff;border:1px solid var(--line);border-radius:999px;padding:.35em 1.1em;font-size:.85rem}
-        .stat b{font-family:'Space Grotesk';color:var(--blue)}
-        .stat--ok b{color:#1f8a4c}.stat--no b{color:#b23b3b}.stat--rev b{color:#a8862a}
-        .empty{color:var(--muted);padding:14px 0}
-        .capf{width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
+
+        .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+        .stat{background:#faf6ee;border:1px solid var(--line);border-radius:12px;padding:.45em .95em;font-size:.82rem;line-height:1.5}
+        .stat b{font-family:'Space Grotesk';color:var(--blue);font-size:.98rem}
+        .stat--ok b{color:var(--ok)}.stat--no b{color:var(--no)}.stat--rev b{color:#a8862a}
+
+        .bk{position:relative;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"time who badge" "tel tel tel" "acts acts acts";gap:8px 12px;align-items:center;padding:14px;border:1px solid var(--line);border-inline-start:4px solid var(--blue);border-radius:14px;background:#fff;margin-bottom:10px;box-shadow:0 6px 16px -14px rgba(40,30,10,.6)}
+        .bk .time{grid-area:time;justify-self:start;font-family:'Space Grotesk';font-weight:700;color:var(--blue);font-size:1.02rem;background:#eef6fd;border-radius:9px;padding:.15em .6em}
+        .bk>span:nth-child(2){grid-area:who;min-width:0}
+        .bk .who{font-weight:700}.bk .svc{color:var(--muted);font-size:.85rem}
+        .bk .badge{grid-area:badge;color:#fff;border-radius:999px;padding:.25em .85em;font-size:.72rem;white-space:nowrap;justify-self:end}
+        .bk .contact{grid-area:tel;display:flex;align-items:center;gap:8px}
+        .bk .tel{color:var(--blue);text-decoration:none;font-family:'Space Grotesk';font-weight:600}
+        .cbtn{width:36px;height:36px;flex:0 0 auto;border-radius:10px;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;color:var(--blue);background:#fff;transition:transform .1s}
+        .cbtn svg{width:17px;height:17px}
+        .cbtn.sms{color:var(--ok)}
+        .cbtn:active{transform:translateY(1px)}
+        .bk--confirmed{border-inline-start-color:var(--blue)}
+        .bk--paid{border-inline-start-color:var(--ok)}
+        .bk--done{border-inline-start-color:var(--ok);background:#f4fbf6}
+        .bk--noshow{border-inline-start-color:var(--no);background:#fdf5f4}
+        .bk--cancelled{border-inline-start-color:#c2c2c2;opacity:.6}
+        .bk--cancelled .who{text-decoration:line-through}
+        .acts{grid-area:acts;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+        .mini{min-height:40px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:.3em 1em;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+        .mini:active{transform:translateY(1px)}
+        .mini.ok{color:var(--ok);border-color:#bfe3ca}.mini.ok:hover{background:#f1fbf4}
+        .mini.no{color:var(--no);border-color:#e8c4c4}.mini.no:hover{background:#fdf5f4}
+        .mini.cx{color:#8a8a8a}.mini.undo{color:var(--blue)}
+        .empty{color:var(--muted);padding:18px 0;text-align:center}
+        .dhead{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-weight:700;color:var(--ink);font-size:.92rem}
+        .dhead::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto}
+        .dhead::after{content:"";flex:1;height:1px;background:var(--line)}
+        .dhead:first-child{margin-top:0}
+
+        input,select{font-family:inherit;font-size:16px;color:var(--ink)}
+
+        /* weekly working hours (option-based, accordion) */
+        .wh{display:flex;flex-direction:column;gap:8px}
+        .wh-day{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden;transition:box-shadow .2s}
+        .wh-day.open{box-shadow:0 6px 16px -14px rgba(40,30,10,.6);border-color:rgba(0,102,179,.3)}
+        .wh-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+        .wh-name{font-weight:700;min-width:54px}
+        .wh-day:not(.on) .wh-name{color:var(--muted)}
+        .wh-sum{color:var(--muted);font-family:'Space Grotesk';font-size:.82rem;direction:ltr;margin-inline-start:auto;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .wh-chev{flex:0 0 auto;color:var(--muted);font-size:1rem;transition:transform .2s}
+        .wh-day.open .wh-chev{transform:rotate(180deg)}
+        .switch{position:relative;display:inline-flex;flex:0 0 auto;width:48px;height:28px;cursor:pointer}
+        .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+        .switch .knob{position:absolute;inset:0;border-radius:999px;background:#d8cdb8;transition:background .2s}
+        .switch .knob::before{content:"";position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+        .switch input:checked+.knob{background:linear-gradient(135deg,var(--blue-2),var(--blue))}
+        .switch input:checked+.knob::before{transform:translateX(-20px)}
+        .wh-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:8px}
+        .wh-range{display:flex;align-items:center;gap:8px}
+        .wh-lbl{color:var(--muted);font-size:.85rem;flex:0 0 auto}
+        .wh-range select{flex:1 1 80px;min-width:0;min-height:44px;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:'Space Grotesk';direction:ltr;text-align:center}
+        .wh-rm{flex:0 0 auto;width:40px;min-height:40px;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--no);cursor:pointer;font-size:.9rem}
+        .wh-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+        .wh-add,.wh-copy{min-height:38px;border-radius:10px;padding:.3em 1em;font-family:inherit;font-weight:600;font-size:.82rem;cursor:pointer}
+        .wh-add{border:1px dashed var(--blue-2);background:#eef6fd;color:var(--blue)}
+        .wh-copy{border:1px solid var(--line);background:#faf6ee;color:var(--muted)}
+        .svcrow{display:grid;grid-template-columns:1fr 96px 78px;gap:8px;align-items:center;margin-bottom:8px}
+        .svcrow input{min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff;text-align:center}
+        .svcrow .nm{font-weight:600;font-size:.9rem}
+        .svc-price{min-height:44px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';direction:ltr;color:var(--muted);background:#f4efe4;border:1px solid var(--line);border-radius:10px}
+        .capf{width:140px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff}
+
         .blkadd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-        .blkadd select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;background:#fff}
-        .blkadd input{width:88px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
+        .blkadd select{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;background:#fff;flex:1 1 130px}
+        .blkadd input{flex:0 0 84px;width:84px;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-family:'Space Grotesk';direction:ltr;background:#fff;text-align:center}
         .blklist{display:flex;flex-direction:column;gap:6px}
-        .blkitem{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-        .blkitem .rm{border:none;background:none;color:#b23b3b;cursor:pointer;font-size:1rem}
-        #vac.on{background:linear-gradient(135deg,#1E86D6,#0066B3);color:#fff;border-color:transparent}
-        .cal .c.selstart{background:var(--gold);color:#fff}
-        table.hrs{width:100%;border-collapse:collapse}
-        table.hrs td{padding:6px 4px;border-bottom:1px solid rgba(0,0,0,.05)}
-        table.hrs input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
-        .svcrow{display:grid;grid-template-columns:1fr 130px 110px;gap:10px;align-items:center;margin-bottom:8px}
-        .svcrow input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Space Grotesk';direction:ltr}
-        .svcrow .nm{font-weight:600}
-        .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:340px}
-        .cal .h{text-align:center;font-size:.72rem;color:var(--muted)}
-        .cal .c{aspect-ratio:1;border:1px solid transparent;border-radius:8px;background:#fff;cursor:pointer;font-family:'Space Grotesk';font-size:.85rem}
-        .cal .c.empty{background:none;cursor:default}.cal .c.past{opacity:.35;cursor:not-allowed}
-        .cal .c.closed{background:#c0392b;color:#fff;border-color:transparent}
-        .calnav{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-        .calnav button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer}
-        h2{font-size:1.1rem;margin:0 0 10px}
-        .hint{color:var(--muted);font-size:.85rem;margin:0 0 12px}
-        .saved{background:#d4edda;border:1px solid #9ecfa8;color:#20612f;padding:8px 14px;border-radius:10px;margin-bottom:14px}
-        .login{max-width:360px;margin:12vh auto}.login input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:8px 0;font-size:1rem}
-        .err{color:#c0392b}
+        .blkitem{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.9rem}
+        .blkitem .rm{border:none;background:none;color:var(--no);cursor:pointer;font-size:1.1rem;min-width:32px;min-height:32px}
+
+        #vac{margin-bottom:12px}
+        #vac.on{background:linear-gradient(135deg,var(--blue-2),var(--blue));color:#fff;border-color:transparent}
+        .calwrap{max-width:360px;margin:0 auto}
+        .calnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+        .calnav b{font-size:1rem}
+        .calnav button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:1.2rem;color:var(--blue);display:flex;align-items:center;justify-content:center}
+        .calnav button:hover{background:#f5f5f5}
+        .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+        .cal .h{text-align:center;font-size:.72rem;color:var(--muted);font-weight:600;padding-bottom:4px}
+        .cal .c{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-family:'Space Grotesk';font-size:.9rem;transition:background .15s,transform .1s}
+        .cal .c:not(.empty):not(.past):hover{background:#eef6fd;border-color:var(--blue-2)}
+        .cal .c:active{transform:scale(.94)}
+        .cal .c.empty{background:none;border-color:transparent;cursor:default}
+        .cal .c.past{opacity:.4;cursor:not-allowed;background:#f4efe4}
+        .cal .c.today{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+        .cal .c.closed{background:var(--no);color:#fff;border-color:transparent}
+        .cal .c.selstart{background:var(--gold);color:#fff;border-color:transparent}
+        .callegend{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:14px;font-size:.78rem;color:var(--muted)}
+        .callegend span{display:inline-flex;align-items:center;gap:6px}
+        .callegend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+        .lg-closed{background:var(--no)}.lg-today{border:1.5px solid var(--gold)}
+
+        .saved{background:#d9efe0;border:1px solid #9ecfa8;color:#1c5a2e;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-weight:600}
+        .savebar{position:fixed;left:0;right:0;bottom:calc(59px + env(safe-area-inset-bottom));z-index:39;margin:0;padding:8px 14px;background:linear-gradient(180deg,rgba(225,213,192,0),rgba(225,213,192,.97) 45%);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+        .btn--save{display:flex;width:100%;max-width:692px;margin:0 auto}
+
+        .login{max-width:380px;margin:10vh auto}
+        .login input{width:100%;min-height:50px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0;font-size:16px;text-align:center;background:#fff}
+        .err{color:var(--no);font-weight:600}
+
+        @media (min-width:640px){
+          .pw{padding:0 20px 60px}
+          .pcard{padding:22px 24px;margin-bottom:18px}
+          .appbar{padding-top:16px;padding-bottom:14px}
+          .appbar__meta h1{font-size:1.35rem}
+          h2{font-size:1.18rem}
+          .bk{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+          .bk .badge{margin-inline-start:auto}
+          .acts{width:100%}
+          .svcrow{grid-template-columns:1fr 130px 110px;gap:10px}
+        }
+
+        /* ---- automatic dark mode ---- */
+        @media (prefers-color-scheme:dark){
+          :root{--ink:#ece7dd;--muted:#a49d8c;--line:rgba(255,255,255,.12);--card:#1e1c17;--blue:#57a8e6;--blue-2:#6fb6ec;--gold:#d4b455;--ok:#43c07d;--no:#e5695f}
+          body{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
+          .appbar{background:rgba(30,28,23,.82)}
+          .iconbtn,.btn--ghost,.bk,.mini,.cbtn,.wh-day,.wh-range select,.wh-rm,.capf,.svcrow input,.blkadd select,.blkadd input,.blkitem,.cal .c,.calnav button,.search,.search input,.tab.on,.login input{background:#26231d;color:var(--ink);border-color:var(--line)}
+          .stat{background:#231f19}
+          .tile{background:linear-gradient(180deg,#272318,#201d17)}
+          .seg{background:#18160f}
+          .tabbar{background:rgba(22,20,16,.9)}
+          .bk .time{background:rgba(87,168,230,.16)}
+          .bk--done{background:#172219;border-inline-start-color:var(--ok)}
+          .bk--noshow{background:#241a19;border-inline-start-color:var(--no)}
+          .cal .c.past{background:#211e18}
+          .savebar{background:linear-gradient(180deg,rgba(20,19,16,0),rgba(20,19,16,.96) 45%)}
+          .splash{background:radial-gradient(140% 120% at 50% 0%,#26241e,#1b1915 58%,#141310)}
+          .switch .knob{background:#4a453a}
+          .hint code{background:rgba(255,255,255,.08)}
+          .saved{background:#12351f;border-color:#1f5a34;color:#a8e6c0}
+          .nbtn.on{background:#172219}
+          .gap span{background:rgba(87,168,230,.14)}
+        }
         </style></head><body><div class="pw"><?php
     }
-    protected static function foot() { echo '</div></body></html>'; }
+    public static function foot() { echo '</div></body></html>'; }
 
     protected static function login_page($provider, $err) {
         self::head('ورود — ' . $provider->post_title);
@@ -340,9 +618,10 @@ class Dorian_Panel {
           <h1 style="text-align:center;margin:0 0 4px"><?php echo esc_html($provider->post_title); ?></h1>
           <p class="hint" style="text-align:center">برای ورود به پنل، رمز خود را وارد کنید.</p>
           <?php if ($err) echo '<p class="err" style="text-align:center">' . esc_html($err) . '</p>'; ?>
-          <form method="post" action="<?php echo esc_url(home_url('/' . get_post_meta($provider->ID, '_dorian_slug', true) . '/')); ?>">
-            <input type="password" name="passcode" placeholder="رمز" autofocus>
-            <button class="btn btn--blue" name="dorian_login" value="1" style="width:100%;justify-content:center">ورود</button>
+          <form method="post">
+            <label for="passcode" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">رمز ورود</label>
+            <input id="passcode" type="password" name="passcode" placeholder="رمز" autocomplete="current-password" inputmode="numeric" autofocus>
+            <button class="btn btn--blue" name="dorian_login" value="1" style="width:100%">ورود</button>
           </form>
         </div><?php
         self::foot();
@@ -351,32 +630,72 @@ class Dorian_Panel {
     protected static function panel_page($provider) {
         $pid = $provider->ID;
         $role = get_post_meta($pid, '_dorian_role', true);
+        $photo = get_the_post_thumbnail_url($pid, 'thumbnail');
+        if (!$photo) $photo = DORIAN_URL . 'assets/avatar.svg';
         $days = array('امروز', 'فردا', 'پس‌فردا');
         self::head('پنل ' . $provider->post_title);
         ?>
-        <div class="pcard">
-          <div class="ptop">
-            <div><h1><?php echo esc_html($provider->post_title); ?></h1><span class="role"><?php echo esc_html($role); ?></span></div>
-            <a class="btn btn--ghost" href="?logout=1">خروج</a>
+        <div class="splash" id="splash"><div class="splash__box"><img class="splash__ava" src="<?php echo esc_url($photo); ?>" alt=""><div class="splash__bar"><i></i></div></div></div>
+        <header class="appbar">
+          <div class="appbar__id">
+            <img class="appbar__ava" src="<?php echo esc_url($photo); ?>" alt="">
+            <div class="appbar__meta"><h1><?php echo esc_html($provider->post_title); ?></h1><span class="role"><?php echo esc_html($role); ?></span></div>
           </div>
-        </div>
+          <a class="iconbtn" href="?logout=1"><span aria-hidden="true">⎋</span> خروج</a>
+        </header>
 
-        <?php if (isset($_GET['saved'])) echo '<div class="saved">تغییرات ذخیره شد.</div>'; ?>
+        <?php
+        if (isset($_GET['saved'])) echo '<div class="saved">تغییرات ذخیره شد.</div>';
+        $labels = array(
+            'confirmed' => array('تأییدشده', '#0066B3'),
+            'paid'      => array('پرداخت‌شده', '#1f8a4c'),
+            'done'      => array('انجام شد', '#1f8a4c'),
+            'noshow'    => array('نیامد', '#b23b3b'),
+            'cancelled' => array('لغو شد', '#9a9a9a'),
+        );
+        $rw = self::revenue($pid, 7); $rm = self::revenue($pid, 30);
+        $today = date('Y-m-d', current_time('timestamp'));
+        $trows = self::bookings_on($pid, $today);
+        $t_total = 0; $t_done = 0;
+        foreach ($trows as $r) { if ($r->status !== 'cancelled') $t_total++; if ($r->status === 'done') $t_done++; }
+        global $wpdb;
+        $maxid = (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(MAX(id),0) FROM " . Dorian_DB::table() . " WHERE FIND_IN_SET(%d, provider_ids)", $pid));
+        $sv = isset($_GET['saved']) ? 'set' : 'dash';
+        ?>
+        <div id="pnl" data-pid="<?php echo (int) $pid; ?>" data-ajax="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" data-max="<?php echo $maxid; ?>" hidden></div>
 
-        <div class="pcard">
-          <h2>نوبت‌ها</h2>
-          <div class="tabs">
-            <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
-          </div>
-          <?php
-          $labels = array(
-              'confirmed' => array('تأییدشده', '#0066B3'),
-              'paid'      => array('پرداخت‌شده', '#1f8a4c'),
-              'done'      => array('انجام شد', '#1f8a4c'),
-              'noshow'    => array('نیامد', '#b23b3b'),
-              'cancelled' => array('لغو شد', '#9a9a9a'),
-          );
-          foreach ($days as $i => $d) {
+        <main class="views">
+
+          <section class="view<?php echo $sv === 'dash' ? ' on' : ''; ?>" data-view="dash">
+            <div class="pcard">
+              <h2>پیشخوان</h2>
+              <div class="tiles">
+                <div class="tile"><span class="tile__ic"><?php echo self::icon('cal'); ?></span><div class="tile__b"><span class="tile__n"><?php echo $t_total; ?></span><span class="tile__l">نوبت امروز</span></div></div>
+                <div class="tile tile--ok"><span class="tile__ic"><?php echo self::icon('check'); ?></span><div class="tile__b"><span class="tile__n"><?php echo $t_done; ?></span><span class="tile__l">انجام‌شدهٔ امروز</span></div></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته (تومان)</span></div></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه (تومان)</span></div></div>
+              </div>
+              <button type="button" id="notifyBtn" class="btn btn--ghost nbtn"><?php echo self::icon('bell'); ?> فعال‌سازی اعلانِ نوبت جدید</button>
+            </div>
+            <div class="pcard">
+              <h2>نوبت‌های امروز</h2>
+              <?php if (!$trows) { echo '<p class="empty">امروز نوبتی ندارید.</p>'; }
+              else { echo '<form method="post" class="today-list daylist" data-today="1">'; wp_nonce_field('dorian_panel_' . $pid);
+                foreach ($trows as $r) echo self::render_row($r, $labels);
+                echo '</form>'; } ?>
+            </div>
+          </section>
+
+          <section class="view<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book">
+            <div class="pcard">
+              <h2>نوبت‌ها</h2>
+              <div class="search"><span class="search__ic"><?php echo self::icon('search'); ?></span><input type="search" id="bkSearch" placeholder="جست‌وجوی نام یا شماره…" autocomplete="off"><button type="button" class="search__x" id="bkSearchX" aria-label="پاک کردن" hidden>✕</button></div>
+              <div class="seg">
+                <?php foreach ($days as $i => $d) echo '<button type="button" class="tab' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">' . esc_html($d) . '</button>'; ?>
+                <button type="button" class="tab" data-day="up">آینده</button>
+              </div>
+              <?php
+              foreach ($days as $i => $d) {
               $ymd = date('Y-m-d', strtotime("+$i day", current_time('timestamp')));
               echo '<div class="day' . ($i === 0 ? ' on' : '') . '" data-day="' . $i . '">';
               $rows = self::bookings_on($pid, $ymd);
@@ -396,63 +715,87 @@ class Dorian_Panel {
 
               if (!$rows) { echo '<p class="empty">نوبتی برای این روز ثبت نشده.</p>'; echo '</div>'; continue; }
 
-              echo '<form method="post">';
+              echo '<form method="post" class="daylist"' . ($i === 0 ? ' data-today="1"' : '') . '>';
               wp_nonce_field('dorian_panel_' . $pid);
-              foreach ($rows as $r) {
-                  $st = isset($labels[$r->status]) ? $r->status : 'confirmed';
-                  $lb = $labels[$st];
-                  echo '<div class="bk bk--' . esc_attr($st) . '"><span class="time">' . esc_html(date('H:i', strtotime($r->start_dt))) . '</span>'
-                     . '<span><span class="who">' . esc_html($r->customer_name) . '</span><br><span class="svc">' . esc_html($r->service_names) . ' · ' . (int) $r->duration_min . '′</span></span>'
-                     . '<span class="badge" style="background:' . esc_attr($lb[1]) . '">' . esc_html($lb[0]) . '</span>'
-                     . '<a class="tel" href="tel:' . esc_attr($r->customer_phone) . '">' . esc_html($r->customer_phone) . '</a>';
-                  echo '<span class="acts">';
-                  if ($st === 'confirmed' || $st === 'paid') {
-                      echo '<button class="mini ok" name="dorian_status" value="' . (int) $r->id . ':done">✓ انجام شد</button>'
-                         . '<button class="mini no" name="dorian_status" value="' . (int) $r->id . ':noshow">نیامد</button>'
-                         . '<button class="mini cx" name="dorian_status" value="' . (int) $r->id . ':cancelled">لغو</button>';
-                  } else {
-                      echo '<button class="mini undo" name="dorian_status" value="' . (int) $r->id . ':confirmed">↺ بازگردانی</button>';
-                  }
-                  echo '</span></div>';
-              }
+              foreach ($rows as $r) echo self::render_row($r, $labels);
               echo '</form>';
               echo '</div>';
-          } ?>
-        </div>
+          }
 
-        <?php $rw = self::revenue($pid, 7); $rm = self::revenue($pid, 30); ?>
-        <div class="pcard">
-          <h2>گزارش درآمد</h2>
-          <div class="stats">
-            <span class="stat stat--rev"><b><?php echo number_format($rw['s']); ?></b> تومان · هفتگی (۷ روز اخیر، <?php echo $rw['c']; ?> نوبت)</span>
-            <span class="stat stat--rev"><b><?php echo number_format($rm['s']); ?></b> تومان · ماهانه (۳۰ روز اخیر، <?php echo $rm['c']; ?> نوبت)</span>
-          </div>
-          <p class="hint" style="margin:10px 0 0">درآمد بر اساس نوبت‌هایی که آن‌ها را «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
-        </div>
+          // upcoming tab: everything from the 4th day onward, grouped by date
+          $fut = self::upcoming($pid, date('Y-m-d', strtotime('+3 day', current_time('timestamp'))));
+          echo '<div class="day" data-day="up">';
+          if (!$fut) {
+              echo '<p class="empty">نوبتی برای روزهای بعد ثبت نشده.</p>';
+          } else {
+              echo '<form method="post">';
+              wp_nonce_field('dorian_panel_' . $pid);
+              $cur = '';
+              foreach ($fut as $r) {
+                  $d = date('Y-m-d', strtotime($r->start_dt));
+                  if ($d !== $cur) {
+                      $cur = $d;
+                      echo '<div class="dhead"><span class="jdate" data-ymd="' . esc_attr($d) . '">' . esc_html($d) . '</span></div>';
+                  }
+                  echo self::render_row($r, $labels);
+              }
+              echo '</form>';
+          }
+          echo '</div>';
+          ?>
+            </div>
+          </section>
 
-        <form method="post">
-          <?php wp_nonce_field('dorian_panel_' . $pid); ?>
+          <section class="view<?php echo $sv === 'rev' ? ' on' : ''; ?>" data-view="rev">
+            <div class="pcard">
+              <h2>گزارش درآمد</h2>
+              <div class="tiles">
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rw['s']); ?></span><span class="tile__l">درآمد هفته · <?php echo $rw['c']; ?> نوبت</span></div></div>
+                <div class="tile tile--rev"><span class="tile__ic"><?php echo self::icon('coin'); ?></span><div class="tile__b"><span class="tile__n"><?php echo number_format($rm['s']); ?></span><span class="tile__l">درآمد ماه · <?php echo $rm['c']; ?> نوبت</span></div></div>
+              </div>
+              <p class="hint" style="margin:12px 0 0">درآمد بر اساس نوبت‌هایی که «انجام شد» علامت زده‌اید محاسبه می‌شود.</p>
+            </div>
+            <div class="pcard">
+              <h2>نمودار ۷ روز اخیر</h2>
+              <?php
+              $bd = self::revenue_by_day($pid, 7);
+              $mx = 1; foreach ($bd as $b) { if ($b['s'] > $mx) $mx = $b['s']; }
+              echo '<div class="chart">';
+              foreach ($bd as $b) {
+                  $hpct = (int) round($b['s'] / $mx * 100);
+                  echo '<div class="chart__col' . ($b['today'] ? ' is-today' : '') . '">'
+                     . '<span class="chart__v">' . ($b['s'] ? number_format($b['s'] / 1000) . 'K' : '') . '</span>'
+                     . '<div class="chart__bar" style="height:' . max(2, $hpct) . '%"></div>'
+                     . '<span class="chart__x">' . esc_html($b['x']) . '</span></div>';
+              }
+              echo '</div>';
+              ?>
+            </div>
+          </section>
+
+          <form method="post" class="view<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set">
+            <?php wp_nonce_field('dorian_panel_' . $pid); ?>
 
           <div class="pcard">
             <h2>ساعت کاری هفتگی</h2>
-            <p class="hint">برای هر روز، بازه‌ها را با ویرگول جدا کنید. مثال: <code style="direction:ltr">12:00-14:00, 18:00-20:00</code> — خالی بگذارید یعنی آن روز تعطیل است.</p>
-            <table class="hrs"><?php
-              $wd = array('شنبه', 'یک‌شنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه');
+            <p class="hint">روزهای کاری را روشن کنید و ساعتِ شروع و پایان را از لیست انتخاب کنید. برای هر روز می‌توانید چند بازه اضافه کنید (مثلاً صبح و عصر). روز خاموش یعنی تعطیل.</p>
+            <div id="wh" class="wh"></div>
+            <?php
               $hours = dorian_provider_hours($pid);
-              foreach ($wd as $w => $name) {
-                  $val = isset($hours[$w]) && is_array($hours[$w]) ? implode('، ', $hours[$w]) : '';
-                  echo '<tr><td style="width:90px">' . esc_html($name) . '</td><td><input type="text" name="hours[' . $w . ']" value="' . esc_attr($val) . '" placeholder="12:00-14:00, 18:00-20:00"></td></tr>';
+              for ($w = 0; $w < 7; $w++) {
+                  $val = isset($hours[$w]) && is_array($hours[$w]) ? implode(',', $hours[$w]) : '';
+                  echo '<input type="hidden" name="hours[' . $w . ']" id="wh_' . $w . '" value="' . esc_attr($val) . '">';
               }
-            ?></table>
+            ?>
           </div>
 
           <div class="pcard">
-            <h2>خدمات (قیمت و زمان)</h2>
-            <p class="hint">قیمت و مدتِ هر خدمت مختصِ شماست. اسلات‌ها بر اساس مدتِ خدمت ساخته می‌شوند.</p>
+            <h2>خدمات و زمان</h2>
+            <p class="hint">قیمت‌ها توسط مدیریت تعیین می‌شود و اینجا فقط برای اطلاع نمایش داده می‌شود. شما فقط مدتِ هر خدمت را تنظیم می‌کنید (اسلات‌ها بر اساس آن ساخته می‌شوند).</p>
             <div class="svcrow" style="font-size:.8rem;color:var(--muted)"><span>خدمت</span><span>قیمت (تومان)</span><span>مدت (دقیقه)</span></div>
             <?php foreach (dorian_provider_services($pid) as $sid => $s) {
                 echo '<div class="svcrow"><span class="nm">' . esc_html($s['name']) . ($s['group'] ? ' <small style="color:var(--muted)">· ' . esc_html($s['group']) . '</small>' : '') . '</span>'
-                   . '<input type="number" name="svc[' . $sid . '][price]" value="' . esc_attr($s['price']) . '">'
+                   . '<span class="svc-price">' . number_format((int) $s['price']) . '</span>'
                    . '<input type="number" step="5" name="svc[' . $sid . '][dur]" value="' . esc_attr($s['dur']) . '"></div>';
             } ?>
           </div>
@@ -480,17 +823,41 @@ class Dorian_Panel {
           <div class="pcard">
             <h2>روزهای تعطیل و مرخصی</h2>
             <p class="hint">روی هر روز کلیک کنید تا کل آن روز تعطیل شود (قرمز). برای مرخصیِ چندروزه، «حالت مرخصی» را بزنید و سپس ابتدا و انتهای بازه را کلیک کنید.</p>
-            <button type="button" class="btn btn--ghost" id="vac" style="margin-bottom:12px">🏖️ حالت مرخصی (بازهٔ چندروزه)</button>
-            <div class="calnav"><button type="button" id="cprev">‹</button><b id="ctitle">—</b><button type="button" id="cnext">›</button></div>
-            <div class="cal" id="cal"></div>
+            <button type="button" class="btn btn--ghost" id="vac">🏖️ حالت مرخصی (بازهٔ چندروزه)</button>
+            <div class="calwrap">
+              <div class="calnav"><button type="button" id="cprev" aria-label="ماه قبل">‹</button><b id="ctitle">—</b><button type="button" id="cnext" aria-label="ماه بعد">›</button></div>
+              <div class="cal" id="cal"></div>
+              <div class="callegend"><span><i class="lg-closed"></i> تعطیل</span><span><i class="lg-today"></i> امروز</span></div>
+            </div>
             <input type="hidden" name="closed" id="closed" value="<?php echo esc_attr(implode(',', dorian_provider_closed($pid))); ?>">
           </div>
 
-          <button class="btn btn--blue" name="dorian_save" value="1">ذخیرهٔ تنظیمات</button>
-        </form>
+            <div class="savebar"><button class="btn btn--blue btn--save" name="dorian_save" value="1">ذخیرهٔ تنظیمات</button></div>
+          </form>
+
+        </main>
+
+        <nav class="tabbar" aria-label="بخش‌های پنل">
+          <button type="button" class="tabbtn<?php echo $sv === 'dash' ? ' on' : ''; ?>" data-view="dash"><span class="ic"><?php echo self::icon('dash'); ?></span>پیشخوان</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'book' ? ' on' : ''; ?>" data-view="book"><span class="ic"><?php echo self::icon('book'); ?></span>نوبت‌ها</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'rev' ? ' on' : ''; ?>" data-view="rev"><span class="ic"><?php echo self::icon('rev'); ?></span>درآمد</button>
+          <button type="button" class="tabbtn<?php echo $sv === 'set' ? ' on' : ''; ?>" data-view="set"><span class="ic"><?php echo self::icon('set'); ?></span>تنظیمات</button>
+        </nav>
 
         <script>
-        // tabs
+        // bottom tab bar → switch top-level views
+        (function(){
+          var views=document.querySelectorAll('.view'),btns=document.querySelectorAll('.tabbtn');
+          function setBody(v){document.body.className=document.body.className.replace(/\bview-\S+/g,'').trim();document.body.classList.add('view-'+v);}
+          function show(v){
+            views.forEach(function(s){s.classList.toggle('on',s.dataset.view===v);});
+            btns.forEach(function(b){b.classList.toggle('on',b.dataset.view===v);});
+            setBody(v);window.scrollTo(0,0);
+          }
+          btns.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.view);});});
+          var cur=document.querySelector('.view.on');setBody(cur?cur.dataset.view:'dash');
+        })();
+        // day sub-tabs inside نوبت‌ها
         document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){
           document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
           document.querySelectorAll('.day').forEach(x=>x.classList.remove('on'));
@@ -532,6 +899,7 @@ class Dorian_Panel {
               var jdn=j2d(view.jy,view.jm,day),g=greg(view.jy,view.jm,day),c=document.createElement('div');c.className='c';c.textContent=fa(day);
               if(jdn<tdn){c.className+=' past'}
               else{
+                if(jdn===tdn)c.className+=' today';
                 if(closed.has(g))c.className+=' closed';
                 if(rangeMode&&rangeStart===jdn)c.className+=' selstart';
                 c.addEventListener('click',function(){
@@ -548,6 +916,9 @@ class Dorian_Panel {
           document.getElementById('cprev').addEventListener('click',function(){view.jm--;if(view.jm<1){view.jm=12;view.jy--}render()});
           document.getElementById('cnext').addEventListener('click',function(){view.jm++;if(view.jm>12){view.jm=1;view.jy++}render()});
           render();
+
+          /* ---- Jalaali date headers in the "upcoming" tab ---- */
+          document.querySelectorAll('.jdate').forEach(function(el){ if(el.dataset.ymd) el.textContent=jlabel(el.dataset.ymd); });
 
           /* ---- partial-day time blocks ---- */
           var blkEl=document.getElementById('blocks');
@@ -577,8 +948,190 @@ class Dorian_Panel {
             renderBlocks();
           }
         })();
+
+        /* ---- weekly working hours: option-based picker ---- */
+        (function(){
+          var wrap=document.getElementById('wh');
+          if(!wrap) return;
+          var WD=["شنبه","یک‌شنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنج‌شنبه","جمعه"];
+          var TIMES=[];
+          for(var t=6*60;t<=24*60;t+=30){var h=Math.floor(t/60),m=t%60;TIMES.push((h<10?'0':'')+h+':'+(m<10?'0':'')+m);}
+          var DEF=['12:00','20:00'];
+          function idx(v){return TIMES.indexOf(v);}
+          function opts(cur){return TIMES.map(function(t){return '<option'+(t===cur?' selected':'')+'>'+t+'</option>';}).join('');}
+          function hid(w){return document.getElementById('wh_'+w);}
+
+          // build model from the hidden inputs
+          var model=[];
+          for(var w=0;w<7;w++){
+            var rs=(hid(w).value||'').split(/[،,]/).map(function(s){return s.trim();}).filter(Boolean)
+                    .map(function(r){var pp=r.split('-');return [pp[0],pp[1]];})
+                    .filter(function(pp){return idx(pp[0])>=0&&idx(pp[1])>=0&&idx(pp[1])>idx(pp[0]);});
+            model[w]={on:rs.length>0, ranges:rs.length?rs:[DEF.slice()]};
+          }
+          function fa(s){return String(s).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[+d];});}
+          function commit(w){var mm=model[w];hid(w).value=mm.on?mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('،'):'';}
+          function summary(w){var mm=model[w];return mm.on?fa(mm.ranges.map(function(r){return r[0]+'-'+r[1];}).join('  ·  ')):'تعطیل';}
+
+          var openW=-1; // accordion: only one day expanded at a time
+          function render(){
+            wrap.innerHTML='';
+            for(var w=0;w<7;w++){(function(w){
+              var mm=model[w];
+              var day=document.createElement('div');day.className='wh-day'+(mm.on?' on':'')+(openW===w?' open':'');
+              var head=document.createElement('div');head.className='wh-head';
+              head.innerHTML='<label class="switch"><input type="checkbox"'+(mm.on?' checked':'')+' aria-label="'+WD[w]+'"><span class="knob"></span></label>'
+                +'<span class="wh-name">'+WD[w]+'</span><span class="wh-sum">'+summary(w)+'</span><span class="wh-chev" aria-hidden="true">⌄</span>';
+              head.querySelector('.switch').addEventListener('click',function(e){e.stopPropagation();});
+              head.querySelector('input').addEventListener('change',function(e){mm.on=e.target.checked;if(mm.on){if(!mm.ranges.length)mm.ranges=[DEF.slice()];openW=w;}commit(w);render();});
+              head.addEventListener('click',function(){openW=(openW===w?-1:w);render();});
+              day.appendChild(head);
+              if(openW===w){
+                var body=document.createElement('div');body.className='wh-body';
+                if(!mm.on){
+                  body.innerHTML='<p class="hint" style="margin:0">این روز تعطیل است. برای تنظیم ساعت، کلید را روشن کنید.</p>';
+                }else{
+                  mm.ranges.forEach(function(r,ri){
+                    var row=document.createElement('div');row.className='wh-range';
+                    row.innerHTML='<span class="wh-lbl">از</span><select class="wh-from">'+opts(r[0])+'</select>'
+                      +'<span class="wh-lbl">تا</span><select class="wh-to">'+opts(r[1])+'</select>'
+                      +'<button type="button" class="wh-rm" aria-label="حذف بازه">✕</button>';
+                    var fs=row.querySelector('.wh-from'),ts=row.querySelector('.wh-to');
+                    fs.addEventListener('change',function(){r[0]=fs.value;if(idx(r[1])<=idx(r[0])){r[1]=TIMES[Math.min(idx(r[0])+1,TIMES.length-1)];ts.value=r[1];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
+                    ts.addEventListener('change',function(){r[1]=ts.value;if(idx(r[1])<=idx(r[0])){r[0]=TIMES[Math.max(idx(r[1])-1,0)];fs.value=r[0];}commit(w);day.querySelector('.wh-sum').textContent=summary(w);});
+                    row.querySelector('.wh-rm').addEventListener('click',function(){mm.ranges.splice(ri,1);if(!mm.ranges.length)mm.on=false;commit(w);render();});
+                    body.appendChild(row);
+                  });
+                  var tools=document.createElement('div');tools.className='wh-tools';
+                  var add=document.createElement('button');add.type='button';add.className='wh-add';add.textContent='+ افزودن بازه';
+                  add.addEventListener('click',function(){mm.ranges.push(['18:00','20:00']);commit(w);render();});
+                  var cp=document.createElement('button');cp.type='button';cp.className='wh-copy';cp.textContent='اعمال به همهٔ روزها';
+                  cp.addEventListener('click',function(){for(var x=0;x<7;x++){model[x]={on:mm.on,ranges:mm.ranges.map(function(r){return r.slice();})};commit(x);}render();});
+                  tools.appendChild(add);tools.appendChild(cp);
+                  body.appendChild(tools);
+                }
+                day.appendChild(body);
+              }
+              wrap.appendChild(day);
+            })(w);}
+          }
+          for(var w2=0;w2<7;w2++)commit(w2); // normalize hidden values
+          render();
+        })();
+
+        /* ---- search / filter bookings by name or phone ---- */
+        (function(){
+          var inp=document.getElementById('bkSearch'); if(!inp) return;
+          var xbtn=document.getElementById('bkSearchX'),card=inp.closest('.pcard');
+          function norm(s){return s.replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d);}).toLowerCase().trim();}
+          function apply(){
+            var q=norm(inp.value);
+            card.classList.toggle('searching',q.length>0);
+            if(xbtn) xbtn.hidden=!q;
+            var hits=0;
+            card.querySelectorAll('.bk').forEach(function(bk){
+              var show=!q || (bk.dataset.q||'').indexOf(q)>=0;
+              bk.classList.toggle('hidden',!show); if(show&&q)hits++;
+            });
+            var res=card.querySelector('.search-empty');
+            if(q&&hits===0){ if(!res){res=document.createElement('p');res.className='empty search-empty';res.textContent='نتیجه‌ای پیدا نشد.';card.appendChild(res);} res.hidden=false; }
+            else if(res){ res.hidden=true; }
+          }
+          inp.addEventListener('input',apply);
+          if(xbtn) xbtn.addEventListener('click',function(){inp.value='';apply();inp.focus();});
+        })();
+
+        /* ---- today timeline: free-gap chips + "now" marker ---- */
+        (function(){
+          function fmt(m){var h=Math.floor(m/60),mm=m%60;if(h&&mm)return h+' ساعت و '+mm+' دقیقه';if(h)return h+' ساعت';return mm+' دقیقه';}
+          function build(container,isToday){
+            var rows=[].slice.call(container.querySelectorAll('.bk')).filter(function(b){return !b.classList.contains('bk--cancelled');});
+            var prevEnd=null;
+            rows.forEach(function(bk){
+              var s=+bk.dataset.start,d=+bk.dataset.dur;
+              if(prevEnd!==null && s-prevEnd>=15){
+                var g=document.createElement('div');g.className='gap';g.innerHTML='<span>'+fmt(s-prevEnd)+' آزاد</span>';
+                bk.parentNode.insertBefore(g,bk);
+              }
+              prevEnd=(prevEnd===null)?s+d:Math.max(prevEnd,s+d);
+            });
+            if(isToday){
+              var now=new Date().getHours()*60+new Date().getMinutes(),line=document.createElement('div');line.className='nowline';line.innerHTML='<span>الان</span>';
+              var placed=false;
+              rows.forEach(function(bk){ if(!placed&&(+bk.dataset.start)>now){bk.parentNode.insertBefore(line,bk);placed=true;} });
+              if(!placed) container.appendChild(line);
+            }
+          }
+          document.querySelectorAll('.daylist').forEach(function(c){ build(c,c.dataset.today==='1'); });
+        })();
+
+        /* ---- new-booking notifications (foreground poll) ---- */
+        (function(){
+          var meta=document.getElementById('pnl'); if(!meta) return;
+          var pid=meta.dataset.pid,url=meta.dataset.ajax,last=+meta.dataset.max||0;
+          function fa(s){return String(s).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[+d];});}
+          var btn=document.getElementById('notifyBtn');
+          if(btn){
+            if(!('Notification' in window)) btn.style.display='none';
+            else if(Notification.permission==='granted') btn.classList.add('on');
+            btn.addEventListener('click',function(){ if(!('Notification' in window))return; Notification.requestPermission().then(function(pm){ if(pm==='granted'){btn.classList.add('on');} }); });
+          }
+          function toast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);requestAnimationFrame(function(){t.classList.add('on');});setTimeout(function(){t.classList.remove('on');setTimeout(function(){t.parentNode&&t.remove();},350);},6000);}
+          function poll(){
+            fetch(url+'?action=dorian_panel_ping&pid='+encodeURIComponent(pid),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+              if(!j||!j.success)return; var m=+j.data.max;
+              if(last>0 && m>last){
+                var msg='نوبت جدید'+(j.data.name?': '+j.data.name:'')+(j.data.when?' — '+fa(j.data.when):'');
+                toast(msg);
+                if(('Notification' in window)&&Notification.permission==='granted'){try{new Notification('نوبت جدید دوریان',{body:msg});}catch(e){}}
+              }
+              last=m;
+            }).catch(function(){});
+          }
+          setInterval(poll,60000);
+        })();
+
+        /* ---- splash / app-launch feel ---- */
+        (function(){
+          var s=document.getElementById('splash'); if(!s) return;
+          function hide(){ s.classList.add('hide'); setTimeout(function(){s.parentNode&&s.remove();},450); }
+          if(document.readyState==='complete') setTimeout(hide,300); else window.addEventListener('load',function(){setTimeout(hide,300);});
+          setTimeout(hide,1600);
+        })();
+
+        /* ---- Persian numerals everywhere (skip form controls) ---- */
+        (function(){
+          var P='۰۱۲۳۴۵۶۷۸۹',skip={SCRIPT:1,STYLE:1,SELECT:1,OPTION:1,INPUT:1,TEXTAREA:1};
+          function fa(s){return s.replace(/[0-9]/g,function(d){return P[+d];}).replace(/([۰-۹])[,،]([۰-۹])/g,'$1٬$2').replace(/([۰-۹])[,،]([۰-۹])/g,'$1٬$2');}
+          function walk(node){
+            for(var n=node.firstChild;n;n=n.nextSibling){
+              if(n.nodeType===3){ if(/[0-9]/.test(n.nodeValue)) n.nodeValue=fa(n.nodeValue); }
+              else if(n.nodeType===1 && !skip[n.tagName] && !n.hasAttribute('data-nofa')) walk(n);
+            }
+          }
+          walk(document.body);
+        })();
         </script>
         <?php
         self::foot();
     }
+
+    /** Lightweight poll endpoint: latest booking id for a provider (cookie-gated). */
+    public static function ping() {
+        $pid = isset($_GET['pid']) ? (int) $_GET['pid'] : 0;
+        if (!$pid || get_post_type($pid) !== 'dorian_provider' || !self::is_authed($pid)) wp_send_json_error();
+        global $wpdb;
+        $t = Dorian_DB::table();
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, customer_name, start_dt FROM $t WHERE FIND_IN_SET(%d, provider_ids) ORDER BY id DESC LIMIT 1",
+            $pid
+        ));
+        wp_send_json_success(array(
+            'max'  => $row ? (int) $row->id : 0,
+            'name' => $row ? $row->customer_name : '',
+            'when' => $row ? date('H:i', strtotime($row->start_dt)) : '',
+        ));
+    }
 }
+add_action('wp_ajax_dorian_panel_ping', array('Dorian_Panel', 'ping'));
+add_action('wp_ajax_nopriv_dorian_panel_ping', array('Dorian_Panel', 'ping'));
