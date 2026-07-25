@@ -537,11 +537,13 @@ class Dorian_Manage {
 }
 
 /* ---------- routing: /<manage_slug> -> management panel ---------- */
-add_action('init', function () {
+/** Named so activation can register this rule without re-firing the whole `init` action. */
+function dorian_manage_register_routes() {
     add_rewrite_tag('%dorian_manage%', '1');
     $slug = Dorian_Manage_slug();
     if ($slug) add_rewrite_rule('^' . preg_quote($slug, '#') . '/?$', 'index.php?dorian_manage=1', 'top');
-});
+}
+add_action('init', 'dorian_manage_register_routes');
 add_action('template_redirect', function () {
     if (get_query_var('dorian_manage')) { Dorian_Manage::handle(); exit; }
 });

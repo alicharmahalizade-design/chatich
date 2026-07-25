@@ -120,13 +120,15 @@ function dorian_form_providers() {
 }
 
 /* ---------- rewrite: /<slug> -> panel ---------- */
-add_action('init', function () {
+/** Named so activation can register these rules without re-firing the whole `init` action. */
+function dorian_panel_register_routes() {
     add_rewrite_tag('%dorian_pslug%', '([^&/]+)');
     foreach (get_posts(array('post_type' => 'dorian_provider', 'numberposts' => -1, 'fields' => 'ids')) as $pid) {
         $slug = get_post_meta($pid, '_dorian_slug', true);
         if ($slug) add_rewrite_rule('^' . preg_quote($slug, '#') . '/?$', 'index.php?dorian_pslug=' . $slug, 'top');
     }
-});
+}
+add_action('init', 'dorian_panel_register_routes');
 add_action('save_post_dorian_provider', function () { flush_rewrite_rules(); });
 
 /* ---------- render the panel ---------- */
