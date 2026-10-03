@@ -1,14 +1,13 @@
-/* Online Fitting Room — settings screen. Font: Dana (variable) */
-@font-face{font-family:'OFR Dana';src:url('../fonts/dana.woff2') format('woff2');font-weight:10 990;font-display:swap}
+/* Online Fitting Room — settings screen. Font: Vazirmatn (SIL OFL, bundled; @font-face is added inline by PHP). */
 
 .ofr-app{
 	--ofr-orange:#ff6a2b;--ofr-orange-2:#f2501a;--ofr-orange-soft:#fff2ea;--ofr-ink:#151821;--ofr-text:#1f2430;
 	--ofr-muted:#6b7280;--ofr-line:#e8eaee;--ofr-bg:#f6f7f9;--ofr-ok:#0f9d58;--ofr-warn:#c2410c;--ofr-radius:18px;
-	margin:0 0 0 20px;font-family:'OFR Dana',Tahoma,sans-serif;color:var(--ofr-text);
+	margin:0 0 0 20px;font-family:'OFR Vazirmatn',Tahoma,sans-serif;color:var(--ofr-text);
 }
 .rtl .ofr-app{margin:0 0 0 20px}
 /* Beats WordPress RTL rules such as ".rtl h1{font-family:Tahoma,Arial}" on headings, inputs and buttons. */
-body .wrap.ofr-app,body .wrap.ofr-app *{box-sizing:border-box;font-family:'OFR Dana',Tahoma,sans-serif}
+body .wrap.ofr-app,body .wrap.ofr-app *{box-sizing:border-box;font-family:'OFR Vazirmatn',Tahoma,sans-serif}
 body .wrap.ofr-app code{font-family:ui-monospace,Menlo,Consolas,monospace}
 .ofr-icon{width:18px;height:18px;flex:none}
 
@@ -48,6 +47,8 @@ body .wrap.ofr-app code{font-family:ui-monospace,Menlo,Consolas,monospace}
 .ofr-alert a{color:var(--ofr-orange-2);font-weight:800;text-decoration:underline;text-underline-offset:4px}
 .ofr-alert--info{border-color:var(--ofr-line);background:#fff;color:var(--ofr-text)}
 .ofr-alert--ok{border-color:#bfe8cf;background:#effaf3;color:#0b6b3c}
+.ofr-btn--ghost .ofr-icon{width:16px;height:16px}
+.ofr-app [data-ofr-turnstile][hidden]{display:none}
 .ofr-alert--error{border-color:#ffd9c7;background:var(--ofr-orange-soft);color:#7c2d12}
 
 /* Stats */

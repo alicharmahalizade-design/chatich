@@ -33,10 +33,18 @@ final class OFR_Admin {
 
 	public static function ip_sources() {
 		return array(
-			'remote_addr' => __( 'ندارد', 'online-fitting-room' ),
-			'cloudflare'  => 'Cloudflare',
-			'x_forwarded' => __( 'آروان‌کلاد / پروکسی دیگر (X-Forwarded-For)', 'online-fitting-room' ),
-			'x_real_ip'   => 'Nginx (X-Real-IP)',
+			'auto'        => __( 'خودکار (پیشنهادی): Cloudflare، آروان‌کلاد و پروکسی‌های مورد اعتماد', 'online-fitting-room' ),
+			'remote_addr' => __( 'بدون CDN — فقط IP اتصال', 'online-fitting-room' ),
+			'cloudflare'  => __( 'همیشه Cloudflare (CF-Connecting-IP)', 'online-fitting-room' ),
+			'x_forwarded' => __( 'همیشه X-Forwarded-For', 'online-fitting-room' ),
+			'x_real_ip'   => __( 'همیشه Nginx (X-Real-IP)', 'online-fitting-room' ),
+		);
+	}
+
+	public static function fonts() {
+		return array(
+			'theme'     => __( 'فونت قالب سایت (پیشنهادی، بدون بارگذاری اضافه)', 'online-fitting-room' ),
+			'vazirmatn' => __( 'وزیرمتن همراه افزونه (۴۸ کیلوبایت، مجوز آزاد OFL)', 'online-fitting-room' ),
 		);
 	}
 
@@ -48,6 +56,7 @@ final class OFR_Admin {
 	public static function assets( $hook ) {
 		if ( ! self::$hook || $hook !== self::$hook ) return;
 		wp_enqueue_style( 'ofr-admin', plugins_url( 'assets/css/admin.css', OFR_FILE ), array(), Online_Fitting_Room::VERSION );
+		wp_add_inline_style( 'ofr-admin', Online_Fitting_Room::font_face_css() );
 		wp_enqueue_script( 'ofr-admin', plugins_url( 'assets/js/admin.js', OFR_FILE ), array(), Online_Fitting_Room::VERSION, true );
 		wp_localize_script( 'ofr-admin', 'OFRAdmin', array(
 			'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
@@ -97,6 +106,12 @@ final class OFR_Admin {
 			'api_key'            => $api_key,
 			'button_text'        => isset( $input['button_text'] ) ? sanitize_text_field( $input['button_text'] ) : $old['button_text'],
 			'primary_color'      => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: $old['primary_color'],
+			'font'               => array_key_exists( $input['font'] ?? '', self::fonts() ) ? $input['font'] : $old['font'],
+			'photo_guide'        => $on( 'photo_guide' ),
+			'trusted_proxies'    => implode( "\n", OFR_Client::parse_cidrs( $input['trusted_proxies'] ?? $old['trusted_proxies'] ) ),
+			'captcha'            => array_key_exists( $input['captcha'] ?? '', OFR_Captcha::modes() ) ? $input['captcha'] : $old['captcha'],
+			'turnstile_site'     => isset( $input['turnstile_site'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $input['turnstile_site'] ) : $old['turnstile_site'],
+			'turnstile_secret'   => isset( $input['turnstile_secret'] ) && '' !== trim( $input['turnstile_secret'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $input['turnstile_secret'] ) : $old['turnstile_secret'],
 			'accent_color'       => sanitize_hex_color( $input['accent_color'] ?? '' ) ?: $old['accent_color'],
 			'default_category'   => array_key_exists( $input['default_category'] ?? '', self::categories() ) ? $input['default_category'] : $old['default_category'],
 			'require_login'      => $on( 'require_login' ),
@@ -135,9 +150,40 @@ final class OFR_Admin {
 			'shield' => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
 			'alert'  => '<path d="M12 3l10 18H2zM12 10v5M12 18h.01"/>',
 			'test'   => '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+			'lock'   => '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
+			'health' => '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
 			'support' => '<path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v3a2 2 0 0 0 2 2h1v-6H6a2 2 0 0 0-2 2M20 13v3a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2"/><path d="M17 18c0 1.7-2.2 3-5 3"/>',
 		);
 		return '<svg class="ofr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ( $paths[ $name ] ?? '' ) . '</svg>';
+	}
+
+	/** Settings-page warning when shoppers would all count as one CDN address (or the header can be forged). */
+	public static function proxy_hint() {
+		$seen = get_option( 'ofr_client_seen' );
+		if ( ! is_array( $seen ) || $seen['time'] < time() - 7 * DAY_IN_SECONDS ) return '';
+		switch ( $seen['hint'] ) {
+			case 'unresolved':
+				return __( 'سایت پشت CDN است ولی IP واقعی مشتری‌ها پیدا نمی‌شود؛ سقف روزانه هر کاربر بین همه مشتری‌ها مشترک شده است.', 'online-fitting-room' );
+			case 'unknown_cdn':
+				return __( 'درخواست‌ها هدر CDN دارند ولی از آدرس شناخته‌شده‌ای نمی‌آیند؛ بازه IP آن CDN را در «پروکسی‌های مورد اعتماد» وارد کنید.', 'online-fitting-room' );
+			case 'spoofable':
+				return __( 'گزینه «همیشه Cloudflare» انتخاب شده ولی درخواست‌ها از Cloudflare نمی‌آیند؛ هر کسی می‌تواند IP خودش را جعل کند. «خودکار» را انتخاب کنید.', 'online-fitting-room' );
+		}
+		return '';
+	}
+
+	/** One line under the IP setting: what the latest visit looked like. */
+	private static function ip_status() {
+		$seen  = get_option( 'ofr_client_seen' );
+		$names = array( 'cloudflare' => 'Cloudflare', 'arvan' => __( 'آروان‌کلاد', 'online-fitting-room' ), 'custom' => __( 'پروکسی مورد اعتماد', 'online-fitting-room' ), 'private' => __( 'پروکسی داخلی', 'online-fitting-room' ), 'x_forwarded' => 'X-Forwarded-For', 'x_real_ip' => 'X-Real-IP' );
+		$base  = __( 'حالت خودکار هدر IP را فقط وقتی می‌پذیرد که درخواست واقعاً از CDN آمده باشد؛ برای همه سایت‌ها امن است.', 'online-fitting-room' );
+		if ( ! is_array( $seen ) ) return $base;
+		if ( $seen['via'] ) {
+			/* translators: 1: CDN name, 2: time span. */
+			return $base . ' ' . sprintf( __( 'آخرین بازدید: از طریق %1$s، %2$s پیش ✓', 'online-fitting-room' ), $names[ $seen['via'] ] ?? $seen['via'], human_time_diff( $seen['time'] ) );
+		}
+		/* translators: %s: time span. */
+		return $base . ' ' . sprintf( __( 'آخرین بازدید: اتصال مستقیم، %s پیش.', 'online-fitting-room' ), human_time_diff( $seen['time'] ) );
 	}
 
 	public static function page() {
@@ -159,6 +205,7 @@ final class OFR_Admin {
 				</div>
 				<nav class="ofr-hero__actions">
 					<a class="ofr-btn ofr-btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>"><?php esc_html_e( 'محصولات', 'online-fitting-room' ); ?></a>
+					<a class="ofr-btn ofr-btn--ghost" href="<?php echo esc_url( admin_url( 'site-health.php' ) ); ?>"><?php echo self::icon( 'health' ); ?><?php esc_html_e( 'سلامت سایت', 'online-fitting-room' ); ?></a>
 					<button type="button" class="ofr-btn ofr-btn--primary" id="ofr-test"><?php echo self::icon( 'test' ); ?><?php esc_html_e( 'تست اتصال', 'online-fitting-room' ); ?></button>
 				</nav>
 			</header>
@@ -175,6 +222,9 @@ final class OFR_Admin {
 					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( $warning ); ?></span><a href="#ofr-api-key"><?php esc_html_e( 'اصلاح کلید', 'online-fitting-room' ); ?></a></div>
 				<?php elseif ( ! $has_key ) : ?>
 					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( __( 'هنوز کلید API ثبت نشده است؛ تا آن زمان پرو برای مشتری‌ها کار نمی‌کند.', 'online-fitting-room' ) . ' ' . OFR_Api::support_text() ); ?></span><a href="#ofr-api-key"><?php esc_html_e( 'ثبت کلید', 'online-fitting-room' ); ?></a></div>
+				<?php endif; ?>
+				<?php $proxy_hint = self::proxy_hint(); if ( $proxy_hint ) : ?>
+					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( $proxy_hint ); ?></span><a href="#ofr-limits"><?php esc_html_e( 'بررسی تنظیم', 'online-fitting-room' ); ?></a></div>
 				<?php endif; ?>
 
 				<section class="ofr-stats" aria-label="<?php esc_attr_e( 'وضعیت', 'online-fitting-room' ); ?>">
@@ -222,14 +272,26 @@ final class OFR_Admin {
 							<?php endif; ?>
 						</section>
 
-						<section class="ofr-card">
+						<section class="ofr-card" id="ofr-limits">
 							<header class="ofr-card__head"><span class="ofr-card__icon"><?php echo self::icon( 'shield' ); ?></span><div><h2><?php esc_html_e( 'محدودیت مصرف', 'online-fitting-room' ); ?></h2><p><?php esc_html_e( 'از اعتبار حساب مربع API در برابر استفاده بی‌رویه محافظت کنید.', 'online-fitting-room' ); ?></p></div></header>
 							<div class="ofr-field"><?php self::toggle( 'require_login', $s['require_login'], __( 'فقط کاربران عضو', 'online-fitting-room' ), __( 'مهمان‌ها برای پرو باید وارد حساب کاربری شوند.', 'online-fitting-room' ) ); ?></div>
 							<div class="ofr-row">
 								<div class="ofr-field"><label class="ofr-label" for="ofr-limit-user"><?php esc_html_e( 'سقف روزانه هر کاربر', 'online-fitting-room' ); ?></label><input id="ofr-limit-user" class="ofr-input" type="number" min="0" max="1000" name="<?php echo self::name( 'limit_per_user_day' ); ?>" value="<?php echo esc_attr( $s['limit_per_user_day'] ); ?>"><p class="ofr-help"><?php esc_html_e( '۰ یعنی نامحدود', 'online-fitting-room' ); ?></p></div>
 								<div class="ofr-field"><label class="ofr-label" for="ofr-limit-site"><?php esc_html_e( 'سقف روزانه کل سایت', 'online-fitting-room' ); ?></label><input id="ofr-limit-site" class="ofr-input" type="number" min="0" max="100000" name="<?php echo self::name( 'limit_site_day' ); ?>" value="<?php echo esc_attr( $s['limit_site_day'] ); ?>"><p class="ofr-help"><?php esc_html_e( '۰ یعنی نامحدود', 'online-fitting-room' ); ?></p></div>
 							</div>
-							<div class="ofr-field"><label class="ofr-label" for="ofr-ip_source"><?php esc_html_e( 'سایت پشت CDN', 'online-fitting-room' ); ?></label><?php self::select( 'ip_source', self::ip_sources(), $s['ip_source'] ); ?><p class="ofr-help"><?php esc_html_e( 'برای شناختن درست هر مشتری در سقف روزانه. اگر از Cloudflare یا آروان استفاده نمی‌کنید، «ندارد» بماند.', 'online-fitting-room' ); ?></p></div>
+							<div class="ofr-field"><label class="ofr-label" for="ofr-ip_source"><?php esc_html_e( 'سایت پشت CDN', 'online-fitting-room' ); ?></label><?php self::select( 'ip_source', self::ip_sources(), $s['ip_source'] ); ?><p class="ofr-help"><?php echo esc_html( self::ip_status() ); ?></p></div>
+							<div class="ofr-field"><label class="ofr-label" for="ofr-trusted"><?php esc_html_e( 'پروکسی‌های مورد اعتماد (اختیاری)', 'online-fitting-room' ); ?></label><textarea id="ofr-trusted" class="ofr-input" rows="2" dir="ltr" placeholder="203.0.113.0/24" name="<?php echo self::name( 'trusted_proxies' ); ?>"><?php echo esc_textarea( $s['trusted_proxies'] ); ?></textarea><p class="ofr-help"><?php esc_html_e( 'فقط اگر سایت پشت CDN یا لودبالانسر دیگری است: بازه IP آن (هر خط یک مورد). IP مهمان‌ها با یک شناسه امضاشده در مرورگر هم ترکیب می‌شود تا مشتریانی که IP مشترک اپراتور موبایل دارند سهم هم را مصرف نکنند.', 'online-fitting-room' ); ?></p></div>
+						</section>
+
+						<section class="ofr-card ofr-card--wide" id="ofr-security">
+							<header class="ofr-card__head"><span class="ofr-card__icon"><?php echo self::icon( 'lock' ); ?></span><div><h2><?php esc_html_e( 'محافظت در برابر ربات', 'online-fitting-room' ); ?></h2><p><?php esc_html_e( 'پیش از هر پرو مهمان، یک تأیید امنیتی انجام می‌شود تا ربات‌ها اعتبار حساب را خرج نکنند.', 'online-fitting-room' ); ?></p></div></header>
+							<div class="ofr-field"><label class="ofr-label" for="ofr-captcha"><?php esc_html_e( 'روش تأیید', 'online-fitting-room' ); ?></label><?php self::select( 'captcha', OFR_Captcha::modes(), $s['captcha'] ); ?><p class="ofr-help"><?php esc_html_e( 'چالش داخلی برای مشتری کاملاً نامرئی است، به هیچ سرویس خارجی نیاز ندارد و روی هاست‌های داخل ایران هم کار می‌کند. کاربران عضو به‌جای آن با سقف حساب خودشان کنترل می‌شوند.', 'online-fitting-room' ); ?></p></div>
+							<div class="ofr-row" data-ofr-turnstile>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-ts-site"><?php esc_html_e( 'Site Key کلادفلر', 'online-fitting-room' ); ?></label><input id="ofr-ts-site" class="ofr-input" dir="ltr" autocomplete="off" name="<?php echo self::name( 'turnstile_site' ); ?>" value="<?php echo esc_attr( $s['turnstile_site'] ); ?>"></div>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-ts-secret"><?php esc_html_e( 'Secret Key کلادفلر', 'online-fitting-room' ); ?></label><input id="ofr-ts-secret" class="ofr-input" type="password" dir="ltr" autocomplete="new-password" name="<?php echo self::name( 'turnstile_secret' ); ?>" placeholder="<?php echo esc_attr( $s['turnstile_secret'] ? __( 'ذخیره شده؛ برای حفظ خالی بگذارید', 'online-fitting-room' ) : '0x…' ); ?>"></div>
+							</div>
+							<p class="ofr-help" data-ofr-turnstile><?php esc_html_e( 'کلیدها را از داشبورد Cloudflare ← Turnstile بگیرید. اگر هاست داخل ایران است و به Cloudflare دسترسی ندارد، چالش داخلی را انتخاب کنید؛ بدون کلید، چالش داخلی استفاده می‌شود.', 'online-fitting-room' ); ?></p>
+							<p class="ofr-hint"><?php echo self::icon( 'shield' ); ?><span><?php esc_html_e( 'سقف‌های روزانه به‌صورت اتمیک در پایگاه داده شمرده می‌شوند؛ حتی صدها درخواست هم‌زمان نمی‌توانند از آن‌ها عبور کنند. پروی ناموفق از سهم مشتری کم نمی‌شود.', 'online-fitting-room' ); ?></span></p>
 						</section>
 
 						<section class="ofr-card ofr-card--wide">
@@ -237,10 +299,12 @@ final class OFR_Admin {
 							<div class="ofr-row">
 								<div class="ofr-field"><?php self::toggle( 'enabled', $s['enabled'], __( 'اتاق پُرُو فعال باشد', 'online-fitting-room' ) ); ?></div>
 								<div class="ofr-field"><?php self::toggle( 'auto_display', $s['auto_display'], __( 'نمایش خودکار در صفحه محصول', 'online-fitting-room' ), __( 'اگر از ویجت المنتور یا شورت‌کد [online_fitting_room] استفاده می‌کنید، خاموش کنید.', 'online-fitting-room' ) ); ?></div>
+								<div class="ofr-field"><?php self::toggle( 'photo_guide', $s['photo_guide'], __( 'راهنمای تصویری عکس', 'online-fitting-room' ), __( 'نمونه عکس درست و نادرست در پنجره پرو؛ پروهای ناموفق را کم می‌کند.', 'online-fitting-room' ) ); ?></div>
 							</div>
 							<div class="ofr-row">
 								<div class="ofr-field"><label class="ofr-label" for="ofr-button-text"><?php esc_html_e( 'متن دکمه', 'online-fitting-room' ); ?></label><input id="ofr-button-text" class="ofr-input" name="<?php echo self::name( 'button_text' ); ?>" value="<?php echo esc_attr( $s['button_text'] ); ?>"></div>
 								<div class="ofr-field"><label class="ofr-label" for="ofr-default_category"><?php esc_html_e( 'نوع لباس پیش‌فرض', 'online-fitting-room' ); ?></label><?php self::select( 'default_category', self::categories(), $s['default_category'] ); ?><p class="ofr-help"><?php esc_html_e( 'در ویرایش هر محصول قابل تغییر است.', 'online-fitting-room' ); ?></p></div>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-font"><?php esc_html_e( 'فونت', 'online-fitting-room' ); ?></label><?php self::select( 'font', self::fonts(), $s['font'] ); ?></div>
 								<div class="ofr-field"><span class="ofr-label"><?php esc_html_e( 'رنگ‌ها', 'online-fitting-room' ); ?></span><div class="ofr-colors"><label><input type="color" name="<?php echo self::name( 'primary_color' ); ?>" value="<?php echo esc_attr( $s['primary_color'] ); ?>"> <?php esc_html_e( 'اصلی', 'online-fitting-room' ); ?></label><label><input type="color" name="<?php echo self::name( 'accent_color' ); ?>" value="<?php echo esc_attr( $s['accent_color'] ); ?>"> <?php esc_html_e( 'تأکیدی', 'online-fitting-room' ); ?></label></div></div>
 							</div>
 							<div class="ofr-field"><label class="ofr-label" for="ofr-privacy"><?php esc_html_e( 'متن رضایت مشتری', 'online-fitting-room' ); ?></label><textarea id="ofr-privacy" class="ofr-input" rows="3" name="<?php echo self::name( 'privacy_text' ); ?>"><?php echo esc_textarea( $s['privacy_text'] ); ?></textarea></div>

@@ -115,7 +115,9 @@ final class OFR_Image {
 			if ( ! $info ) return new WP_Error( 'ofr_convert_failed', 'Corrupt image.', array( 'format' => $format ) );
 			$rotated = self::exif_orientation( $path ) > 1;
 			if ( ! $rotated && max( $info[0], $info[1] ) <= $max_dim && filesize( $path ) <= $max_bytes ) {
-				return array( 'bytes' => file_get_contents( $path ), 'mime' => $info['mime'], 'format' => $format ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+				// Lossless, but without EXIF/XMP/IPTC: no GPS position, camera serial or name leaves the site.
+				$clean = self::strip_jpeg_metadata( (string) file_get_contents( $path ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+				if ( false !== $clean ) return array( 'bytes' => $clean, 'mime' => 'image/jpeg', 'format' => $format );
 			}
 		}
 		if ( ! self::server_can( $format ) ) {
@@ -193,6 +195,69 @@ final class OFR_Image {
 		ob_start();
 		imagejpeg( $out, null, 90 );
 		return ob_get_clean();
+	}
+
+	/**
+	 * Removes every metadata segment from a JPEG without re-encoding it: EXIF
+	 * (GPS, device, date), XMP, IPTC/Photoshop, comments and the extra images
+	 * phones append after the main one (depth and gain maps carry their own
+	 * EXIF). Kept: JFIF, the ICC colour profile and Adobe's colour transform
+	 * flag, which decoders need to show colours correctly.
+	 *
+	 * @return string|false Clean JPEG, or false when the file is not a well-formed JPEG.
+	 */
+	public static function strip_jpeg_metadata( $data ) {
+		$len = strlen( $data );
+		if ( $len < 4 || "\xFF\xD8" !== substr( $data, 0, 2 ) ) return false;
+		$out = "\xFF\xD8";
+		$pos = 2;
+		while ( $pos < $len ) {
+			if ( "\xFF" !== $data[ $pos ] ) return false;
+			while ( $pos < $len && "\xFF" === $data[ $pos ] ) $pos++; // Fill bytes.
+			if ( $pos >= $len ) return false;
+			$marker = ord( $data[ $pos ] );
+			$pos++;
+			if ( 0xD9 === $marker ) return $out . "\xFF\xD9";
+			if ( ( $marker >= 0xD0 && $marker <= 0xD7 ) || 0x01 === $marker ) { // No length field.
+				$out .= "\xFF" . chr( $marker );
+				continue;
+			}
+			if ( $pos + 2 > $len ) return false;
+			$size = ( ord( $data[ $pos ] ) << 8 ) | ord( $data[ $pos + 1 ] );
+			if ( $size < 2 || $pos + $size > $len ) return false;
+			$segment = substr( $data, $pos, $size );
+			$pos    += $size;
+			if ( 0xDA === $marker ) {
+				// Start of scan: entropy-coded data follows. The first EOI ends the main image; anything after it is dropped.
+				$end = self::find_eoi( $data, $pos );
+				if ( false === $end ) return false;
+				return $out . "\xFF\xDA" . $segment . substr( $data, $pos, $end - $pos ) . "\xFF\xD9";
+			}
+			$keep = 0xE0 === $marker // APP0 JFIF.
+				|| ( 0xE2 === $marker && 0 === strncmp( substr( $segment, 2 ), "ICC_PROFILE\0", 12 ) )
+				|| 0xEE === $marker // APP14 Adobe.
+				|| ( $marker < 0xE0 || ( $marker > 0xEF && 0xFE !== $marker ) ); // Tables, frame headers… (not APPn, not COM).
+			if ( $keep ) $out .= "\xFF" . chr( $marker ) . $segment;
+		}
+		return false;
+	}
+
+	/** Offset of the EOI marker that ends entropy-coded data starting at $pos (FF00 stuffing and RSTn skipped; DHT/SOS of progressive scans pass through). */
+	private static function find_eoi( $data, $pos ) {
+		$len = strlen( $data );
+		while ( false !== ( $pos = strpos( $data, "\xFF", $pos ) ) ) {
+			if ( $pos + 1 >= $len ) return false;
+			$next = ord( $data[ $pos + 1 ] );
+			if ( 0xD9 === $next ) return $pos;
+			$pos += 2;
+			// Progressive JPEGs: segments between scans (DHT, SOS, DRI…) have lengths; skip their headers so their bytes are not misread.
+			if ( 0x00 !== $next && 0xFF !== $next && ! ( $next >= 0xD0 && $next <= 0xD7 ) && $pos + 2 <= $len ) {
+				$pos += ( ord( $data[ $pos ] ) << 8 ) | ord( $data[ $pos + 1 ] );
+			} elseif ( 0xFF === $next ) {
+				$pos--; // Fill byte: look at it again.
+			}
+		}
+		return false;
 	}
 
 	private static function exif_orientation( $path ) {

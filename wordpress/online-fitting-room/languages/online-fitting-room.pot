@@ -1,12 +1,39 @@
-# Copyright (C) 2026 Webich
-# This file is distributed under the same license as the Online Fitting Room plugin.
+# Copyright (C) 2026 مربع استودیو
+# This file is distributed under the same license as the اتاق پُرُو آنلاین plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Online Fitting Room 1.3.0\n"
+"Project-Id-Version: اتاق پُرُو آنلاین 1.6.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/online-fitting-room\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-03T23:35:23+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: online-fitting-room\n"
+
+#. Plugin Name of the plugin
+#: online-fitting-room.php
+#: includes/class-ofr-admin.php:52
+#: includes/class-ofr-admin.php:204
+#: includes/class-ofr-admin.php:330
+#: includes/class-ofr-health.php:22
+#: online-fitting-room.php:205
+#: online-fitting-room.php:450
+msgid "اتاق پُرُو آنلاین"
+msgstr ""
+
+#. Description of the plugin
+#: online-fitting-room.php
+msgid "اتاق پرو مجازی هوشمند برای ووکامرس؛ مشتری عکس خودش را بارگذاری می‌کند و در چند ثانیه همان لباس را روی تصویر خودش می‌بیند. همراه با ویجت المنتور، پشتیبانی از همه فرمت‌های عکس و حفظ حریم خصوصی مشتری."
+msgstr ""
+
+#. Author of the plugin
+#: online-fitting-room.php
+msgid "مربع استودیو"
+msgstr ""
 
 #: includes/class-ofr-admin.php:27
 msgid "تشخیص خودکار"
@@ -25,281 +52,401 @@ msgid "یک‌تکه / پیراهن"
 msgstr ""
 
 #: includes/class-ofr-admin.php:36
-msgid "ندارد"
+msgid "خودکار (پیشنهادی): Cloudflare، آروان‌کلاد و پروکسی‌های مورد اعتماد"
+msgstr ""
+
+#: includes/class-ofr-admin.php:37
+msgid "بدون CDN — فقط IP اتصال"
 msgstr ""
 
 #: includes/class-ofr-admin.php:38
-msgid "آروان‌کلاد / پروکسی دیگر (X-Forwarded-For)"
+msgid "همیشه Cloudflare (CF-Connecting-IP)"
 msgstr ""
 
-#: includes/class-ofr-admin.php:44 includes/class-ofr-admin.php:44 includes/class-ofr-admin.php:158 includes/class-ofr-admin.php:266 online-fitting-room.php:155 online-fitting-room.php:317
-msgid "اتاق پُرُو آنلاین"
+#: includes/class-ofr-admin.php:39
+msgid "همیشه X-Forwarded-For"
 msgstr ""
 
-#: includes/class-ofr-admin.php:55
+#: includes/class-ofr-admin.php:40
+msgid "همیشه Nginx (X-Real-IP)"
+msgstr ""
+
+#: includes/class-ofr-admin.php:46
+msgid "فونت قالب سایت (پیشنهادی، بدون بارگذاری اضافه)"
+msgstr ""
+
+#: includes/class-ofr-admin.php:47
+msgid "وزیرمتن همراه افزونه (۴۸ کیلوبایت، مجوز آزاد OFL)"
+msgstr ""
+
+#: includes/class-ofr-admin.php:64
 msgid "در حال بررسی اتصال…"
 msgstr ""
 
-#: includes/class-ofr-admin.php:56
+#: includes/class-ofr-admin.php:65
 msgid "پاسخ نامعتبر از سرور سایت دریافت شد."
 msgstr ""
 
-#: includes/class-ofr-admin.php:61
+#: includes/class-ofr-admin.php:70
 msgid "تنظیمات"
 msgstr ""
 
-#: includes/class-ofr-admin.php:71
+#: includes/class-ofr-admin.php:80
 msgid "افزونه «اتاق پُرُو آنلاین» به ووکامرس نیاز دارد."
 msgstr ""
 
-#: includes/class-ofr-admin.php:85
+#: includes/class-ofr-admin.php:94
 msgid "مقداری که وارد کردید شناسه کلید است (با key_ شروع می‌شود) و ذخیره نشد. کلید خام را وارد کنید؛ با vton_live_ یا vton_test_ شروع می‌شود."
 msgstr ""
 
-#: includes/class-ofr-admin.php:158
-msgid "پرو مجازی هوشمند برای ووکامرس"
-msgstr ""
-
-#: includes/class-ofr-admin.php:161
-msgid "محصولات"
-msgstr ""
-
-#: includes/class-ofr-admin.php:162
-msgid "تست اتصال"
-msgstr ""
-
-#: includes/class-ofr-admin.php:167
-msgid "مرکز مدیریت"
+#: includes/class-ofr-admin.php:166
+msgid "سایت پشت CDN است ولی IP واقعی مشتری‌ها پیدا نمی‌شود؛ سقف روزانه هر کاربر بین همه مشتری‌ها مشترک شده است."
 msgstr ""
 
 #: includes/class-ofr-admin.php:168
+msgid "درخواست‌ها هدر CDN دارند ولی از آدرس شناخته‌شده‌ای نمی‌آیند؛ بازه IP آن CDN را در «پروکسی‌های مورد اعتماد» وارد کنید."
+msgstr ""
+
+#: includes/class-ofr-admin.php:170
+msgid "گزینه «همیشه Cloudflare» انتخاب شده ولی درخواست‌ها از Cloudflare نمی‌آیند؛ هر کسی می‌تواند IP خودش را جعل کند. «خودکار» را انتخاب کنید."
+msgstr ""
+
+#: includes/class-ofr-admin.php:178
+#: includes/class-ofr-health.php:107
+msgid "آروان‌کلاد"
+msgstr ""
+
+#: includes/class-ofr-admin.php:178
+msgid "پروکسی مورد اعتماد"
+msgstr ""
+
+#: includes/class-ofr-admin.php:178
+msgid "پروکسی داخلی"
+msgstr ""
+
+#: includes/class-ofr-admin.php:179
+msgid "حالت خودکار هدر IP را فقط وقتی می‌پذیرد که درخواست واقعاً از CDN آمده باشد؛ برای همه سایت‌ها امن است."
+msgstr ""
+
+#. translators: 1: CDN name, 2: time span.
+#: includes/class-ofr-admin.php:183
+#, php-format
+msgid "آخرین بازدید: از طریق %1$s، %2$s پیش ✓"
+msgstr ""
+
+#. translators: %s: time span.
+#: includes/class-ofr-admin.php:186
+#, php-format
+msgid "آخرین بازدید: اتصال مستقیم، %s پیش."
+msgstr ""
+
+#: includes/class-ofr-admin.php:204
+msgid "پرو مجازی هوشمند برای ووکامرس"
+msgstr ""
+
+#: includes/class-ofr-admin.php:207
+msgid "محصولات"
+msgstr ""
+
+#: includes/class-ofr-admin.php:208
+msgid "سلامت سایت"
+msgstr ""
+
+#: includes/class-ofr-admin.php:209
+msgid "تست اتصال"
+msgstr ""
+
+#: includes/class-ofr-admin.php:214
+msgid "مرکز مدیریت"
+msgstr ""
+
+#: includes/class-ofr-admin.php:215
 msgid "تنظیمات اتاق پُرُو"
 msgstr ""
 
-#: includes/class-ofr-admin.php:169
+#: includes/class-ofr-admin.php:216
 msgid "اتصال به سرویس، نمایش دکمه پرو و محدودیت مصرف را از یک‌جا مدیریت کنید."
 msgstr ""
 
-#: includes/class-ofr-admin.php:175
+#: includes/class-ofr-admin.php:222
 msgid "اصلاح کلید"
 msgstr ""
 
-#: includes/class-ofr-admin.php:177
+#: includes/class-ofr-admin.php:224
 msgid "هنوز کلید API ثبت نشده است؛ تا آن زمان پرو برای مشتری‌ها کار نمی‌کند."
 msgstr ""
 
-#: includes/class-ofr-admin.php:177
+#: includes/class-ofr-admin.php:224
 msgid "ثبت کلید"
 msgstr ""
 
-#: includes/class-ofr-admin.php:180
+#: includes/class-ofr-admin.php:227
+msgid "بررسی تنظیم"
+msgstr ""
+
+#: includes/class-ofr-admin.php:230
 msgid "وضعیت"
 msgstr ""
 
-#: includes/class-ofr-admin.php:182
+#: includes/class-ofr-admin.php:232
 msgid "وضعیت افزونه"
 msgstr ""
 
-#: includes/class-ofr-admin.php:183
+#: includes/class-ofr-admin.php:233
 msgid "فعال"
 msgstr ""
 
-#: includes/class-ofr-admin.php:183
+#: includes/class-ofr-admin.php:233
 msgid "غیرفعال"
 msgstr ""
 
-#: includes/class-ofr-admin.php:184 includes/class-ofr-admin.php:239
+#: includes/class-ofr-admin.php:234
+#: includes/class-ofr-admin.php:301
 msgid "نمایش خودکار در صفحه محصول"
 msgstr ""
 
-#: includes/class-ofr-admin.php:184
+#: includes/class-ofr-admin.php:234
 msgid "فقط با ویجت یا شورت‌کد"
 msgstr ""
 
-#: includes/class-ofr-admin.php:187
+#: includes/class-ofr-admin.php:237
 msgid "کلید API"
 msgstr ""
 
-#: includes/class-ofr-admin.php:188
+#: includes/class-ofr-admin.php:238
 msgid "ثبت نشده"
 msgstr ""
 
-#: includes/class-ofr-admin.php:188
+#: includes/class-ofr-admin.php:238
 msgid "نیاز به بررسی"
 msgstr ""
 
-#: includes/class-ofr-admin.php:188
+#: includes/class-ofr-admin.php:238
 msgid "ثبت شده"
 msgstr ""
 
-#: includes/class-ofr-admin.php:192
+#: includes/class-ofr-admin.php:242
 msgid "پروهای امروز"
 msgstr ""
 
 #. translators: %s: daily site limit.
-#: includes/class-ofr-admin.php:194
+#: includes/class-ofr-admin.php:244
 #, php-format
 msgid "از سقف %s"
 msgstr ""
 
 #. translators: %s: daily site limit.
-#: includes/class-ofr-admin.php:194
+#: includes/class-ofr-admin.php:244
 msgid "بدون سقف روزانه"
 msgstr ""
 
-#: includes/class-ofr-admin.php:197
+#: includes/class-ofr-admin.php:247
 msgid "آخرین خطای سرویس"
 msgstr ""
 
 #. translators: %s: time span such as "2 hours".
-#: includes/class-ofr-admin.php:198
+#: includes/class-ofr-admin.php:248
 #, php-format
 msgid "%s پیش"
 msgstr ""
 
 #. translators: %s: time span such as "2 hours".
-#: includes/class-ofr-admin.php:198
+#: includes/class-ofr-admin.php:248
 msgid "بدون خطا"
 msgstr ""
 
 #. translators: %s: time span such as "2 hours".
-#: includes/class-ofr-admin.php:199
+#: includes/class-ofr-admin.php:249
 msgid "همه‌چیز عادی است"
 msgstr ""
 
-#: includes/class-ofr-admin.php:207
+#: includes/class-ofr-admin.php:257
 msgid "اتصال به سرویس"
 msgstr ""
 
-#: includes/class-ofr-admin.php:207
+#: includes/class-ofr-admin.php:257
 msgid "کلید خام مربع API؛ هرگز به مرورگر مشتری ارسال نمی‌شود."
 msgstr ""
 
-#: includes/class-ofr-admin.php:209
+#: includes/class-ofr-admin.php:259
 msgid "کلید مربع API"
 msgstr ""
 
-#: includes/class-ofr-admin.php:211
+#: includes/class-ofr-admin.php:261
 msgid "کلید در تنظیمات سرور تعریف شده است:"
 msgstr ""
 
-#: includes/class-ofr-admin.php:213
+#: includes/class-ofr-admin.php:263
 msgid "برای حفظ کلید فعلی خالی بگذارید"
 msgstr ""
 
-#: includes/class-ofr-admin.php:215
+#: includes/class-ofr-admin.php:265
 msgid "کلید فعلی:"
 msgstr ""
 
-#: includes/class-ofr-admin.php:215
+#: includes/class-ofr-admin.php:265
 msgid "حذف کلید"
 msgstr ""
 
-#: includes/class-ofr-admin.php:221
+#: includes/class-ofr-admin.php:271
 msgid "جزئیات آخرین خطای سرویس"
 msgstr ""
 
-#: includes/class-ofr-admin.php:226
+#: includes/class-ofr-admin.php:276
 msgid "محدودیت مصرف"
 msgstr ""
 
-#: includes/class-ofr-admin.php:226
+#: includes/class-ofr-admin.php:276
 msgid "از اعتبار حساب مربع API در برابر استفاده بی‌رویه محافظت کنید."
 msgstr ""
 
-#: includes/class-ofr-admin.php:227
+#: includes/class-ofr-admin.php:277
 msgid "فقط کاربران عضو"
 msgstr ""
 
-#: includes/class-ofr-admin.php:227
+#: includes/class-ofr-admin.php:277
 msgid "مهمان‌ها برای پرو باید وارد حساب کاربری شوند."
 msgstr ""
 
-#: includes/class-ofr-admin.php:229
+#: includes/class-ofr-admin.php:279
 msgid "سقف روزانه هر کاربر"
 msgstr ""
 
-#: includes/class-ofr-admin.php:229 includes/class-ofr-admin.php:230
+#: includes/class-ofr-admin.php:279
+#: includes/class-ofr-admin.php:280
 msgid "۰ یعنی نامحدود"
 msgstr ""
 
-#: includes/class-ofr-admin.php:230
+#: includes/class-ofr-admin.php:280
 msgid "سقف روزانه کل سایت"
 msgstr ""
 
-#: includes/class-ofr-admin.php:232
+#: includes/class-ofr-admin.php:282
 msgid "سایت پشت CDN"
 msgstr ""
 
-#: includes/class-ofr-admin.php:232
-msgid "برای شناختن درست هر مشتری در سقف روزانه. اگر از Cloudflare یا آروان استفاده نمی‌کنید، «ندارد» بماند."
+#: includes/class-ofr-admin.php:283
+msgid "پروکسی‌های مورد اعتماد (اختیاری)"
 msgstr ""
 
-#: includes/class-ofr-admin.php:236
+#: includes/class-ofr-admin.php:283
+msgid "فقط اگر سایت پشت CDN یا لودبالانسر دیگری است: بازه IP آن (هر خط یک مورد). IP مهمان‌ها با یک شناسه امضاشده در مرورگر هم ترکیب می‌شود تا مشتریانی که IP مشترک اپراتور موبایل دارند سهم هم را مصرف نکنند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:287
+msgid "محافظت در برابر ربات"
+msgstr ""
+
+#: includes/class-ofr-admin.php:287
+msgid "پیش از هر پرو مهمان، یک تأیید امنیتی انجام می‌شود تا ربات‌ها اعتبار حساب را خرج نکنند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:288
+msgid "روش تأیید"
+msgstr ""
+
+#: includes/class-ofr-admin.php:288
+msgid "چالش داخلی برای مشتری کاملاً نامرئی است، به هیچ سرویس خارجی نیاز ندارد و روی هاست‌های داخل ایران هم کار می‌کند. کاربران عضو به‌جای آن با سقف حساب خودشان کنترل می‌شوند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:290
+msgid "Site Key کلادفلر"
+msgstr ""
+
+#: includes/class-ofr-admin.php:291
+msgid "Secret Key کلادفلر"
+msgstr ""
+
+#: includes/class-ofr-admin.php:291
+msgid "ذخیره شده؛ برای حفظ خالی بگذارید"
+msgstr ""
+
+#: includes/class-ofr-admin.php:293
+msgid "کلیدها را از داشبورد Cloudflare ← Turnstile بگیرید. اگر هاست داخل ایران است و به Cloudflare دسترسی ندارد، چالش داخلی را انتخاب کنید؛ بدون کلید، چالش داخلی استفاده می‌شود."
+msgstr ""
+
+#: includes/class-ofr-admin.php:294
+msgid "سقف‌های روزانه به‌صورت اتمیک در پایگاه داده شمرده می‌شوند؛ حتی صدها درخواست هم‌زمان نمی‌توانند از آن‌ها عبور کنند. پروی ناموفق از سهم مشتری کم نمی‌شود."
+msgstr ""
+
+#: includes/class-ofr-admin.php:298
 msgid "نمایش در فروشگاه"
 msgstr ""
 
-#: includes/class-ofr-admin.php:236
+#: includes/class-ofr-admin.php:298
 msgid "دکمه پرو و پنجره‌ای که مشتری می‌بیند."
 msgstr ""
 
-#: includes/class-ofr-admin.php:238
+#: includes/class-ofr-admin.php:300
 msgid "اتاق پُرُو فعال باشد"
 msgstr ""
 
-#: includes/class-ofr-admin.php:239
+#: includes/class-ofr-admin.php:301
 msgid "اگر از ویجت المنتور یا شورت‌کد [online_fitting_room] استفاده می‌کنید، خاموش کنید."
 msgstr ""
 
-#: includes/class-ofr-admin.php:242 includes/class-ofr-elementor-widget.php:100
+#: includes/class-ofr-admin.php:302
+msgid "راهنمای تصویری عکس"
+msgstr ""
+
+#: includes/class-ofr-admin.php:302
+msgid "نمونه عکس درست و نادرست در پنجره پرو؛ پروهای ناموفق را کم می‌کند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:305
+#: includes/class-ofr-elementor-widget.php:100
 msgid "متن دکمه"
 msgstr ""
 
-#: includes/class-ofr-admin.php:243
+#: includes/class-ofr-admin.php:306
 msgid "نوع لباس پیش‌فرض"
 msgstr ""
 
-#: includes/class-ofr-admin.php:243
+#: includes/class-ofr-admin.php:306
 msgid "در ویرایش هر محصول قابل تغییر است."
 msgstr ""
 
-#: includes/class-ofr-admin.php:244
+#: includes/class-ofr-admin.php:307
+msgid "فونت"
+msgstr ""
+
+#: includes/class-ofr-admin.php:308
 msgid "رنگ‌ها"
 msgstr ""
 
-#: includes/class-ofr-admin.php:244
+#: includes/class-ofr-admin.php:308
 msgid "اصلی"
 msgstr ""
 
-#: includes/class-ofr-admin.php:244
+#: includes/class-ofr-admin.php:308
 msgid "تأکیدی"
 msgstr ""
 
-#: includes/class-ofr-admin.php:246
+#: includes/class-ofr-admin.php:310
 msgid "متن رضایت مشتری"
 msgstr ""
 
-#: includes/class-ofr-admin.php:249
+#: includes/class-ofr-admin.php:313
 msgid "تغییرات پس از ذخیره روی فروشگاه اعمال می‌شوند."
 msgstr ""
 
-#: includes/class-ofr-admin.php:249
+#: includes/class-ofr-admin.php:313
 msgid "ذخیره تنظیمات"
 msgstr ""
 
-#: includes/class-ofr-admin.php:259
+#: includes/class-ofr-admin.php:323
 msgid "دسترسی مجاز نیست."
 msgstr ""
 
-#: includes/class-ofr-admin.php:266
+#: includes/class-ofr-admin.php:330
 msgid "نمایش دکمه پرو برای این محصول"
 msgstr ""
 
-#: includes/class-ofr-admin.php:267
+#: includes/class-ofr-admin.php:331
 msgid "نوع لباس پرو مجازی"
 msgstr ""
 
-#: includes/class-ofr-admin.php:267
+#: includes/class-ofr-admin.php:331
 msgid "تنظیم عمومی"
 msgstr ""
 
@@ -389,7 +536,8 @@ msgstr ""
 msgid "این عکس قابل پردازش نیست. لطفاً یک عکس تمام‌قد، روبه‌رو و با نور کافی انتخاب کنید."
 msgstr ""
 
-#: includes/class-ofr-api.php:381 online-fitting-room.php:447
+#: includes/class-ofr-api.php:381
+#: online-fitting-room.php:612
 msgid "حجم تصویر بیشتر از حد مجاز است."
 msgstr ""
 
@@ -409,11 +557,28 @@ msgstr ""
 msgid "سرویس پرو مجازی موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید."
 msgstr ""
 
+#: includes/class-ofr-captcha.php:25
+msgid "چالش داخلی نامرئی (پیشنهادی، بدون سرویس خارجی)"
+msgstr ""
+
+#: includes/class-ofr-captcha.php:26
+msgid "Cloudflare Turnstile"
+msgstr ""
+
+#: includes/class-ofr-captcha.php:27
+msgid "خاموش"
+msgstr ""
+
+#: includes/class-ofr-captcha.php:122
+msgid "تأیید امنیتی انجام نشد؛ لطفاً دوباره روی «ساخت تصویر پرو» بزنید."
+msgstr ""
+
 #: includes/class-ofr-elementor-widget.php:23
 msgid "دکمه اتاق پُرُو"
 msgstr ""
 
-#: includes/class-ofr-elementor-widget.php:67 includes/class-ofr-elementor-widget.php:79
+#: includes/class-ofr-elementor-widget.php:67
+#: includes/class-ofr-elementor-widget.php:79
 msgid "محصول"
 msgstr ""
 
@@ -441,7 +606,8 @@ msgstr ""
 msgid "دکمه فقط برای محصولی نمایش داده می‌شود که منتشر شده، تصویر شاخص دارد و پرو مجازی آن در ویرایش محصول خاموش نشده باشد."
 msgstr ""
 
-#: includes/class-ofr-elementor-widget.php:98 includes/class-ofr-elementor-widget.php:144
+#: includes/class-ofr-elementor-widget.php:98
+#: includes/class-ofr-elementor-widget.php:144
 msgid "دکمه"
 msgstr ""
 
@@ -505,15 +671,18 @@ msgstr ""
 msgid "عادی"
 msgstr ""
 
-#: includes/class-ofr-elementor-widget.php:148 includes/class-ofr-elementor-widget.php:154
+#: includes/class-ofr-elementor-widget.php:148
+#: includes/class-ofr-elementor-widget.php:154
 msgid "رنگ متن"
 msgstr ""
 
-#: includes/class-ofr-elementor-widget.php:149 includes/class-ofr-elementor-widget.php:155
+#: includes/class-ofr-elementor-widget.php:149
+#: includes/class-ofr-elementor-widget.php:155
 msgid "رنگ پس‌زمینه"
 msgstr ""
 
-#: includes/class-ofr-elementor-widget.php:150 includes/class-ofr-elementor-widget.php:156
+#: includes/class-ofr-elementor-widget.php:150
+#: includes/class-ofr-elementor-widget.php:156
 msgid "رنگ آیکون"
 msgstr ""
 
@@ -577,238 +746,568 @@ msgstr ""
 msgid "این دکمه در سایت نمایش داده نمی‌شود:"
 msgstr ""
 
-#: online-fitting-room.php:71
+#: includes/class-ofr-health.php:38
+msgid "رمزنگاری تصاویر نتیجه پرو"
+msgstr ""
+
+#: includes/class-ofr-health.php:39
+msgid "پاک‌سازی خودکار نتایج پرو"
+msgstr ""
+
+#: includes/class-ofr-health.php:40
+msgid "تشخیص IP مشتری برای سقف مصرف"
+msgstr ""
+
+#: includes/class-ofr-health.php:41
+msgid "جدول شمارنده‌های سقف مصرف"
+msgstr ""
+
+#: includes/class-ofr-health.php:47
+msgid "حد حجم آپلود وب‌سرور برای عکس پرو"
+msgstr ""
+
+#: includes/class-ofr-health.php:48
+msgid "دسترسی مستقیم به پوشه نتایج پرو"
+msgstr ""
+
+#: includes/class-ofr-health.php:49
+msgid "اتصال هاست به مربع API"
+msgstr ""
+
+#: includes/class-ofr-health.php:81
+msgid "تصاویر نتیجه پرو رمزنگاری‌شده ذخیره می‌شوند"
+msgstr ""
+
+#. translators: %s: libsodium or OpenSSL.
+#: includes/class-ofr-health.php:83
+#, php-format
+msgid "هر تصویر با کلیدی ساخته‌شده از توکن خصوصی همان مشتری (%s) رمز می‌شود و حتی با دسترسی مستقیم به فایل قابل دیدن نیست."
+msgstr ""
+
+#: includes/class-ofr-health.php:85
+msgid "تصاویر نتیجه پرو بدون رمزنگاری ذخیره می‌شوند"
+msgstr ""
+
+#: includes/class-ofr-health.php:86
+msgid "نه افزونه sodium و نه OpenSSL (AES-256-GCM) روی PHP این هاست فعال است. از پشتیبانی هاست بخواهید یکی از آن‌ها را فعال کند."
+msgstr ""
+
+#: includes/class-ofr-health.php:92
+msgid "نتایج پرو به‌موقع پاک می‌شوند"
+msgstr ""
+
+#. translators: %s: time span such as "20 minutes".
+#: includes/class-ofr-health.php:94
+#, php-format
+msgid "آخرین پاک‌سازی %s پیش انجام شد. هیچ نتیجه‌ای بیشتر از ۲۴ ساعت نگه داشته نمی‌شود."
+msgstr ""
+
+#: includes/class-ofr-health.php:96
+msgid "پاک‌سازی ساعتی نتایج پرو عقب افتاده است"
+msgstr ""
+
+#: includes/class-ofr-health.php:97
+msgid "WP-Cron اجرا نمی‌شود (یا سایت بازدید کمی داشته است). افزونه هنگام هر پرو و هر بار باز شدن پنجره هم پاک‌سازی می‌کند و فایل منقضی را هرگز نمایش نمی‌دهد، ولی برای پاک شدن دقیق، یک Cron واقعی سرور برای wp-cron.php تنظیم کنید."
+msgstr ""
+
+#: includes/class-ofr-health.php:104
+msgid "تشخیص IP مشتری فعال است"
+msgstr ""
+
+#: includes/class-ofr-health.php:105
+msgid "هنوز مشتری‌ای پنجره پرو را باز نکرده است؛ پس از اولین بازدید، این بررسی وضعیت واقعی را نشان می‌دهد."
+msgstr ""
+
+#: includes/class-ofr-health.php:107
+msgid "پروکسی تعریف‌شده"
+msgstr ""
+
+#: includes/class-ofr-health.php:107
+msgid "پروکسی داخلی سرور"
+msgstr ""
+
+#: includes/class-ofr-health.php:110
+msgid "همه مشتری‌ها با IP شبکه CDN شناخته می‌شوند"
+msgstr ""
+
+#. translators: %s: CDN name.
+#: includes/class-ofr-health.php:112
+#, php-format
+msgid "سایت پشت %s است ولی IP واقعی مشتری در درخواست پیدا نشد؛ در این حالت سقف روزانه هر کاربر بین همه مشتری‌ها مشترک می‌شود. «تشخیص IP» را روی «خودکار» بگذارید و مطمئن شوید CDN هدر X-Forwarded-For یا CF-Connecting-IP را می‌فرستد."
+msgstr ""
+
+#: includes/class-ofr-health.php:113
+#: includes/class-ofr-health.php:117
+msgid "تنظیمات محدودیت مصرف"
+msgstr ""
+
+#: includes/class-ofr-health.php:115
+msgid "هدر CDN از آدرسی ناشناخته رسید"
+msgstr ""
+
+#: includes/class-ofr-health.php:116
+msgid "درخواست‌ها هدر IP یک CDN دارند ولی از آدرس‌های شناخته‌شده آن نمی‌آیند (مثلاً فهرست IPهای آروان هنوز دانلود نشده یا هاست به آن دسترسی ندارد). بازه IPهای CDN خود را در «پروکسی‌های مورد اعتماد» وارد کنید."
+msgstr ""
+
+#: includes/class-ofr-health.php:119
+msgid "گزینه Cloudflare انتخاب شده ولی سایت پشت Cloudflare نیست"
+msgstr ""
+
+#: includes/class-ofr-health.php:120
+msgid "در این حالت هر کسی می‌تواند با یک هدر ساختگی IP خودش را عوض کند و سقف روزانه را دور بزند. «تشخیص IP» را روی «خودکار» بگذارید."
+msgstr ""
+
+#: includes/class-ofr-health.php:123
+msgid "IP واقعی مشتری درست تشخیص داده می‌شود"
+msgstr ""
+
+#. translators: %s: CDN name.
+#: includes/class-ofr-health.php:125
+#, php-format
+msgid "درخواست‌ها از طریق %s می‌رسند و IP واقعی هر مشتری از هدر معتبر آن خوانده می‌شود."
+msgstr ""
+
+#. translators: %s: CDN name.
+#: includes/class-ofr-health.php:125
+msgid "سایت مستقیم (بدون CDN) در دسترس است."
+msgstr ""
+
+#. translators: %s: CDN name.
+#: includes/class-ofr-health.php:125
+msgid "روش تشخیص IP دستی انتخاب شده است."
+msgstr ""
+
+#: includes/class-ofr-health.php:133
+msgid "سقف مصرف به‌صورت اتمیک شمرده می‌شود"
+msgstr ""
+
+#: includes/class-ofr-health.php:134
+msgid "حتی صدها درخواست هم‌زمان نمی‌توانند از سقف روزانه عبور کنند."
+msgstr ""
+
+#: includes/class-ofr-health.php:137
+msgid "جدول شمارنده‌های اتاق پُرُو ساخته نشده است"
+msgstr ""
+
+#: includes/class-ofr-health.php:138
+msgid "افزونه دوباره تلاش کرد جدول را بسازد. اگر این پیام باقی ماند، کاربر پایگاه داده اجازه CREATE TABLE ندارد؛ تا آن زمان شمارش غیراتمیک (قدیمی) استفاده می‌شود."
+msgstr ""
+
+#: includes/class-ofr-health.php:170
+#: includes/class-ofr-health.php:185
+msgid "حد حجم آپلود وب‌سرور بررسی نشد"
+msgstr ""
+
+#. translators: %s: error message.
+#: includes/class-ofr-health.php:172
+#, php-format
+msgid "درخواست آزمایشی سایت به خودش انجام نشد (%s). افزونه عکس‌ها را زیر ۹۰۰ کیلوبایت ارسال می‌کند و در صورت خطای ۴۱۳ خودکار نسخه سبک‌تری می‌فرستد."
+msgstr ""
+
+#: includes/class-ofr-health.php:177
+msgid "وب‌سرور عکس‌های پرو را بدون مشکل می‌پذیرد"
+msgstr ""
+
+#. translators: %s: file size.
+#: includes/class-ofr-health.php:179
+#, php-format
+msgid "یک فایل آزمایشی %s با موفقیت دریافت شد."
+msgstr ""
+
+#: includes/class-ofr-health.php:182
+msgid "وب‌سرور آپلودهای بزرگ‌تر از ۱ مگابایت را رد می‌کند"
+msgstr ""
+
+#: includes/class-ofr-health.php:183
+msgid "افزونه برای همین عکس‌ها را زیر ۹۰۰ کیلوبایت فشرده می‌کند و در صورت نیاز خودکار نسخه سبک‌تری می‌فرستد، ولی عکس‌هایی که مرورگر نمی‌تواند باز کند (مثل RAW) رد می‌شوند. اگر سرور Nginx است، در تنظیمات آن مقدار زیر را اضافه کنید (یا از پشتیبانی هاست بخواهید):"
+msgstr ""
+
+#. translators: %d: HTTP status code.
+#: includes/class-ofr-health.php:187
+#, php-format
+msgid "درخواست آزمایشی با پاسخ HTTP %d روبه‌رو شد (احتمالاً فایروال یا افزونه امنیتی). اگر مشتری‌ها هنگام ارسال عکس خطا می‌بینند، این مورد را بررسی کنید."
+msgstr ""
+
+#: includes/class-ofr-health.php:192
+msgid "پوشه نتایج پرو خارج از دسترس وب است"
+msgstr ""
+
+#: includes/class-ofr-health.php:193
+msgid "مسیر پوشه نتایج با OFR_RESULTS_DIR یا فیلتر ofr_results_dir تعیین شده است."
+msgstr ""
+
+#: includes/class-ofr-health.php:198
+msgid "پوشه نتایج پرو قابل ساخت نیست"
+msgstr ""
+
+#: includes/class-ofr-health.php:199
+msgid "پوشه uploads قابل نوشتن نیست؛ پرو مجازی نمی‌تواند نتیجه را ذخیره کند."
+msgstr ""
+
+#: includes/class-ofr-health.php:208
+msgid "پوشه نتایج پرو از وب قابل دسترسی نیست"
+msgstr ""
+
+#: includes/class-ofr-health.php:209
+msgid "یک فایل آزمایشی در پوشه نتایج از طریق آدرس وب باز نشد."
+msgstr ""
+
+#: includes/class-ofr-health.php:212
+msgid "یا پوشه را بیرون از public_html ببرید، با افزودن این خط به wp-config.php:"
+msgstr ""
+
+#: includes/class-ofr-health.php:215
+msgid "پوشه نتایج پرو از وب باز می‌شود (فایل‌ها رمزنگاری‌شده‌اند)"
+msgstr ""
+
+#: includes/class-ofr-health.php:216
+msgid "وب‌سرور (معمولاً Nginx) فایل .htaccess را نادیده می‌گیرد. چون هر تصویر با کلید خصوصی همان مشتری رمز شده، فایل‌ها حتی با باز شدن هم قابل دیدن نیستند؛ ولی برای اطمینان کامل، دسترسی را در وب‌سرور ببندید:"
+msgstr ""
+
+#: includes/class-ofr-health.php:218
+msgid "تصاویر نتیجه پرو از وب قابل دسترسی‌اند"
+msgstr ""
+
+#: includes/class-ofr-health.php:219
+msgid "وب‌سرور .htaccess را نادیده می‌گیرد و رمزنگاری هم روی این هاست در دسترس نیست. دسترسی را در وب‌سرور ببندید:"
+msgstr ""
+
+#: includes/class-ofr-health.php:226
+msgid "هاست به مربع API دسترسی دارد"
+msgstr ""
+
+#: includes/class-ofr-health.php:226
+msgid "اتصال هاست به مربع API برقرار نیست"
+msgstr ""
+
+#: online-fitting-room.php:85
 msgid "پرو با هوش مصنوعی"
 msgstr ""
 
-#: online-fitting-room.php:84
+#: online-fitting-room.php:104
 msgid "عکس من فقط برای ساخت تصویر پرو به سرویس پردازش ارسال می‌شود و روی سایت ذخیره نمی‌شود. تصویر نتیجه به‌صورت خصوصی نگه داشته و حداکثر پس از ۲۴ ساعت حذف می‌شود."
 msgstr ""
 
-#: online-fitting-room.php:210
+#: online-fitting-room.php:266
 msgid "ارتباط با سرور برقرار نشد. اتصال اینترنت را بررسی و دوباره تلاش کنید."
 msgstr ""
 
-#: online-fitting-room.php:211 online-fitting-room.php:519
+#: online-fitting-room.php:267
+#: online-fitting-room.php:707
 msgid "پردازش بیش از حد معمول طول کشید. دوباره تلاش کنید."
 msgstr ""
 
-#: online-fitting-room.php:212 online-fitting-room.php:456
+#: online-fitting-room.php:268
+#: online-fitting-room.php:621
 msgid "فایل انتخاب‌شده تصویر نیست یا خراب است؛ لطفاً عکس دیگری انتخاب کنید."
 msgstr ""
 
 #. translators: %s: image format name, e.g. HEIC or TIFF.
-#: online-fitting-room.php:214
+#: online-fitting-room.php:270
 #, php-format
 msgid "باز کردن عکس‌های %s در این مرورگر و روی این سایت ممکن نیست؛ لطفاً عکس را با فرمت JPG انتخاب کنید."
 msgstr ""
 
-#: online-fitting-room.php:215
+#: online-fitting-room.php:271
 msgid "در حال آماده‌سازی عکس…"
 msgstr ""
 
-#: online-fitting-room.php:216
+#: online-fitting-room.php:272
 msgid "پیش‌نمایش این فرمت در مرورگر شما ممکن نیست؛ عکس هنگام ساخت پرو روی سرور تبدیل می‌شود."
 msgstr ""
 
 #. translators: %s: maximum file size, e.g. 8 MB.
-#: online-fitting-room.php:218
+#: online-fitting-room.php:274
 #, php-format
 msgid "حجم این عکس بیشتر از حد مجاز (%s) است و مرورگر نمی‌تواند آن را کوچک کند؛ لطفاً عکس کوچک‌تری انتخاب کنید."
 msgstr ""
 
-#: online-fitting-room.php:219
+#: online-fitting-room.php:275
+msgid "حجم عکس برای سرور سایت زیاد است. لطفاً عکس را با فرمت JPG یا با کیفیت کمتر انتخاب کنید."
+msgstr ""
+
+#: online-fitting-room.php:276
+msgid "در حال ارسال نسخه سبک‌تر عکس…"
+msgstr ""
+
+#: online-fitting-room.php:277
+msgid "درخواست توسط فایروال سایت متوقف شد. چند دقیقه بعد دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:278
+msgid "سرور سایت با خطا روبه‌رو شد. چند لحظه دیگر دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:279
+#: online-fitting-room.php:545
+msgid "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:280
 msgid "در حال آماده‌سازی…"
 msgstr ""
 
-#: online-fitting-room.php:220
+#: online-fitting-room.php:281
+msgid "در حال تأیید امنیتی…"
+msgstr ""
+
+#: online-fitting-room.php:282
+msgid "لطفاً ابتدا تأیید امنیتی بالا را کامل کنید."
+msgstr ""
+
+#: online-fitting-room.php:283
 msgid "در حال ارسال عکس…"
 msgstr ""
 
-#: online-fitting-room.php:221
+#: online-fitting-room.php:284
 msgid "در صف پردازش…"
 msgstr ""
 
-#: online-fitting-room.php:222
+#: online-fitting-room.php:285
 msgid "هوش مصنوعی در حال پوشاندن لباس است…"
 msgstr ""
 
 #. translators: %s: number of try-ons left today.
-#: online-fitting-room.php:224
+#: online-fitting-room.php:287
 #, php-format
 msgid "امروز %s پرو دیگر می‌توانید انجام دهید."
 msgstr ""
 
-#: online-fitting-room.php:225
+#: online-fitting-room.php:288
 msgid "افزودن به سبد خرید"
 msgstr ""
 
-#: online-fitting-room.php:226
+#: online-fitting-room.php:289
 msgid "انتخاب سایز / رنگ و خرید"
 msgstr ""
 
-#: online-fitting-room.php:227
+#: online-fitting-room.php:290
 msgid "مشاهده محصول"
 msgstr ""
 
-#: online-fitting-room.php:228
+#: online-fitting-room.php:291
 msgid "در حال افزودن…"
 msgstr ""
 
-#: online-fitting-room.php:229
+#: online-fitting-room.php:292
 msgid "✓ به سبد خرید اضافه شد."
 msgstr ""
 
-#: online-fitting-room.php:230
+#: online-fitting-room.php:293
 msgid "مشاهده سبد خرید"
 msgstr ""
 
-#: online-fitting-room.php:316
+#: online-fitting-room.php:294
+msgid "عکس را اینجا رها کنید"
+msgstr ""
+
+#: online-fitting-room.php:295
+msgid "فقط فایل تصویر را می‌توانید اینجا رها کنید."
+msgstr ""
+
+#. translators: %s: product name.
+#: online-fitting-room.php:297
+#, php-format
+msgid "پرو «%s» در حال آماده شدن است…"
+msgstr ""
+
+#. translators: %s: product name.
+#: online-fitting-room.php:299
+#, php-format
+msgid "پرو «%s» آماده شد."
+msgstr ""
+
+#: online-fitting-room.php:300
+msgid "ساخت تصویر پرو انجام نشد."
+msgstr ""
+
+#: online-fitting-room.php:301
+msgid "مشاهده"
+msgstr ""
+
+#: online-fitting-room.php:302
+msgid "تلاش دوباره"
+msgstr ""
+
+#: online-fitting-room.php:441
+msgid "تمام‌قد و روبه‌رو"
+msgstr ""
+
+#: online-fitting-room.php:442
+msgid "نیم‌تنه نباشد"
+msgstr ""
+
+#: online-fitting-room.php:443
+msgid "نور کافی"
+msgstr ""
+
+#: online-fitting-room.php:449
+#: online-fitting-room.php:487
 msgid "بستن"
 msgstr ""
 
-#: online-fitting-room.php:317
+#: online-fitting-room.php:450
 msgid "قبل از خرید، تنت ببین"
 msgstr ""
 
-#: online-fitting-room.php:317
+#: online-fitting-room.php:450
 msgid "عکس خودت را بده؛ هوش مصنوعی همین لباس را روی تصویرت شبیه‌سازی می‌کند."
 msgstr ""
 
-#: online-fitting-room.php:318
+#: online-fitting-room.php:451
 msgid "مراحل پرو"
 msgstr ""
 
-#: online-fitting-room.php:318
+#: online-fitting-room.php:451
 msgid "انتخاب عکس"
 msgstr ""
 
-#: online-fitting-room.php:318
+#: online-fitting-room.php:451
 msgid "پردازش"
 msgstr ""
 
-#: online-fitting-room.php:318
+#: online-fitting-room.php:451
 msgid "نتیجه"
 msgstr ""
 
-#: online-fitting-room.php:321
+#: online-fitting-room.php:454
 msgid "برای استفاده از اتاق پُرُو وارد حساب خود شوید"
 msgstr ""
 
-#: online-fitting-room.php:322
+#: online-fitting-room.php:455
 msgid "پرو مجازی فقط برای کاربران عضو فعال است."
 msgstr ""
 
-#: online-fitting-room.php:323
+#: online-fitting-room.php:456
 msgid "ورود / ثبت‌نام"
 msgstr ""
 
-#: online-fitting-room.php:326
+#: online-fitting-room.php:459
 msgid "لباس انتخابی"
 msgstr ""
 
-#: online-fitting-room.php:327
+#: online-fitting-room.php:462
+msgid "چه عکسی بهترین نتیجه را می‌دهد؟"
+msgstr ""
+
+#: online-fitting-room.php:467
+msgid "مناسب:"
+msgstr ""
+
+#: online-fitting-room.php:467
+msgid "نامناسب:"
+msgstr ""
+
+#: online-fitting-room.php:473
 msgid "عکس تمام‌قد خودت را انتخاب کن"
 msgstr ""
 
-#: online-fitting-room.php:327
+#: online-fitting-room.php:473
 msgid "هر فرمت عکسی (JPG، HEIC آیفون، PNG، WEBP، AVIF و…) — روبه‌دوربین و با نور کافی"
 msgstr ""
 
-#: online-fitting-room.php:328
+#: online-fitting-room.php:473
+msgid "یا عکس را اینجا بکشید و رها کنید (Ctrl+V هم کار می‌کند)"
+msgstr ""
+
+#: online-fitting-room.php:474
 msgid "پیش‌نمایش تصویر"
 msgstr ""
 
-#: online-fitting-room.php:328
+#: online-fitting-room.php:474
 msgid "تغییر عکس"
 msgstr ""
 
-#: online-fitting-room.php:332
+#: online-fitting-room.php:474
+msgid "راهنمای عکس"
+msgstr ""
+
+#: online-fitting-room.php:479
 msgid "ساخت تصویر پرو"
 msgstr ""
 
-#: online-fitting-room.php:334
+#: online-fitting-room.php:481
 msgid "داریم استایل جدیدت را می‌سازیم"
 msgstr ""
 
-#: online-fitting-room.php:334
+#: online-fitting-room.php:481
 msgid "این مرحله معمولاً چند ثانیه زمان می‌برد."
 msgstr ""
 
-#: online-fitting-room.php:335
+#: online-fitting-room.php:481
+msgid "بستن و ادامه خرید — وقتی آماده شد خبرتان می‌کنیم"
+msgstr ""
+
+#: online-fitting-room.php:482
 msgid "نتیجه پرو مجازی"
 msgstr ""
 
-#: online-fitting-room.php:335
+#: online-fitting-room.php:482
 msgid "✓ آماده شد"
 msgstr ""
 
-#: online-fitting-room.php:335
+#: online-fitting-room.php:482
 msgid "این استایل چطور شد؟"
 msgstr ""
 
-#: online-fitting-room.php:335
+#: online-fitting-room.php:482
 msgid "دانلود تصویر"
 msgstr ""
 
-#: online-fitting-room.php:335
+#: online-fitting-room.php:482
 msgid "پرو با عکس دیگر"
 msgstr ""
 
-#: online-fitting-room.php:392
-msgid "برای استفاده از اتاق پُرُو ابتدا وارد حساب کاربری خود شوید."
-msgstr ""
-
-#: online-fitting-room.php:396
+#: online-fitting-room.php:541
 msgid "ظرفیت پرو مجازی امروز به پایان رسیده است. لطفاً فردا دوباره سر بزنید."
 msgstr ""
 
-#: online-fitting-room.php:399
+#: online-fitting-room.php:543
 msgid "سهم پرو امروز شما تمام شده است. فردا دوباره امتحان کنید."
 msgstr ""
 
-#: online-fitting-room.php:403
-msgid "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کنید."
-msgstr ""
-
-#: online-fitting-room.php:412
+#: online-fitting-room.php:557
 msgid "نشست شما منقضی شده؛ دوباره تلاش کنید."
 msgstr ""
 
-#: online-fitting-room.php:432
+#: online-fitting-room.php:582
 msgid "این محصول برای پرو مجازی آماده نیست."
 msgstr ""
 
-#: online-fitting-room.php:442
+#: online-fitting-room.php:584
+msgid "برای استفاده از اتاق پُرُو ابتدا وارد حساب کاربری خود شوید."
+msgstr ""
+
+#: online-fitting-room.php:608
 msgid "حجم تصویر بیشتر از حد مجاز سرور است."
 msgstr ""
 
-#: online-fitting-room.php:442
+#: online-fitting-room.php:608
 msgid "آپلود تصویر کامل نشد؛ دوباره تلاش کنید."
 msgstr ""
 
 #. translators: %s: image format name, e.g. HEIC or TIFF.
-#: online-fitting-room.php:454
+#: online-fitting-room.php:619
 #, php-format
 msgid "تبدیل عکس‌های %s روی این سایت ممکن نیست؛ لطفاً عکس را با فرمت JPG انتخاب کنید."
 msgstr ""
 
-#: online-fitting-room.php:478
+#: online-fitting-room.php:641
 msgid "تصویر این لباس قابل استفاده نیست؛ لطفاً به فروشگاه اطلاع دهید."
 msgstr ""
 
-#: online-fitting-room.php:516
+#: online-fitting-room.php:704
 msgid "این پرو منقضی شده است؛ دوباره تلاش کنید."
 msgstr ""
 
-#: online-fitting-room.php:534
+#: online-fitting-room.php:722
 msgid "این تصویر برای بررسی بیشتر متوقف شد. لطفاً عکس دیگری امتحان کنید."
 msgstr ""
 
-#: online-fitting-room.php:538
+#: online-fitting-room.php:726
 msgid "ساخت تصویر ناموفق بود. لطفاً با یک عکس تمام‌قد و روبه‌رو دوباره امتحان کنید."
 msgstr ""
 
-#: online-fitting-room.php:558
+#: online-fitting-room.php:747
 msgid "دریافت تصویر نهایی ناموفق بود؛ دوباره تلاش کنید."
 msgstr ""
