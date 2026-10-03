@@ -1,0 +1,814 @@
+# Copyright (C) 2026 Webich
+# This file is distributed under the same license as the Online Fitting Room plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Online Fitting Room 1.3.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: online-fitting-room\n"
+
+#: includes/class-ofr-admin.php:27
+msgid "تشخیص خودکار"
+msgstr ""
+
+#: includes/class-ofr-admin.php:28
+msgid "بالاتنه"
+msgstr ""
+
+#: includes/class-ofr-admin.php:29
+msgid "پایین‌تنه"
+msgstr ""
+
+#: includes/class-ofr-admin.php:30
+msgid "یک‌تکه / پیراهن"
+msgstr ""
+
+#: includes/class-ofr-admin.php:36
+msgid "ندارد"
+msgstr ""
+
+#: includes/class-ofr-admin.php:38
+msgid "آروان‌کلاد / پروکسی دیگر (X-Forwarded-For)"
+msgstr ""
+
+#: includes/class-ofr-admin.php:44 includes/class-ofr-admin.php:44 includes/class-ofr-admin.php:158 includes/class-ofr-admin.php:266 online-fitting-room.php:155 online-fitting-room.php:317
+msgid "اتاق پُرُو آنلاین"
+msgstr ""
+
+#: includes/class-ofr-admin.php:55
+msgid "در حال بررسی اتصال…"
+msgstr ""
+
+#: includes/class-ofr-admin.php:56
+msgid "پاسخ نامعتبر از سرور سایت دریافت شد."
+msgstr ""
+
+#: includes/class-ofr-admin.php:61
+msgid "تنظیمات"
+msgstr ""
+
+#: includes/class-ofr-admin.php:71
+msgid "افزونه «اتاق پُرُو آنلاین» به ووکامرس نیاز دارد."
+msgstr ""
+
+#: includes/class-ofr-admin.php:85
+msgid "مقداری که وارد کردید شناسه کلید است (با key_ شروع می‌شود) و ذخیره نشد. کلید خام را وارد کنید؛ با vton_live_ یا vton_test_ شروع می‌شود."
+msgstr ""
+
+#: includes/class-ofr-admin.php:158
+msgid "پرو مجازی هوشمند برای ووکامرس"
+msgstr ""
+
+#: includes/class-ofr-admin.php:161
+msgid "محصولات"
+msgstr ""
+
+#: includes/class-ofr-admin.php:162
+msgid "تست اتصال"
+msgstr ""
+
+#: includes/class-ofr-admin.php:167
+msgid "مرکز مدیریت"
+msgstr ""
+
+#: includes/class-ofr-admin.php:168
+msgid "تنظیمات اتاق پُرُو"
+msgstr ""
+
+#: includes/class-ofr-admin.php:169
+msgid "اتصال به سرویس، نمایش دکمه پرو و محدودیت مصرف را از یک‌جا مدیریت کنید."
+msgstr ""
+
+#: includes/class-ofr-admin.php:175
+msgid "اصلاح کلید"
+msgstr ""
+
+#: includes/class-ofr-admin.php:177
+msgid "هنوز کلید API ثبت نشده است؛ تا آن زمان پرو برای مشتری‌ها کار نمی‌کند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:177
+msgid "ثبت کلید"
+msgstr ""
+
+#: includes/class-ofr-admin.php:180
+msgid "وضعیت"
+msgstr ""
+
+#: includes/class-ofr-admin.php:182
+msgid "وضعیت افزونه"
+msgstr ""
+
+#: includes/class-ofr-admin.php:183
+msgid "فعال"
+msgstr ""
+
+#: includes/class-ofr-admin.php:183
+msgid "غیرفعال"
+msgstr ""
+
+#: includes/class-ofr-admin.php:184 includes/class-ofr-admin.php:239
+msgid "نمایش خودکار در صفحه محصول"
+msgstr ""
+
+#: includes/class-ofr-admin.php:184
+msgid "فقط با ویجت یا شورت‌کد"
+msgstr ""
+
+#: includes/class-ofr-admin.php:187
+msgid "کلید API"
+msgstr ""
+
+#: includes/class-ofr-admin.php:188
+msgid "ثبت نشده"
+msgstr ""
+
+#: includes/class-ofr-admin.php:188
+msgid "نیاز به بررسی"
+msgstr ""
+
+#: includes/class-ofr-admin.php:188
+msgid "ثبت شده"
+msgstr ""
+
+#: includes/class-ofr-admin.php:192
+msgid "پروهای امروز"
+msgstr ""
+
+#. translators: %s: daily site limit.
+#: includes/class-ofr-admin.php:194
+#, php-format
+msgid "از سقف %s"
+msgstr ""
+
+#. translators: %s: daily site limit.
+#: includes/class-ofr-admin.php:194
+msgid "بدون سقف روزانه"
+msgstr ""
+
+#: includes/class-ofr-admin.php:197
+msgid "آخرین خطای سرویس"
+msgstr ""
+
+#. translators: %s: time span such as "2 hours".
+#: includes/class-ofr-admin.php:198
+#, php-format
+msgid "%s پیش"
+msgstr ""
+
+#. translators: %s: time span such as "2 hours".
+#: includes/class-ofr-admin.php:198
+msgid "بدون خطا"
+msgstr ""
+
+#. translators: %s: time span such as "2 hours".
+#: includes/class-ofr-admin.php:199
+msgid "همه‌چیز عادی است"
+msgstr ""
+
+#: includes/class-ofr-admin.php:207
+msgid "اتصال به سرویس"
+msgstr ""
+
+#: includes/class-ofr-admin.php:207
+msgid "کلید خام مربع API؛ هرگز به مرورگر مشتری ارسال نمی‌شود."
+msgstr ""
+
+#: includes/class-ofr-admin.php:209
+msgid "کلید مربع API"
+msgstr ""
+
+#: includes/class-ofr-admin.php:211
+msgid "کلید در تنظیمات سرور تعریف شده است:"
+msgstr ""
+
+#: includes/class-ofr-admin.php:213
+msgid "برای حفظ کلید فعلی خالی بگذارید"
+msgstr ""
+
+#: includes/class-ofr-admin.php:215
+msgid "کلید فعلی:"
+msgstr ""
+
+#: includes/class-ofr-admin.php:215
+msgid "حذف کلید"
+msgstr ""
+
+#: includes/class-ofr-admin.php:221
+msgid "جزئیات آخرین خطای سرویس"
+msgstr ""
+
+#: includes/class-ofr-admin.php:226
+msgid "محدودیت مصرف"
+msgstr ""
+
+#: includes/class-ofr-admin.php:226
+msgid "از اعتبار حساب مربع API در برابر استفاده بی‌رویه محافظت کنید."
+msgstr ""
+
+#: includes/class-ofr-admin.php:227
+msgid "فقط کاربران عضو"
+msgstr ""
+
+#: includes/class-ofr-admin.php:227
+msgid "مهمان‌ها برای پرو باید وارد حساب کاربری شوند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:229
+msgid "سقف روزانه هر کاربر"
+msgstr ""
+
+#: includes/class-ofr-admin.php:229 includes/class-ofr-admin.php:230
+msgid "۰ یعنی نامحدود"
+msgstr ""
+
+#: includes/class-ofr-admin.php:230
+msgid "سقف روزانه کل سایت"
+msgstr ""
+
+#: includes/class-ofr-admin.php:232
+msgid "سایت پشت CDN"
+msgstr ""
+
+#: includes/class-ofr-admin.php:232
+msgid "برای شناختن درست هر مشتری در سقف روزانه. اگر از Cloudflare یا آروان استفاده نمی‌کنید، «ندارد» بماند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:236
+msgid "نمایش در فروشگاه"
+msgstr ""
+
+#: includes/class-ofr-admin.php:236
+msgid "دکمه پرو و پنجره‌ای که مشتری می‌بیند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:238
+msgid "اتاق پُرُو فعال باشد"
+msgstr ""
+
+#: includes/class-ofr-admin.php:239
+msgid "اگر از ویجت المنتور یا شورت‌کد [online_fitting_room] استفاده می‌کنید، خاموش کنید."
+msgstr ""
+
+#: includes/class-ofr-admin.php:242 includes/class-ofr-elementor-widget.php:100
+msgid "متن دکمه"
+msgstr ""
+
+#: includes/class-ofr-admin.php:243
+msgid "نوع لباس پیش‌فرض"
+msgstr ""
+
+#: includes/class-ofr-admin.php:243
+msgid "در ویرایش هر محصول قابل تغییر است."
+msgstr ""
+
+#: includes/class-ofr-admin.php:244
+msgid "رنگ‌ها"
+msgstr ""
+
+#: includes/class-ofr-admin.php:244
+msgid "اصلی"
+msgstr ""
+
+#: includes/class-ofr-admin.php:244
+msgid "تأکیدی"
+msgstr ""
+
+#: includes/class-ofr-admin.php:246
+msgid "متن رضایت مشتری"
+msgstr ""
+
+#: includes/class-ofr-admin.php:249
+msgid "تغییرات پس از ذخیره روی فروشگاه اعمال می‌شوند."
+msgstr ""
+
+#: includes/class-ofr-admin.php:249
+msgid "ذخیره تنظیمات"
+msgstr ""
+
+#: includes/class-ofr-admin.php:259
+msgid "دسترسی مجاز نیست."
+msgstr ""
+
+#: includes/class-ofr-admin.php:266
+msgid "نمایش دکمه پرو برای این محصول"
+msgstr ""
+
+#: includes/class-ofr-admin.php:267
+msgid "نوع لباس پرو مجازی"
+msgstr ""
+
+#: includes/class-ofr-admin.php:267
+msgid "تنظیم عمومی"
+msgstr ""
+
+#: includes/class-ofr-api.php:63
+msgid "برای دریافت کلید مربع API با پشتیبانی محصول در راست‌چین در ارتباط باشید."
+msgstr ""
+
+#: includes/class-ofr-api.php:70
+msgid "این مقدار شناسه کلید است (با key_ شروع می‌شود)، نه خود کلید؛ کلید اصلی با vton_live_ شروع می‌شود."
+msgstr ""
+
+#: includes/class-ofr-api.php:71
+msgid "کلید ذخیره‌شده با vton_ شروع نمی‌شود. اگر «تست اتصال» خطا داد، مطمئن شوید کلید را کامل وارد کرده‌اید."
+msgstr ""
+
+#: includes/class-ofr-api.php:179
+msgid "مربع API"
+msgstr ""
+
+#. translators: %s: host name.
+#: includes/class-ofr-api.php:183
+#, php-format
+msgid "سرور سایت آدرس %s را پیدا نکرد (خطای DNS). از پشتیبانی هاست بخواهید DNS سرور را بررسی کند."
+msgstr ""
+
+#. translators: %s: host name.
+#: includes/class-ofr-api.php:186
+#, php-format
+msgid "هاست اجازه اتصال به %s را نمی‌دهد. از پشتیبانی هاست بخواهید اتصال خروجی به این دامنه روی پورت ۴۴۳ (HTTPS) را باز کند."
+msgstr ""
+
+#. translators: %s: host name.
+#: includes/class-ofr-api.php:189
+#, php-format
+msgid "از %s در زمان مجاز پاسخی نیامد. ممکن است فایروال هاست اتصال را بی‌صدا مسدود کرده باشد یا مربع API در دسترس نباشد."
+msgstr ""
+
+#: includes/class-ofr-api.php:191
+msgid "ارتباط امن (SSL) با مربع API برقرار نشد. معمولاً نسخه OpenSSL/cURL یا گواهی‌های ریشه هاست قدیمی است؛ از پشتیبانی هاست بخواهید آن‌ها را به‌روز کند."
+msgstr ""
+
+#. translators: %s: host name.
+#: includes/class-ofr-api.php:194
+#, php-format
+msgid "اتصال به %s برقرار شد ولی پیش از رسیدن پاسخ قطع شد؛ افزونه چند روش اتصال را امتحان کرد. این معمولاً کار فایروال یا فیلترینگ مسیر شبکه هاست است (مثلاً هاست داخل ایران و سرویس خارج از ایران). از پشتیبانی هاست بپرسید آیا اتصال HTTPS به این دامنه مسدود یا محدود می‌شود؛ اگر هاست مشکلی نمی‌بیند، موضوع را با پشتیبانی محصول در راست‌چین مطرح کنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:196
+msgid "سرور سایت به مربع API وصل نشد."
+msgstr ""
+
+#: includes/class-ofr-api.php:271
+msgid "سرور مربع API در دسترس است، ولی هیچ کلید API تنظیم نشده است."
+msgstr ""
+
+#: includes/class-ofr-api.php:272
+msgid "سرور مربع API در دسترس است، ولی کلید ثبت‌شده قابل استفاده نیست."
+msgstr ""
+
+#: includes/class-ofr-api.php:281
+msgid "اتصال برقرار است و مربع API کلید را پذیرفت."
+msgstr ""
+
+#: includes/class-ofr-api.php:284
+msgid "سرور مربع API در دسترس است، ولی کلید را نپذیرفت. کلید را کامل و بدون تغییر وارد کنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:286
+msgid "کلید معتبر است ولی اعتبار حساب مربع API تمام شده است."
+msgstr ""
+
+#. translators: %s: time span such as "2 hours".
+#: includes/class-ofr-api.php:295
+#, php-format
+msgid "سرور مربع API در دسترس است و آخرین درخواست با این کلید %s پیش موفق بوده است."
+msgstr ""
+
+#: includes/class-ofr-api.php:297
+msgid "سرور مربع API در دسترس است و کلید ثبت شده. کلید با اولین پرو واقعی تأیید می‌شود؛ پس از آن، این تست وضعیت کلید را هم بررسی می‌کند."
+msgstr ""
+
+#: includes/class-ofr-api.php:377
+msgid "ارتباط با سرویس پردازش تصویر برقرار نشد. چند لحظه دیگر دوباره تلاش کنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:379
+msgid "این عکس قابل پردازش نیست. لطفاً یک عکس تمام‌قد، روبه‌رو و با نور کافی انتخاب کنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:381 online-fitting-room.php:447
+msgid "حجم تصویر بیشتر از حد مجاز است."
+msgstr ""
+
+#: includes/class-ofr-api.php:383
+msgid "ظرفیت پرو مجازی فروشگاه فعلاً به پایان رسیده است. لطفاً بعداً دوباره سر بزنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:385
+msgid "سرویس پرو در حال حاضر شلوغ است؛ چند لحظه دیگر دوباره تلاش کنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:387
+msgid "این پردازش پیدا نشد؛ لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: includes/class-ofr-api.php:389
+msgid "سرویس پرو مجازی موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:23
+msgid "دکمه اتاق پُرُو"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:67 includes/class-ofr-elementor-widget.php:79
+msgid "محصول"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:69
+msgid "منبع محصول"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:73
+msgid "محصول فعلی (صفحه یا قالب محصول)"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:74
+msgid "انتخاب از فهرست محصولات"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:75
+msgid "وارد کردن شناسه محصول"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:86
+msgid "شناسه محصول"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:93
+msgid "دکمه فقط برای محصولی نمایش داده می‌شود که منتشر شده، تصویر شاخص دارد و پرو مجازی آن در ویرایش محصول خاموش نشده باشد."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:98 includes/class-ofr-elementor-widget.php:144
+msgid "دکمه"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:103
+msgid "خالی بگذارید تا متن تنظیمات افزونه استفاده شود."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:107
+msgid "آیکون"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:110
+msgid "پیش‌فرض (✦)"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:110
+msgid "انتخاب آیکون"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:110
+msgid "بدون آیکون"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:113
+msgid "آیکون دلخواه"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:119
+msgid "جایگاه آیکون"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:122
+msgid "قبل از متن"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:122
+msgid "بعد از متن"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:126
+msgid "چینش"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:129
+msgid "راست"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:130
+msgid "وسط"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:131
+msgid "چپ"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:132
+msgid "تمام‌عرض"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:147
+msgid "عادی"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:148 includes/class-ofr-elementor-widget.php:154
+msgid "رنگ متن"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:149 includes/class-ofr-elementor-widget.php:155
+msgid "رنگ پس‌زمینه"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:150 includes/class-ofr-elementor-widget.php:156
+msgid "رنگ آیکون"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:153
+msgid "هاور"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:157
+msgid "رنگ حاشیه"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:160
+msgid "جابجایی رو به بالا"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:170
+msgid "گردی گوشه‌ها"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:176
+msgid "فاصله داخلی"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:182
+msgid "اندازه آیکون"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:190
+msgid "فاصله آیکون و متن"
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:212
+msgid "ووکامرس فعال نیست."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:213
+msgid "اتاق پُرُو در تنظیمات افزونه غیرفعال است."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:214
+msgid "محصولی پیدا نشد. داخل قالب محصول استفاده کنید یا یک محصول انتخاب کنید."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:215
+msgid "شناسه وارد شده متعلق به محصول ووکامرس نیست."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:216
+msgid "محصول منتشر نشده است."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:217
+msgid "محصول تصویر شاخص ندارد."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:218
+msgid "پرو مجازی برای این محصول خاموش است."
+msgstr ""
+
+#: includes/class-ofr-elementor-widget.php:250
+msgid "این دکمه در سایت نمایش داده نمی‌شود:"
+msgstr ""
+
+#: online-fitting-room.php:71
+msgid "پرو با هوش مصنوعی"
+msgstr ""
+
+#: online-fitting-room.php:84
+msgid "عکس من فقط برای ساخت تصویر پرو به سرویس پردازش ارسال می‌شود و روی سایت ذخیره نمی‌شود. تصویر نتیجه به‌صورت خصوصی نگه داشته و حداکثر پس از ۲۴ ساعت حذف می‌شود."
+msgstr ""
+
+#: online-fitting-room.php:210
+msgid "ارتباط با سرور برقرار نشد. اتصال اینترنت را بررسی و دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:211 online-fitting-room.php:519
+msgid "پردازش بیش از حد معمول طول کشید. دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:212 online-fitting-room.php:456
+msgid "فایل انتخاب‌شده تصویر نیست یا خراب است؛ لطفاً عکس دیگری انتخاب کنید."
+msgstr ""
+
+#. translators: %s: image format name, e.g. HEIC or TIFF.
+#: online-fitting-room.php:214
+#, php-format
+msgid "باز کردن عکس‌های %s در این مرورگر و روی این سایت ممکن نیست؛ لطفاً عکس را با فرمت JPG انتخاب کنید."
+msgstr ""
+
+#: online-fitting-room.php:215
+msgid "در حال آماده‌سازی عکس…"
+msgstr ""
+
+#: online-fitting-room.php:216
+msgid "پیش‌نمایش این فرمت در مرورگر شما ممکن نیست؛ عکس هنگام ساخت پرو روی سرور تبدیل می‌شود."
+msgstr ""
+
+#. translators: %s: maximum file size, e.g. 8 MB.
+#: online-fitting-room.php:218
+#, php-format
+msgid "حجم این عکس بیشتر از حد مجاز (%s) است و مرورگر نمی‌تواند آن را کوچک کند؛ لطفاً عکس کوچک‌تری انتخاب کنید."
+msgstr ""
+
+#: online-fitting-room.php:219
+msgid "در حال آماده‌سازی…"
+msgstr ""
+
+#: online-fitting-room.php:220
+msgid "در حال ارسال عکس…"
+msgstr ""
+
+#: online-fitting-room.php:221
+msgid "در صف پردازش…"
+msgstr ""
+
+#: online-fitting-room.php:222
+msgid "هوش مصنوعی در حال پوشاندن لباس است…"
+msgstr ""
+
+#. translators: %s: number of try-ons left today.
+#: online-fitting-room.php:224
+#, php-format
+msgid "امروز %s پرو دیگر می‌توانید انجام دهید."
+msgstr ""
+
+#: online-fitting-room.php:225
+msgid "افزودن به سبد خرید"
+msgstr ""
+
+#: online-fitting-room.php:226
+msgid "انتخاب سایز / رنگ و خرید"
+msgstr ""
+
+#: online-fitting-room.php:227
+msgid "مشاهده محصول"
+msgstr ""
+
+#: online-fitting-room.php:228
+msgid "در حال افزودن…"
+msgstr ""
+
+#: online-fitting-room.php:229
+msgid "✓ به سبد خرید اضافه شد."
+msgstr ""
+
+#: online-fitting-room.php:230
+msgid "مشاهده سبد خرید"
+msgstr ""
+
+#: online-fitting-room.php:316
+msgid "بستن"
+msgstr ""
+
+#: online-fitting-room.php:317
+msgid "قبل از خرید، تنت ببین"
+msgstr ""
+
+#: online-fitting-room.php:317
+msgid "عکس خودت را بده؛ هوش مصنوعی همین لباس را روی تصویرت شبیه‌سازی می‌کند."
+msgstr ""
+
+#: online-fitting-room.php:318
+msgid "مراحل پرو"
+msgstr ""
+
+#: online-fitting-room.php:318
+msgid "انتخاب عکس"
+msgstr ""
+
+#: online-fitting-room.php:318
+msgid "پردازش"
+msgstr ""
+
+#: online-fitting-room.php:318
+msgid "نتیجه"
+msgstr ""
+
+#: online-fitting-room.php:321
+msgid "برای استفاده از اتاق پُرُو وارد حساب خود شوید"
+msgstr ""
+
+#: online-fitting-room.php:322
+msgid "پرو مجازی فقط برای کاربران عضو فعال است."
+msgstr ""
+
+#: online-fitting-room.php:323
+msgid "ورود / ثبت‌نام"
+msgstr ""
+
+#: online-fitting-room.php:326
+msgid "لباس انتخابی"
+msgstr ""
+
+#: online-fitting-room.php:327
+msgid "عکس تمام‌قد خودت را انتخاب کن"
+msgstr ""
+
+#: online-fitting-room.php:327
+msgid "هر فرمت عکسی (JPG، HEIC آیفون، PNG، WEBP، AVIF و…) — روبه‌دوربین و با نور کافی"
+msgstr ""
+
+#: online-fitting-room.php:328
+msgid "پیش‌نمایش تصویر"
+msgstr ""
+
+#: online-fitting-room.php:328
+msgid "تغییر عکس"
+msgstr ""
+
+#: online-fitting-room.php:332
+msgid "ساخت تصویر پرو"
+msgstr ""
+
+#: online-fitting-room.php:334
+msgid "داریم استایل جدیدت را می‌سازیم"
+msgstr ""
+
+#: online-fitting-room.php:334
+msgid "این مرحله معمولاً چند ثانیه زمان می‌برد."
+msgstr ""
+
+#: online-fitting-room.php:335
+msgid "نتیجه پرو مجازی"
+msgstr ""
+
+#: online-fitting-room.php:335
+msgid "✓ آماده شد"
+msgstr ""
+
+#: online-fitting-room.php:335
+msgid "این استایل چطور شد؟"
+msgstr ""
+
+#: online-fitting-room.php:335
+msgid "دانلود تصویر"
+msgstr ""
+
+#: online-fitting-room.php:335
+msgid "پرو با عکس دیگر"
+msgstr ""
+
+#: online-fitting-room.php:392
+msgid "برای استفاده از اتاق پُرُو ابتدا وارد حساب کاربری خود شوید."
+msgstr ""
+
+#: online-fitting-room.php:396
+msgid "ظرفیت پرو مجازی امروز به پایان رسیده است. لطفاً فردا دوباره سر بزنید."
+msgstr ""
+
+#: online-fitting-room.php:399
+msgid "سهم پرو امروز شما تمام شده است. فردا دوباره امتحان کنید."
+msgstr ""
+
+#: online-fitting-room.php:403
+msgid "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:412
+msgid "نشست شما منقضی شده؛ دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:432
+msgid "این محصول برای پرو مجازی آماده نیست."
+msgstr ""
+
+#: online-fitting-room.php:442
+msgid "حجم تصویر بیشتر از حد مجاز سرور است."
+msgstr ""
+
+#: online-fitting-room.php:442
+msgid "آپلود تصویر کامل نشد؛ دوباره تلاش کنید."
+msgstr ""
+
+#. translators: %s: image format name, e.g. HEIC or TIFF.
+#: online-fitting-room.php:454
+#, php-format
+msgid "تبدیل عکس‌های %s روی این سایت ممکن نیست؛ لطفاً عکس را با فرمت JPG انتخاب کنید."
+msgstr ""
+
+#: online-fitting-room.php:478
+msgid "تصویر این لباس قابل استفاده نیست؛ لطفاً به فروشگاه اطلاع دهید."
+msgstr ""
+
+#: online-fitting-room.php:516
+msgid "این پرو منقضی شده است؛ دوباره تلاش کنید."
+msgstr ""
+
+#: online-fitting-room.php:534
+msgid "این تصویر برای بررسی بیشتر متوقف شد. لطفاً عکس دیگری امتحان کنید."
+msgstr ""
+
+#: online-fitting-room.php:538
+msgid "ساخت تصویر ناموفق بود. لطفاً با یک عکس تمام‌قد و روبه‌رو دوباره امتحان کنید."
+msgstr ""
+
+#: online-fitting-room.php:558
+msgid "دریافت تصویر نهایی ناموفق بود؛ دوباره تلاش کنید."
+msgstr ""
