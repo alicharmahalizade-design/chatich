@@ -41,6 +41,22 @@ final class OFR_Admin {
 		);
 	}
 
+	public static function positions() {
+		return array(
+			'summary'    => __( 'خلاصه محصول، زیر توضیح کوتاه (پیش‌فرض)', 'online-fitting-room' ),
+			'after_cart' => __( 'زیر دکمه «افزودن به سبد خرید»', 'online-fitting-room' ),
+			'gallery'    => __( 'روی تصویر محصول (گالری)', 'online-fitting-room' ),
+		);
+	}
+
+	public static function theme_modes() {
+		return array(
+			'light' => __( 'روشن', 'online-fitting-room' ),
+			'dark'  => __( 'تیره', 'online-fitting-room' ),
+			'auto'  => __( 'خودکار (مطابق تنظیم دستگاه مشتری)', 'online-fitting-room' ),
+		);
+	}
+
 	public static function fonts() {
 		return array(
 			'theme'     => __( 'فونت قالب سایت (پیشنهادی، بدون بارگذاری اضافه)', 'online-fitting-room' ),
@@ -108,6 +124,15 @@ final class OFR_Admin {
 			'primary_color'      => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: $old['primary_color'],
 			'font'               => array_key_exists( $input['font'] ?? '', self::fonts() ) ? $input['font'] : $old['font'],
 			'photo_guide'        => $on( 'photo_guide' ),
+			'remember_photo'     => $on( 'remember_photo' ),
+			'watermark'          => $on( 'watermark' ),
+			'sticky_mobile'      => $on( 'sticky_mobile' ),
+			'loop_badge'         => $on( 'loop_badge' ),
+			'theme_mode'         => array_key_exists( $input['theme_mode'] ?? '', self::theme_modes() ) ? $input['theme_mode'] : $old['theme_mode'],
+			'button_position'    => array_key_exists( $input['button_position'] ?? '', self::positions() ) ? $input['button_position'] : $old['button_position'],
+			'modal_title'        => isset( $input['modal_title'] ) && '' !== trim( $input['modal_title'] ) ? sanitize_text_field( $input['modal_title'] ) : Online_Fitting_Room::defaults()['modal_title'],
+			'modal_subtitle'     => isset( $input['modal_subtitle'] ) ? sanitize_text_field( $input['modal_subtitle'] ) : $old['modal_subtitle'],
+			'limit_guest_day'    => min( 1000, absint( $input['limit_guest_day'] ?? $old['limit_guest_day'] ) ),
 			'trusted_proxies'    => implode( "\n", OFR_Client::parse_cidrs( $input['trusted_proxies'] ?? $old['trusted_proxies'] ) ),
 			'captcha'            => array_key_exists( $input['captcha'] ?? '', OFR_Captcha::modes() ) ? $input['captcha'] : $old['captcha'],
 			'turnstile_site'     => isset( $input['turnstile_site'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $input['turnstile_site'] ) : $old['turnstile_site'],
@@ -118,7 +143,7 @@ final class OFR_Admin {
 			'limit_per_user_day' => min( 1000, absint( $input['limit_per_user_day'] ?? $old['limit_per_user_day'] ) ),
 			'limit_site_day'     => min( 100000, absint( $input['limit_site_day'] ?? $old['limit_site_day'] ) ),
 			'ip_source'          => array_key_exists( $input['ip_source'] ?? '', self::ip_sources() ) ? $input['ip_source'] : $old['ip_source'],
-			'privacy_text'       => sanitize_textarea_field( $input['privacy_text'] ?? $old['privacy_text'] ),
+			'privacy_text'       => trim( wp_kses( $input['privacy_text'] ?? $old['privacy_text'], Online_Fitting_Room::consent_tags() ) ),
 		);
 	}
 
@@ -276,7 +301,8 @@ final class OFR_Admin {
 							<header class="ofr-card__head"><span class="ofr-card__icon"><?php echo self::icon( 'shield' ); ?></span><div><h2><?php esc_html_e( 'محدودیت مصرف', 'online-fitting-room' ); ?></h2><p><?php esc_html_e( 'از اعتبار حساب مربع API در برابر استفاده بی‌رویه محافظت کنید.', 'online-fitting-room' ); ?></p></div></header>
 							<div class="ofr-field"><?php self::toggle( 'require_login', $s['require_login'], __( 'فقط کاربران عضو', 'online-fitting-room' ), __( 'مهمان‌ها برای پرو باید وارد حساب کاربری شوند.', 'online-fitting-room' ) ); ?></div>
 							<div class="ofr-row">
-								<div class="ofr-field"><label class="ofr-label" for="ofr-limit-user"><?php esc_html_e( 'سقف روزانه هر کاربر', 'online-fitting-room' ); ?></label><input id="ofr-limit-user" class="ofr-input" type="number" min="0" max="1000" name="<?php echo self::name( 'limit_per_user_day' ); ?>" value="<?php echo esc_attr( $s['limit_per_user_day'] ); ?>"><p class="ofr-help"><?php esc_html_e( '۰ یعنی نامحدود', 'online-fitting-room' ); ?></p></div>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-limit-user"><?php esc_html_e( 'سقف روزانه هر عضو', 'online-fitting-room' ); ?></label><input id="ofr-limit-user" class="ofr-input" type="number" min="0" max="1000" name="<?php echo self::name( 'limit_per_user_day' ); ?>" value="<?php echo esc_attr( $s['limit_per_user_day'] ); ?>"><p class="ofr-help"><?php esc_html_e( '۰ یعنی نامحدود', 'online-fitting-room' ); ?></p></div>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-limit-guest"><?php esc_html_e( 'سقف روزانه هر مهمان', 'online-fitting-room' ); ?></label><input id="ofr-limit-guest" class="ofr-input" type="number" min="0" max="1000" name="<?php echo self::name( 'limit_guest_day' ); ?>" value="<?php echo esc_attr( $s['limit_guest_day'] ); ?>"><p class="ofr-help"><?php esc_html_e( 'اگر کمتر از سقف اعضا باشد، مهمانی که سهمش تمام شده دعوت به ورود یا ثبت‌نام می‌شود.', 'online-fitting-room' ); ?></p></div>
 								<div class="ofr-field"><label class="ofr-label" for="ofr-limit-site"><?php esc_html_e( 'سقف روزانه کل سایت', 'online-fitting-room' ); ?></label><input id="ofr-limit-site" class="ofr-input" type="number" min="0" max="100000" name="<?php echo self::name( 'limit_site_day' ); ?>" value="<?php echo esc_attr( $s['limit_site_day'] ); ?>"><p class="ofr-help"><?php esc_html_e( '۰ یعنی نامحدود', 'online-fitting-room' ); ?></p></div>
 							</div>
 							<div class="ofr-field"><label class="ofr-label" for="ofr-ip_source"><?php esc_html_e( 'سایت پشت CDN', 'online-fitting-room' ); ?></label><?php self::select( 'ip_source', self::ip_sources(), $s['ip_source'] ); ?><p class="ofr-help"><?php echo esc_html( self::ip_status() ); ?></p></div>
@@ -299,15 +325,29 @@ final class OFR_Admin {
 							<div class="ofr-row">
 								<div class="ofr-field"><?php self::toggle( 'enabled', $s['enabled'], __( 'اتاق پُرُو فعال باشد', 'online-fitting-room' ) ); ?></div>
 								<div class="ofr-field"><?php self::toggle( 'auto_display', $s['auto_display'], __( 'نمایش خودکار در صفحه محصول', 'online-fitting-room' ), __( 'اگر از ویجت المنتور یا شورت‌کد [online_fitting_room] استفاده می‌کنید، خاموش کنید.', 'online-fitting-room' ) ); ?></div>
-								<div class="ofr-field"><?php self::toggle( 'photo_guide', $s['photo_guide'], __( 'راهنمای تصویری عکس', 'online-fitting-room' ), __( 'نمونه عکس درست و نادرست در پنجره پرو؛ پروهای ناموفق را کم می‌کند.', 'online-fitting-room' ) ); ?></div>
+								<div class="ofr-field"><?php self::toggle( 'sticky_mobile', $s['sticky_mobile'], __( 'نوار چسبان در موبایل', 'online-fitting-room' ), __( 'وقتی مشتری از دکمه رد شد، پایین صفحه موبایل همیشه در دسترس است.', 'online-fitting-room' ) ); ?></div>
+								<div class="ofr-field"><?php self::toggle( 'loop_badge', $s['loop_badge'], __( 'نشان «قابل پرو ✦» روی کارت محصولات', 'online-fitting-room' ), __( 'در فروشگاه و دسته‌ها؛ با زدن آن، پرو بدون رفتن به صفحه محصول باز می‌شود.', 'online-fitting-room' ) ); ?></div>
 							</div>
 							<div class="ofr-row">
+								<div class="ofr-field"><label class="ofr-label" for="ofr-button_position"><?php esc_html_e( 'جای دکمه در صفحه محصول', 'online-fitting-room' ); ?></label><?php self::select( 'button_position', self::positions(), $s['button_position'] ); ?></div>
 								<div class="ofr-field"><label class="ofr-label" for="ofr-button-text"><?php esc_html_e( 'متن دکمه', 'online-fitting-room' ); ?></label><input id="ofr-button-text" class="ofr-input" name="<?php echo self::name( 'button_text' ); ?>" value="<?php echo esc_attr( $s['button_text'] ); ?>"></div>
-								<div class="ofr-field"><label class="ofr-label" for="ofr-default_category"><?php esc_html_e( 'نوع لباس پیش‌فرض', 'online-fitting-room' ); ?></label><?php self::select( 'default_category', self::categories(), $s['default_category'] ); ?><p class="ofr-help"><?php esc_html_e( 'در ویرایش هر محصول قابل تغییر است.', 'online-fitting-room' ); ?></p></div>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-theme_mode"><?php esc_html_e( 'حالت رنگ پنجره پرو', 'online-fitting-room' ); ?></label><?php self::select( 'theme_mode', self::theme_modes(), $s['theme_mode'] ); ?></div>
 								<div class="ofr-field"><label class="ofr-label" for="ofr-font"><?php esc_html_e( 'فونت', 'online-fitting-room' ); ?></label><?php self::select( 'font', self::fonts(), $s['font'] ); ?></div>
+							</div>
+							<div class="ofr-row">
+								<div class="ofr-field"><label class="ofr-label" for="ofr-modal-title"><?php esc_html_e( 'عنوان پنجره پرو', 'online-fitting-room' ); ?></label><input id="ofr-modal-title" class="ofr-input" name="<?php echo self::name( 'modal_title' ); ?>" value="<?php echo esc_attr( $s['modal_title'] ); ?>"></div>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-modal-subtitle"><?php esc_html_e( 'زیرعنوان پنجره پرو', 'online-fitting-room' ); ?></label><input id="ofr-modal-subtitle" class="ofr-input" name="<?php echo self::name( 'modal_subtitle' ); ?>" value="<?php echo esc_attr( $s['modal_subtitle'] ); ?>"><p class="ofr-help"><?php esc_html_e( 'خالی بگذارید تا نمایش داده نشود.', 'online-fitting-room' ); ?></p></div>
+							</div>
+							<div class="ofr-row">
+								<div class="ofr-field"><?php self::toggle( 'photo_guide', $s['photo_guide'], __( 'راهنمای تصویری عکس', 'online-fitting-room' ), __( 'نمونه عکس مناسب در پنجره پرو؛ پروهای ناموفق را کم می‌کند.', 'online-fitting-room' ) ); ?></div>
+								<div class="ofr-field"><?php self::toggle( 'remember_photo', $s['remember_photo'], __( '«عکسم را روی همین دستگاه نگه دار»', 'online-fitting-room' ), __( 'با رضایت مشتری، عکس فقط در مرورگر خودش می‌ماند تا روی هر لباس با یک کلیک پرو کند.', 'online-fitting-room' ) ); ?></div>
+								<div class="ofr-field"><?php self::toggle( 'watermark', $s['watermark'], __( 'لوگوی فروشگاه روی تصویر اشتراک‌گذاری', 'online-fitting-room' ), __( 'لوگوی سایت (یا آیکون سایت) و نام فروشگاه گوشه تصویری که مشتری در شبکه‌های اجتماعی می‌فرستد.', 'online-fitting-room' ) ); ?></div>
+							</div>
+							<div class="ofr-row">
+								<div class="ofr-field"><label class="ofr-label" for="ofr-default_category"><?php esc_html_e( 'نوع لباس پیش‌فرض', 'online-fitting-room' ); ?></label><?php self::select( 'default_category', self::categories(), $s['default_category'] ); ?><p class="ofr-help"><?php esc_html_e( 'در ویرایش هر محصول قابل تغییر است.', 'online-fitting-room' ); ?></p></div>
 								<div class="ofr-field"><span class="ofr-label"><?php esc_html_e( 'رنگ‌ها', 'online-fitting-room' ); ?></span><div class="ofr-colors"><label><input type="color" name="<?php echo self::name( 'primary_color' ); ?>" value="<?php echo esc_attr( $s['primary_color'] ); ?>"> <?php esc_html_e( 'اصلی', 'online-fitting-room' ); ?></label><label><input type="color" name="<?php echo self::name( 'accent_color' ); ?>" value="<?php echo esc_attr( $s['accent_color'] ); ?>"> <?php esc_html_e( 'تأکیدی', 'online-fitting-room' ); ?></label></div></div>
 							</div>
-							<div class="ofr-field"><label class="ofr-label" for="ofr-privacy"><?php esc_html_e( 'متن رضایت مشتری', 'online-fitting-room' ); ?></label><textarea id="ofr-privacy" class="ofr-input" rows="3" name="<?php echo self::name( 'privacy_text' ); ?>"><?php echo esc_textarea( $s['privacy_text'] ); ?></textarea></div>
+							<div class="ofr-field"><label class="ofr-label" for="ofr-privacy"><?php esc_html_e( 'متن رضایت مشتری', 'online-fitting-room' ); ?></label><textarea id="ofr-privacy" class="ofr-input" rows="3" name="<?php echo self::name( 'privacy_text' ); ?>"><?php echo esc_textarea( $s['privacy_text'] ); ?></textarea><p class="ofr-help"><?php esc_html_e( '{privacy} به لینک صفحه «سیاست حریم خصوصی» سایت (تنظیمات ← حریم خصوصی) تبدیل می‌شود. لینک دلخواه هم مجاز است: <a href="…">متن</a>؛ لینک‌ها در زبانه جدید باز می‌شوند.', 'online-fitting-room' ); ?></p></div>
 						</section>
 					</div>
 					<div class="ofr-savebar"><span><?php esc_html_e( 'تغییرات پس از ذخیره روی فروشگاه اعمال می‌شوند.', 'online-fitting-room' ); ?></span><button type="submit" class="ofr-btn ofr-btn--primary"><?php esc_html_e( 'ذخیره تنظیمات', 'online-fitting-room' ); ?></button></div>

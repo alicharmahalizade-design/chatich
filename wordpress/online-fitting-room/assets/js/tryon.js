@@ -8,31 +8,44 @@
   const toastEl = document.querySelector('[data-ofr-toast]');
   const ui = {
     dialog: $('.ofr__dialog'), file: $('[data-avatar]'), preview: $('[data-preview]'), previewWrap: $('.ofr__preview'), previewNote: $('[data-preview-note]'), drop: $('[data-drop]'),
-    consent: $('[data-consent]'), start: $('[data-start]'), error: $('.ofr__error'), remaining: $('[data-remaining]'), result: $('[data-result]'),
-    status: $('[data-status-text]'), cart: $('[data-cart]'), cartNote: $('[data-cart-note]'), download: $('[data-download]'), login: $('[data-login]'),
-    guide: $('[data-guide]'), guideToggle: $('[data-guide-toggle]'), captcha: $('[data-captcha]'), dropzone: $('[data-dropzone]'),
+    savedBadge: $('[data-saved-badge]'), forget: $('[data-forget]'), remember: $('[data-remember]'),
+    consent: $('[data-consent]'), start: $('[data-start]'), error: $('.ofr__error'), errorText: $('[data-error-text]'), upsell: $('[data-upsell]'), remaining: $('[data-remaining]'),
+    status: $('[data-status-text]'), meter: $('[data-meter]'), eta: $('[data-eta]'), scan: $('[data-scan]'), scanPhoto: $('[data-scan-photo]'), scanGarment: $('[data-scan-garment]'), orb: $('[data-orb]'),
+    result: $('[data-result]'), compareView: $('[data-compare-view]'), before: $('[data-before]'), beforeWrap: $('[data-before-wrap]'), compare: $('[data-compare]'),
+    handle: $('[data-handle]'), tagBefore: $('[data-tag-before]'), tagAfter: $('[data-tag-after]'),
+    cart: $('[data-cart]'), cartNote: $('[data-cart-note]'), download: $('[data-download]'), share: $('[data-share]'), openCompare: $('[data-open-compare]'), gallery: $('[data-gallery]'),
+    login: $('[data-login]'), guide: $('[data-guide]'), captcha: $('[data-captcha]'), dropzone: $('[data-dropzone]'),
+    swatches: $('[data-swatches]'), resultSwatches: $('[data-result-swatches]'),
     price: $('[data-product-price]'), regular: $('[data-product-regular]'),
+    viewer: $('[data-viewer]'), viewerImg: $('[data-viewer-img]'),
     toastText: toastEl && toastEl.querySelector('[data-toast-text]'), toastAction: toastEl && toastEl.querySelector('[data-toast-action]')
   };
-  const STAGE_STEP = { login: 0, upload: 0, working: 1, result: 2 };
+  const STAGE_STEP = { login: 0, upload: 0, working: 1, result: 2, compare: 2 };
   const MAX_POLLS = 90;
   const STORE = 'ofr_jobs';
+  const RESULTS = 'ofr_results';
+  const PHOTO_DAYS = 30;
 
   let product = null, opener = null, objectUrl = '', session = null;
-  // The photo to upload once prepared: { blob, canvas? } — canvas allows a lighter re-encode after HTTP 413.
+  // The photo to upload: { blob, canvas?, preview: bool, saved: bool } — canvas allows a lighter re-encode after HTTP 413.
   let prepared = null, pick = 0;
   // Try-ons keep running when the modal closes; `current` is the one the modal shows.
   const jobs = new Set();
-  let current = null, toastJob = null;
-  // Variation chosen on the product page, per product: { id, image, price, regular }.
+  let current = null, toastJob = null, meterTimer = null;
+  // Variation chosen on the page or in the modal, per product: { id, image, price, regular }.
   const variations = {};
+  const swatchCache = {};
 
   const isOpen = () => !root.hidden;
   const fmt = (n) => { try { return Number(n).toLocaleString(document.documentElement.lang || 'fa-IR'); } catch (_) { return String(n); } };
-  const showError = (message) => { ui.error.textContent = message || ''; ui.error.hidden = !message; };
+  const showError = (message, upsell) => {
+    ui.errorText.textContent = message || ''; ui.error.hidden = !message;
+    ui.upsell.hidden = !(message && upsell && session && session.loginUrl);
+    if (!ui.upsell.hidden) { ui.upsell.textContent = upsell; ui.upsell.href = session.loginUrl; }
+  };
   const showRemaining = (n) => {
     ui.remaining.hidden = n === null || n === undefined;
-    if (!ui.remaining.hidden) ui.remaining.textContent = t.remaining.replace('%s', fmt(n));
+    if (!ui.remaining.hidden) ui.remaining.textContent = t.remaining.replace('%s', fmt(n)) + (session && session.memberHint ? ' ' + session.memberHint : '');
   };
   const currentStage = () => { const el = root.querySelector('.ofr__stage.is-active'); return el ? el.dataset.stage : ''; };
   const stage = (name, focus) => {
@@ -43,7 +56,9 @@
     });
     if (focus) { const h = root.querySelector(`[data-stage="${name}"] h3`); if (h) h.focus(); }
   };
-  const storage = (fn) => { try { return fn(window.sessionStorage); } catch (_) { return null; } };
+  const store = (kind, fn) => { try { return fn(kind === 'local' ? window.localStorage : window.sessionStorage); } catch (_) { return null; } };
+  const readJSON = (kind, key, fallback) => { const v = store(kind, (s) => JSON.parse(s.getItem(key) || 'null')); return v === null || v === undefined ? fallback : v; };
+  const writeJSON = (kind, key, value) => store(kind, (s) => s.setItem(key, JSON.stringify(value)));
 
   /* ---------- Server calls ---------- */
 
@@ -72,10 +87,11 @@
     Object.entries(fields || {}).forEach(([k, v]) => { if (v !== undefined && v !== null) body.append(k, v); });
     return body;
   };
-  // The page may come from a full-page cache, so the nonce is fetched live.
+  // The page may come from a full-page cache, so the nonce is fetched live (with this product's colour swatches).
   const loadSession = async () => {
-    session = await post(form('ofr_session', { return: location.href }));
+    session = await post(form('ofr_session', { return: location.href, product_id: product ? product.id : null }));
     if (ui.login) ui.login.href = session.loginUrl;
+    if (product && Array.isArray(session.swatches)) swatchCache[product.id] = session.swatches;
     showRemaining(session.remaining);
     return session;
   };
@@ -267,7 +283,7 @@
     }
     return blob ? { blob, canvas } : null;
   };
-  /** @return {Promise<{blob?: Blob, canvas?: HTMLCanvasElement, preview?: Blob, error?: string}>} */
+  /** @return {Promise<{blob?: Blob, canvas?: HTMLCanvasElement, preview?: boolean, error?: string}>} */
   const prepare = async (file) => {
     const format = await sniff(file);
     if (!format) return { error: t.invalid };
@@ -277,18 +293,43 @@
       try {
         const out = await compress(image, target());
         if (image.close) image.close();
-        if (out) return { blob: out.blob, canvas: out.canvas, preview: out.blob };
+        if (out) return { blob: out.blob, canvas: out.canvas, preview: true };
       } catch (_) { /* fall through to server-side conversion */ }
     }
     // The server converts what the browser cannot (and removes metadata there).
     if (cfg.serverFormats.includes(format)) {
-      return file.size > cfg.maxBytes ? { error: t.large } : { blob: file, preview: null };
+      return file.size > cfg.maxBytes ? { error: t.large } : { blob: file, preview: false };
     }
     if (format === 'other') return { error: t.invalid };
     return { error: t.unsupported.replace('%s', LABELS[format] || format.toUpperCase()) };
   };
 
-  /* ---------- Product card ---------- */
+  /* ---------- "Keep my photo on this device" (IndexedDB, never sent anywhere else) ---------- */
+
+  const idb = (mode, fn) => new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('no indexedDB')); return; }
+    const open = indexedDB.open('ofr', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('photo');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result, tx = db.transaction('photo', mode), request = fn(tx.objectStore('photo'));
+      tx.oncomplete = () => { db.close(); resolve(request ? request.result : undefined); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    };
+  });
+  const savedPhoto = async () => {
+    if (!cfg.rememberPhoto) return null;
+    try {
+      const record = await idb('readonly', (s) => s.get('me'));
+      if (!record || !(record.blob instanceof Blob)) return null;
+      if (Date.now() - record.at > PHOTO_DAYS * 864e5) { forgetPhoto(); return null; }
+      return record;
+    } catch (_) { return null; }
+  };
+  const keepPhoto = (blob) => idb('readwrite', (s) => s.put({ blob, at: Date.now() }, 'me')).catch(() => {});
+  const forgetPhoto = () => idb('readwrite', (s) => s.delete('me')).catch(() => {});
+
+  /* ---------- Product card and colour swatches ---------- */
 
   const parsePrice = (html) => {
     if (!html) return null;
@@ -300,49 +341,163 @@
     const price = clean(doc.body.textContent);
     return price ? { price, regular: '' } : null;
   };
+  const garmentImage = (p) => { const v = variations[p.id]; return (v && v.image) || p.image; };
   const fillProduct = (p) => {
     const variation = variations[p.id];
-    $('[data-product-image]').src = (variation && variation.image) || p.image;
-    $('[data-product-title]').textContent = p.title;
+    $('[data-product-image]').src = garmentImage(p);
+    $('[data-product-title]').textContent = p.title + (variation && variation.label ? ' — ' + variation.label : '');
     const price = (variation && variation.price) ? variation : p;
     ui.price.textContent = price.price || '';
     ui.regular.textContent = price.regular || '';
     ui.regular.hidden = !price.regular;
   };
-
-  /* ---------- Guide ---------- */
-
-  const showGuide = (open) => {
-    if (!ui.guide) return;
-    ui.guide.hidden = !open;
-    if (ui.guideToggle) ui.guideToggle.setAttribute('aria-expanded', String(open));
+  const cartForm = () => [...document.querySelectorAll('form.cart')].find((f) =>
+    String(f.dataset.product_id) === String(product.id) || f.querySelector(`[name="add-to-cart"][value="${product.id}"]`));
+  // Mirror the colour picked in the modal on the product page form, so "add to cart" uses it.
+  const syncForm = (swatch) => {
+    const pageForm = cartForm();
+    if (!pageForm) return;
+    Object.entries(swatch.attrs || {}).forEach(([name, value]) => {
+      const field = pageForm.querySelector(`select[name="${CSS.escape(name)}"]`);
+      if (field && field.value !== value && [...field.options].some((o) => o.value === value)) {
+        field.value = value; field.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
   };
+  // The swatch whose attributes match what is selected on the page form (when the form alone is not complete).
+  const matchSwatch = (pageForm, id) => (swatchCache[id] || []).find((sw) => {
+    const attrs = Object.entries(sw.attrs || {});
+    return attrs.length && attrs.every(([name, value]) => { const f = pageForm.querySelector(`[name="${CSS.escape(name)}"]`); return f && f.value === value; });
+  });
+  const chooseSwatch = (sw) => {
+    variations[product.id] = { id: sw.id, image: sw.image, price: sw.price, regular: sw.regular, label: sw.label };
+    fillProduct(product); renderSwatches(); syncForm(sw);
+  };
+  function renderSwatches() {
+    const list = (product && swatchCache[product.id]) || [];
+    const selected = product && variations[product.id] ? variations[product.id].id : null;
+    [[ui.swatches, false], [ui.resultSwatches, true]].forEach(([box, inResult]) => {
+      if (!box) return;
+      box.hidden = list.length < 2;
+      const holder = box.querySelector('.ofr__swatch-list');
+      holder.textContent = '';
+      list.forEach((sw) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'ofr__swatch' + (sw.inStock ? '' : ' is-out');
+        b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(sw.id === selected));
+        b.title = sw.inStock ? sw.label : `${sw.label} (${t.outOfStock})`;
+        if (sw.thumb) { const img = document.createElement('img'); img.src = sw.thumb; img.alt = ''; img.loading = 'lazy'; b.append(img); }
+        b.append(document.createTextNode(sw.label));
+        b.addEventListener('click', () => {
+          chooseSwatch(sw);
+          // On the result: try the new colour right away with the same photo.
+          if (inResult && prepared) begin(true);
+        });
+        holder.append(b);
+      });
+    });
+  }
+
+  /* ---------- Guide, viewer (full screen, pinch zoom) ---------- */
+
   const highlightGuide = () => {
     if (!ui.guide) return;
-    showGuide(true);
-    const ok = ui.guide.querySelector('.is-ok');
-    if (ok) { ok.classList.remove('is-highlight'); void ok.offsetWidth; ok.classList.add('is-highlight'); }
+    ui.guide.classList.remove('is-highlight'); void ui.guide.offsetWidth; ui.guide.classList.add('is-highlight');
   };
+  const view = { scale: 1, x: 0, y: 0, pointers: new Map(), start: null, back: null, lastTap: 0 };
+  const applyView = () => {
+    ui.viewerImg.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
+    ui.viewer.classList.toggle('is-zoomed', view.scale > 1.01);
+  };
+  const clampView = () => {
+    view.scale = Math.min(5, Math.max(1, view.scale));
+    const maxX = (ui.viewerImg.clientWidth * (view.scale - 1)) / 2, maxY = (ui.viewerImg.clientHeight * (view.scale - 1)) / 2;
+    view.x = Math.min(maxX, Math.max(-maxX, view.x)); view.y = Math.min(maxY, Math.max(-maxY, view.y));
+  };
+  const zoomAt = (scale, cx, cy) => {
+    const rect = ui.viewerImg.getBoundingClientRect(), ox = cx - (rect.left + rect.width / 2), oy = cy - (rect.top + rect.height / 2), k = scale / view.scale;
+    view.x += ox * (1 - k); view.y += oy * (1 - k); view.scale = scale;
+    clampView(); applyView();
+  };
+  const openViewer = (src, alt) => {
+    view.back = document.activeElement; view.scale = 1; view.x = 0; view.y = 0; applyView();
+    ui.viewerImg.src = src; ui.viewerImg.alt = alt || ''; ui.viewer.hidden = false; ui.viewer.focus();
+  };
+  const closeViewer = () => { ui.viewer.hidden = true; view.pointers.clear(); if (view.back) view.back.focus(); };
+  const distance = () => { const [a, b] = [...view.pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+  ui.viewer.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('[data-viewer-close]')) return;
+    ui.viewer.setPointerCapture(e.pointerId);
+    view.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    view.start = view.pointers.size === 2 ? { dist: distance(), scale: view.scale } : { x: e.clientX, y: e.clientY, ox: view.x, oy: view.y, moved: false };
+    ui.viewer.classList.add('is-dragging');
+  });
+  ui.viewer.addEventListener('pointermove', (e) => {
+    if (!view.pointers.has(e.pointerId)) return;
+    view.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (view.pointers.size === 2 && view.start && view.start.dist) {
+      view.scale = view.start.scale * (distance() / view.start.dist); clampView(); applyView();
+    } else if (view.start && view.start.ox !== undefined) {
+      const dx = e.clientX - view.start.x, dy = e.clientY - view.start.y;
+      if (Math.abs(dx) + Math.abs(dy) > 6) view.start.moved = true;
+      if (view.scale > 1) { view.x = view.start.ox + dx; view.y = view.start.oy + dy; clampView(); applyView(); }
+    }
+  });
+  const pointerEnd = (e) => {
+    if (!view.pointers.has(e.pointerId)) return;
+    view.pointers.delete(e.pointerId); ui.viewer.classList.remove('is-dragging');
+    if (e.type === 'pointerup' && view.start && view.start.ox !== undefined && !view.start.moved) {
+      const now = Date.now();
+      if (now - view.lastTap < 320) { zoomAt(view.scale > 1.01 ? 1 : 2.5, e.clientX, e.clientY); view.lastTap = 0; }
+      else { view.lastTap = now; if (e.target === ui.viewer && view.scale <= 1.01) setTimeout(() => { if (view.lastTap === now) closeViewer(); }, 330); }
+    }
+    if (view.scale <= 1.01) { view.scale = 1; view.x = 0; view.y = 0; applyView(); }
+    view.start = view.pointers.size === 1 ? (() => { const p = [...view.pointers.values()][0]; return { x: p.x, y: p.y, ox: view.x, oy: view.y, moved: true }; })() : null;
+  };
+  ui.viewer.addEventListener('pointerup', pointerEnd);
+  ui.viewer.addEventListener('pointercancel', pointerEnd);
+  ui.viewer.addEventListener('wheel', (e) => { e.preventDefault(); zoomAt(view.scale * Math.exp(-Math.max(-300, Math.min(300, e.deltaY)) * 0.0025), e.clientX, e.clientY); }, { passive: false });
+  ui.viewer.addEventListener('click', (e) => { if (e.target.closest('[data-viewer-close]')) closeViewer(); });
 
   /* ---------- Modal ---------- */
 
-  const focusables = () => [...ui.dialog.querySelectorAll('button, [href], input, select, textarea, iframe, [tabindex]:not([tabindex="-1"])')]
-    .filter((el) => !el.disabled && el.offsetParent !== null);
+  const focusables = () => {
+    const scope = ui.viewer.hidden ? ui.dialog : ui.viewer;
+    return [...scope.querySelectorAll('button, [href], input, select, textarea, iframe, [tabindex]:not([tabindex="-1"])')].filter((el) => !el.disabled && el.offsetParent !== null);
+  };
   const valid = () => { ui.start.disabled = !(prepared && ui.consent.checked && (captcha.mode !== 'turnstile' || tsToken)); };
+  const showPhoto = (photo) => {
+    prepared = photo;
+    if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = '';
+    ui.drop.hidden = true; ui.previewWrap.hidden = false;
+    if (photo.preview) { objectUrl = URL.createObjectURL(photo.blob); ui.preview.src = objectUrl; note(''); } else { ui.preview.removeAttribute('src'); note(t.noPreview); }
+    ui.savedBadge.hidden = !photo.saved; ui.forget.hidden = !photo.saved;
+    valid();
+  };
   const clearPhoto = () => {
     pick++; prepared = null; ui.file.value = '';
-    ui.drop.hidden = false; ui.previewWrap.hidden = true; showGuide(true);
+    ui.drop.hidden = false; ui.previewWrap.hidden = true;
     if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = '';
     valid();
   };
-  const reset = () => {
-    current = null; clearPhoto(); ui.consent.checked = consentRemembered(); showError(''); ui.cartNote.hidden = true; valid();
+  const consentRemembered = () => store('local', (s) => s.getItem('ofr_consent') === '1') || false;
+  const toUpload = () => {
+    current = null; showError(''); ui.cartNote.hidden = true;
+    ui.consent.checked = ui.consent.checked || consentRemembered(); valid();
     stage(session && session.loginRequired ? 'login' : 'upload');
   };
-  const consentRemembered = () => storage((s) => s.getItem('ofr_consent') === '1') || false;
+  // A photo kept on this device (with the shopper's consent) is ready again without a new upload.
+  const restorePhoto = async () => {
+    if (prepared) return;
+    const token = pick, record = await savedPhoto();
+    if (!record || prepared || token !== pick) return;
+    if (ui.remember) ui.remember.checked = true;
+    showPhoto({ blob: record.blob, canvas: null, preview: true, saved: true });
+  };
   const close = () => {
     if (!isOpen()) return;
-    root.hidden = true; hideDrop(); document.documentElement.classList.remove('ofr-lock');
+    if (!ui.viewer.hidden) closeViewer();
+    root.hidden = true; hideDrop(); document.documentElement.classList.remove('ofr-lock'); stopMeter();
     // A try-on in progress keeps running; the toast tells the shopper when it is ready.
     const running = (job) => job.state === 'starting' || job.state === 'working';
     const pending = current && running(current) ? current : [...jobs].reverse().find((job) => running(job) || (job.state === 'done' && !job.seen));
@@ -350,24 +505,22 @@
     if (pending) toast(pending);
     if (opener && document.contains(opener)) opener.focus();
   };
+  const show = () => { root.hidden = false; document.documentElement.classList.add('ofr-lock'); hideToast(); };
   const open = async (p, button) => {
     product = p; opener = button || null;
-    fillProduct(product);
-    root.hidden = false; document.documentElement.classList.add('ofr-lock');
-    hideToast();
+    fillProduct(product); renderSwatches();
+    show(); toUpload();
     const running = [...jobs].find((job) => job.product.id === product.id && (job.state === 'starting' || job.state === 'working'));
-    reset();
     if (running) { current = running; render(running); }
     ui.dialog.focus();
-    // Only switch to the login step here: a reset would discard a photo picked while this loads.
-    try { await loadSession(); if (session.loginRequired && !current) stage('login'); } catch (e) { showError(e.message); }
-    const first = focusables()[0]; if (first) first.focus();
+    restorePhoto();
+    // Only switch to the login step here: re-rendering would discard a photo picked while this loads.
+    try {
+      await loadSession(); renderSwatches();
+      if (session.loginRequired && !current) stage('login');
+    } catch (e) { showError(e.message); }
   };
-  const openResult = (job) => {
-    product = job.product; fillProduct(product);
-    root.hidden = false; document.documentElement.classList.add('ofr-lock'); hideToast();
-    reset(); current = job; render(job, true);
-  };
+  const openResult = (job) => { product = job.product; fillProduct(product); renderSwatches(); show(); toUpload(); current = job; render(job, true); };
 
   /* ---------- Toast (try-ons running in the background) ---------- */
 
@@ -392,23 +545,123 @@
     });
   }
 
+  /* ---------- Estimated progress while waiting ---------- */
+
+  // Learns how long try-ons take on this store (last few runs, this browser) to estimate the remaining time.
+  const expected = () => { const list = readJSON('local', 'ofr_durations', []); return list.length ? list.reduce((a, b) => a + b, 0) / list.length : 18; };
+  const learn = (seconds) => { if (seconds > 2 && seconds < 300) writeJSON('local', 'ofr_durations', readJSON('local', 'ofr_durations', []).concat(seconds).slice(-6)); };
+  const stopMeter = () => { clearInterval(meterTimer); meterTimer = null; };
+  const tickMeter = () => {
+    const job = current;
+    if (!job || !isOpen() || !(job.state === 'starting' || job.state === 'working')) { stopMeter(); return; }
+    const elapsed = (Date.now() - job.at) / 1000, total = expected();
+    const pct = Math.round(96 * (1 - Math.exp(-2.1 * elapsed / total)));
+    ui.meter.firstElementChild.style.width = pct + '%'; ui.meter.setAttribute('aria-valuenow', String(pct));
+    const left = Math.round(total - elapsed);
+    ui.eta.textContent = left > 1 ? t.eta.replace('%s', fmt(left)) : t.etaLong;
+  };
+  const startMeter = () => { if (!meterTimer) { tickMeter(); meterTimer = setInterval(tickMeter, 500); } };
+
+  /* ---------- Result: before/after slider, share, comparison ---------- */
+
+  const setCompare = (value) => { ui.compareView.style.setProperty('--pos', value + '%'); };
+  const results = () => readJSON('session', RESULTS, []).filter((r) => Date.now() - r.at < 864e5);
+  const remember = (job) => {
+    const list = results().filter((r) => r.output !== job.output);
+    list.push({ output: job.output, title: job.product.title + (job.label ? ' — ' + job.label : ''), url: job.product.url, at: Date.now() });
+    writeJSON('session', RESULTS, list.slice(-6));
+  };
+  const showResult = (job) => {
+    ui.result.src = job.output; ui.download.href = job.download;
+    const hasBefore = !!job.before;
+    [ui.beforeWrap, ui.compare, ui.handle, ui.tagBefore, ui.tagAfter].forEach((el) => { el.hidden = !hasBefore; });
+    if (hasBefore) { ui.before.src = job.before; ui.compare.value = 50; setCompare(50); }
+    $('[data-result-product]').textContent = job.product.title + (job.label ? ' — ' + job.label : '');
+    ui.share.hidden = !navigator.share;
+    const count = results().length;
+    ui.openCompare.hidden = count < 2;
+    ui.openCompare.textContent = t.compare.replace('%s', fmt(count));
+    setupCart(); renderSwatches();
+  };
+  ui.compare.addEventListener('input', () => setCompare(ui.compare.value));
+
+  const loadImage = (src) => new Promise((resolve, reject) => {
+    const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => resolve(img); img.onerror = reject; img.src = src;
+  });
+  // The store's logo and name in a corner of the shared picture: every share is an ad for the shop.
+  const watermark = async (blob) => {
+    const image = await decode(blob);
+    const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+    if (image.close) image.close();
+    if (cfg.watermark) {
+      const s = Math.max(1, canvas.width / 720), h = 46 * s, pad = 16 * s, inner = h - 14 * s;
+      const logo = cfg.watermark.logo ? await loadImage(cfg.watermark.logo).catch(() => null) : null;
+      ctx.font = `800 ${17 * s}px ${getComputedStyle(root).fontFamily || 'sans-serif'}`;
+      const name = cfg.watermark.name || '', tw = name ? ctx.measureText(name).width : 0;
+      const lw = logo ? inner * Math.min(3, logo.width / logo.height) : 0;
+      const w = 22 * s + lw + (logo && name ? 10 * s : 0) + tw, x = canvas.width - w - pad, y = canvas.height - h - pad;
+      ctx.fillStyle = 'rgba(17,24,39,.74)'; ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, w, h, h / 2); else ctx.rect(x, y, w, h);
+      ctx.fill();
+      if (logo) ctx.drawImage(logo, x + w - 11 * s - lw, y + 7 * s, lw, inner);
+      if (name) { ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'right'; ctx.direction = 'rtl'; ctx.fillText(name, x + w - 11 * s - lw - (logo ? 10 * s : 0), y + h / 2); }
+    }
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  };
+  const saveBlob = (blob, name) => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  const share = async () => {
+    const job = current; if (!job || !job.output) return;
+    let picture = null;
+    ui.share.setAttribute('aria-busy', 'true');
+    try {
+      picture = await watermark(await (await fetch(job.output, { credentials: 'same-origin' })).blob());
+      const file = new File([picture], `try-on-${job.product.id}.jpg`, { type: 'image/jpeg' });
+      const text = `${t.shareText} ${job.product.title}\n${job.product.url}`;
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: job.product.title, text });
+      else await navigator.share({ title: job.product.title, text, url: job.product.url });
+    } catch (e) {
+      if (e && e.name !== 'AbortError' && picture) { saveBlob(picture, `try-on-${job.product.id}.jpg`); ui.cartNote.textContent = t.shareFailed; ui.cartNote.hidden = false; }
+    }
+    ui.share.removeAttribute('aria-busy');
+  };
+  const showGallery = () => {
+    ui.gallery.textContent = '';
+    results().slice().reverse().forEach((r) => {
+      const fig = document.createElement('figure'); fig.className = 'ofr__tile';
+      const btn = document.createElement('button'); btn.type = 'button'; btn.dataset.zoomSrc = r.output; btn.setAttribute('aria-label', r.title);
+      const img = document.createElement('img'); img.src = r.output; img.alt = r.title; img.loading = 'lazy'; btn.append(img);
+      const cap = document.createElement('figcaption'); const name = document.createElement('span'); name.textContent = r.title; cap.append(name);
+      if (r.url) { const a = document.createElement('a'); a.href = r.url; a.textContent = t.viewProductShort; cap.append(a); }
+      fig.append(btn, cap); ui.gallery.append(fig);
+    });
+    stage('compare', true);
+  };
+
   /* ---------- Jobs: shown in the modal or, when it is closed, in the toast ---------- */
 
-  const persist = () => storage((s) => s.setItem(STORE, JSON.stringify([...jobs]
+  const persist = () => store('session', (s) => s.setItem(STORE, JSON.stringify([...jobs]
     .filter((job) => job.token && (job.state === 'working' || (job.state === 'done' && !job.seen)))
-    .map((job) => ({ token: job.token, product: job.product, state: job.state, output: job.output, download: job.download, at: job.at })))));
+    .map((job) => ({ token: job.token, product: job.product, label: job.label, state: job.state, output: job.output, download: job.download, at: job.at })))));
   const markSeen = (job) => { job.seen = true; persist(); };
 
   function render(job, focus) {
     if (job !== current || !isOpen()) { if (!isOpen()) toast(job); return; }
     if (job.state === 'starting' || job.state === 'working') {
       ui.status.textContent = job.status || t.processing;
+      ui.scan.hidden = !job.before; ui.orb.hidden = !!job.before;
+      if (job.before && ui.scanPhoto.getAttribute('src') !== job.before) ui.scanPhoto.src = job.before;
+      ui.scanGarment.src = job.garment || job.product.image;
       if (currentStage() !== 'working') stage('working', true);
+      startMeter();
     } else if (job.state === 'done') {
-      ui.result.src = job.output; ui.download.href = job.download;
-      $('[data-result-product]').textContent = job.product.title; setupCart(); stage('result', true); markSeen(job);
+      stopMeter(); showResult(job); stage('result', true); markSeen(job);
     } else if (job.state === 'failed') {
-      stage(job.login ? 'login' : 'upload', !!focus); showError(job.login ? '' : job.message);
+      stopMeter();
+      stage(job.login ? 'login' : 'upload', !!focus); showError(job.login ? '' : job.message, job.upsell);
       if (job.photoProblem) highlightGuide();
       valid();
     }
@@ -417,9 +670,11 @@
     if (error && error.name === 'AbortError') return;
     clearTimeout(job.timer);
     if (error) {
-      job.state = 'failed'; job.message = error.message; job.login = !!error.login;
+      job.state = 'failed'; job.message = error.message; job.login = !!error.login; job.upsell = error.upsell || '';
       job.photoProblem = [415, 422].includes(error.status);
-    } else job.state = 'done';
+    } else {
+      job.state = 'done'; learn((Date.now() - job.at) / 1000); remember(job);
+    }
     persist(); render(job);
   };
   const poll = async (job) => {
@@ -437,13 +692,20 @@
       finish(job, error);
     }
   };
-  const begin = async () => {
-    if (ui.start.disabled || !prepared) return;
-    if (captcha.mode === 'turnstile' && !tsToken) { showError(t.captcha); return; }
-    const job = { product, state: 'starting', status: t.preparing, attempts: 0, at: Date.now() };
+  const begin = async (force) => {
+    if (!prepared || (!force && ui.start.disabled)) return;
+    if (!ui.consent.checked) { stage('upload'); showError(''); ui.consent.focus(); return; }
+    if (captcha.mode === 'turnstile' && !tsToken) { stage('upload'); showError(t.captcha); return; }
+    const photo = prepared, variation = variations[product.id];
+    const job = {
+      product, state: 'starting', status: t.preparing, attempts: 0, at: Date.now(),
+      label: variation && variation.label, garment: garmentImage(product),
+      before: photo.preview ? URL.createObjectURL(photo.blob) : null
+    };
     jobs.add(job); current = job;
     showError(''); ui.start.disabled = true; render(job);
-    const photo = prepared, variation = variations[product.id];
+    // With consent, a browser-made (metadata-free) photo is kept on this device for the next garment.
+    if (ui.remember && cfg.rememberPhoto) { if (ui.remember.checked && (photo.canvas || photo.saved)) keepPhoto(photo.blob); else if (!ui.remember.checked) forgetPhoto(); }
     // Converted photos go up as photo.jpg; originals keep their name (a hint for camera RAW files).
     const asFile = (blob) => (blob instanceof File ? blob : new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
     const send = async (blob) => {
@@ -456,11 +718,12 @@
       try { data = await send(photo.blob); }
       catch (error) {
         // 413: the web server's body limit is lower than expected. Send a lighter version once, and remember the limit.
-        if (error.status !== 413 || !photo.canvas || (captcha.mode === 'turnstile' && !error.raw)) throw error;
+        const source = error.status === 413 && (photo.canvas || (photo.saved ? await decode(photo.blob) : null));
+        if (!source || (captcha.mode === 'turnstile' && !error.raw)) throw error;
         const limit = Math.max(150 * 1024, Math.floor(Math.min(photo.blob.size, target()) * 0.55));
         lowerTarget(limit);
         job.status = t.retrying; render(job);
-        const lighter = await compress(photo.canvas, limit);
+        const lighter = await compress(source, limit);
         if (!lighter) throw error;
         data = await send(lighter.blob);
       }
@@ -476,8 +739,7 @@
 
   // Try-ons started on a previous page (same tab) carry on here.
   const resume = () => {
-    const saved = storage((s) => JSON.parse(s.getItem(STORE) || '[]')) || [];
-    saved.forEach((item) => {
+    readJSON('session', STORE, []).forEach((item) => {
       if (!item || !item.token || !item.product || Date.now() - item.at > (item.state === 'done' ? 864e5 : 30 * 6e4)) return;
       const job = Object.assign({ attempts: 0, status: t.processing }, item);
       jobs.add(job);
@@ -490,8 +752,6 @@
 
   /* ---------- Cart ---------- */
 
-  const cartForm = () => [...document.querySelectorAll('form.cart')].find((f) =>
-    String(f.dataset.product_id) === String(product.id) || f.querySelector(`[name="add-to-cart"][value="${product.id}"]`));
   function setupCart() {
     ui.cartNote.hidden = true; ui.cart.removeAttribute('aria-busy');
     const pageForm = cartForm();
@@ -509,8 +769,8 @@
       if (!pageForm) return;
       const submit = pageForm.querySelector('.single_add_to_cart_button');
       pageForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      if (submit && !submit.classList.contains('disabled') && !(product.type === 'variable' && !variations[product.id])) submit.click();
-      else { const field = pageForm.querySelector('select, input:not([type=hidden])'); if (field) field.focus(); }
+      if (submit && !submit.classList.contains('disabled') && !submit.classList.contains('wc-variation-selection-needed')) submit.click();
+      else { const field = [...pageForm.querySelectorAll('select')].find((f) => !f.value) || pageForm.querySelector('select, input:not([type=hidden])'); if (field) field.focus(); }
       return;
     }
     ui.cart.setAttribute('aria-busy', 'true'); ui.cart.textContent = t.adding;
@@ -529,22 +789,20 @@
 
   /* ---------- Choosing a photo: picker, drag & drop, paste ---------- */
 
-  const note = (text) => { ui.previewNote.textContent = text || ''; ui.previewNote.hidden = !text; };
+  function note(text) { ui.previewNote.textContent = text || ''; ui.previewNote.hidden = !text; }
   const handleFile = async (file) => {
     if (!file) return;
     const token = ++pick; showError(''); prepared = null; valid();
     if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = '';
-    ui.preview.removeAttribute('src'); ui.drop.hidden = true; ui.previewWrap.hidden = false; showGuide(false); note(t.reading);
+    ui.preview.removeAttribute('src'); ui.drop.hidden = true; ui.previewWrap.hidden = false; ui.savedBadge.hidden = true; ui.forget.hidden = true; note(t.reading);
     const result = await prepare(file);
     if (token !== pick) return; // Another photo was picked meanwhile.
-    if (result.error) { ui.file.value = ''; ui.previewWrap.hidden = true; ui.drop.hidden = false; showGuide(true); showError(result.error); return; }
-    prepared = { blob: result.blob, canvas: result.canvas || null };
-    if (result.preview) { objectUrl = URL.createObjectURL(result.preview); ui.preview.src = objectUrl; note(''); } else note(t.noPreview);
-    valid();
+    if (result.error) { ui.file.value = ''; ui.previewWrap.hidden = true; ui.drop.hidden = false; showError(result.error); highlightGuide(); return; }
+    showPhoto({ blob: result.blob, canvas: result.canvas || null, preview: !!result.preview, saved: false });
   };
   ui.file.addEventListener('change', () => handleFile(ui.file.files[0]));
 
-  const uploadReady = () => isOpen() && currentStage() === 'upload';
+  const uploadReady = () => isOpen() && currentStage() === 'upload' && ui.viewer.hidden;
   const hasFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
   let dragDepth = 0;
   function hideDrop() { dragDepth = 0; if (ui.dropzone) ui.dropzone.hidden = true; ui.drop.classList.remove('is-dragover'); }
@@ -573,30 +831,45 @@
 
   /* ---------- Events ---------- */
 
+  // Product-page buttons and the «قابل پرو» badges on product cards (which sit inside the card's link).
+  const opener$ = (el) => el.closest('.ofr-open[data-product], [data-ofr-open]');
+  const openFrom = (b) => { let p; try { p = JSON.parse(b.dataset.product); } catch (_) { return; } open(p, b); };
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('.ofr-open');
-    if (!b || !b.dataset.product) return;
-    let p; try { p = JSON.parse(b.dataset.product); } catch (_) { return; }
-    open(p, b);
+    const b = opener$(e.target); if (!b) return;
+    e.preventDefault(); e.stopPropagation(); openFrom(b);
+  }, true);
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-ofr-open]')) { e.preventDefault(); openFrom(e.target); }
   });
   root.addEventListener('click', (e) => {
-    if (e.target.closest('[data-ofr-close]') || e.target.closest('[data-background]')) close();
-    if (e.target.closest('[data-change]')) ui.file.click();
-    if (e.target.closest('[data-again]')) reset();
-    if (e.target.closest('[data-guide-toggle]')) showGuide(ui.guide && ui.guide.hidden);
+    const on = (sel) => e.target.closest(sel);
+    if (on('[data-ofr-close]') || on('[data-background]')) close();
+    else if (on('[data-change]')) ui.file.click();
+    else if (on('[data-forget]')) { forgetPhoto(); if (ui.remember) ui.remember.checked = false; clearPhoto(); showError(''); ui.remaining.hidden = false; ui.remaining.textContent = t.forgotten; }
+    else if (on('[data-again]')) { toUpload(); clearPhoto(); ui.file.click(); }
+    else if (on('[data-retry]')) { if (prepared) begin(true); else toUpload(); }
+    else if (on('[data-open-compare]')) showGallery();
+    else if (on('[data-back-result]')) stage('result', true);
+    else if (on('[data-share]')) share();
+    else if (on('[data-zoom-guide]')) { const img = on('[data-zoom-guide]').querySelector('img'); openViewer(img.dataset.full || img.src, img.alt); }
+    else if (on('[data-zoom-result]')) openViewer(ui.result.src, ui.result.alt);
+    else if (on('[data-zoom-src]')) openViewer(on('[data-zoom-src]').dataset.zoomSrc, on('[data-zoom-src]').getAttribute('aria-label'));
   });
   document.addEventListener('keydown', (e) => {
     if (!isOpen()) return;
-    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'Escape') { if (!ui.viewer.hidden) closeViewer(); else close(); return; }
+    if (!ui.viewer.hidden && (e.key === '+' || e.key === '=' || e.key === '-')) { const r = ui.viewer.getBoundingClientRect(); zoomAt(view.scale * (e.key === '-' ? 1 / 1.3 : 1.3), r.width / 2, r.height / 2); return; }
     if (e.key !== 'Tab') return;
-    // Keep keyboard focus inside the dialog.
+    // Keep keyboard focus inside the dialog (or the viewer).
     const items = focusables(); if (!items.length) return;
+    const scope = ui.viewer.hidden ? ui.dialog : ui.viewer;
     const first = items[0], last = items[items.length - 1];
-    if (e.shiftKey && (document.activeElement === first || !ui.dialog.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    if (e.shiftKey && (document.activeElement === first || !scope.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
-  ui.consent.addEventListener('change', () => { storage((s) => (ui.consent.checked ? s.setItem('ofr_consent', '1') : s.removeItem('ofr_consent'))); valid(); });
-  ui.start.addEventListener('click', begin);
+  ui.consent.addEventListener('change', () => { store('local', (s) => (ui.consent.checked ? s.setItem('ofr_consent', '1') : s.removeItem('ofr_consent'))); valid(); });
+  if (ui.remember) ui.remember.addEventListener('change', () => { if (!ui.remember.checked) { forgetPhoto(); ui.savedBadge.hidden = true; ui.forget.hidden = true; if (prepared) prepared.saved = false; } });
+  ui.start.addEventListener('click', () => begin(false));
   ui.cart.addEventListener('click', addToCart);
 
   // WooCommerce variation forms (jQuery events): try on the chosen colour's image, show its price.
@@ -605,13 +878,36 @@
       .on('found_variation', 'form.variations_form', function (event, variation) {
         const id = this.dataset.product_id; if (!id || !variation) return;
         const price = parsePrice(variation.price_html) || {};
-        variations[id] = { id: variation.variation_id, image: variation.image && (variation.image.src || variation.image.full_src), price: price.price || '', regular: price.regular || '' };
-        if (isOpen() && product && String(product.id) === String(id)) fillProduct(product);
+        const swatch = (swatchCache[id] || []).find((sw) => sw.id === variation.variation_id || sw.image === (variation.image && variation.image.full_src));
+        variations[id] = { id: variation.variation_id, image: variation.image && (variation.image.src || variation.image.full_src), price: price.price || '', regular: price.regular || '', label: swatch ? swatch.label : '' };
+        if (isOpen() && product && String(product.id) === String(id)) { fillProduct(product); renderSwatches(); }
       })
       .on('reset_data hide_variation', 'form.variations_form', function () {
-        delete variations[this.dataset.product_id];
-        if (isOpen() && product && String(product.id) === String(this.dataset.product_id)) fillProduct(product);
+        const id = this.dataset.product_id;
+        // A colour alone (size still open) still decides the garment image.
+        const sw = matchSwatch(this, id);
+        if (sw) variations[id] = { id: sw.id, image: sw.image, price: sw.price, regular: sw.regular, label: sw.label }; else delete variations[id];
+        if (isOpen() && product && String(product.id) === String(id)) { fillProduct(product); renderSwatches(); }
       });
+  }
+
+  /* ---------- Button placement: over the gallery, sticky bar on phones ---------- */
+
+  const placeGallery = () => document.querySelectorAll('[data-ofr-gallery]:not(.is-overlay)').forEach((slot) => {
+    const scope = slot.closest('.product') || document;
+    const gallery = scope.querySelector('.woocommerce-product-gallery');
+    if (!gallery) return;
+    const host = gallery.querySelector('.flex-viewport') || gallery.querySelector('.woocommerce-product-gallery__wrapper') || gallery;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    host.append(slot); slot.classList.add('is-overlay');
+  });
+  placeGallery(); window.addEventListener('load', () => { document.querySelectorAll('[data-ofr-gallery].is-overlay').forEach((s) => s.classList.remove('is-overlay')); placeGallery(); });
+  const sticky = document.querySelector('[data-ofr-sticky]');
+  if (sticky) {
+    sticky.hidden = false;
+    const anchor = document.querySelector('.ofr-open:not(.ofr-open--sticky)');
+    if (!anchor || !('IntersectionObserver' in window)) sticky.classList.add('is-visible');
+    else new IntersectionObserver(([entry]) => sticky.classList.toggle('is-visible', !entry.isIntersecting && entry.boundingClientRect.top < 0)).observe(anchor);
   }
 
   resume();

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: اتاق پُرُو آنلاین
  * Description: اتاق پرو مجازی هوشمند برای ووکامرس؛ مشتری عکس خودش را بارگذاری می‌کند و در چند ثانیه همان لباس را روی تصویر خودش می‌بیند. همراه با ویجت المنتور، پشتیبانی از همه فرمت‌های عکس و حفظ حریم خصوصی مشتری.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Requires at least: 6.2
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
@@ -27,8 +27,8 @@ require_once __DIR__ . '/includes/class-ofr-health.php';
 require_once __DIR__ . '/includes/class-ofr-admin.php';
 
 final class Online_Fitting_Room {
-	const VERSION       = '1.6.0';
-	const DB_VERSION    = '4';
+	const VERSION       = '1.7.0';
+	const DB_VERSION    = '5';
 	const OPTION_KEY    = 'ofr_settings';
 	const NONCE_ACTION  = 'ofr_tryon';
 	const META_ENABLED  = '_ofr_enabled';
@@ -61,6 +61,10 @@ final class Online_Fitting_Room {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ), 1 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'woocommerce_single_product_summary', array( $this, 'render_button' ), 35 );
+		add_action( 'woocommerce_after_add_to_cart_form', array( $this, 'render_button_after_cart' ) );
+		add_action( 'woocommerce_before_single_product_summary', array( $this, 'render_button_gallery' ), 25 );
+		add_action( 'woocommerce_before_shop_loop_item_title', array( $this, 'loop_badge' ), 11 );
+		add_filter( 'render_block', array( $this, 'block_badge' ), 10, 3 );
 		add_action( 'wp_footer', array( $this, 'render_modal' ) );
 		add_shortcode( 'online_fitting_room', array( $this, 'shortcode' ) );
 		add_shortcode( 'webich_tryon', array( $this, 'shortcode' ) ); // Legacy name from Webich Smart Try-On.
@@ -86,10 +90,19 @@ final class Online_Fitting_Room {
 			'primary_color'      => '#111827',
 			'accent_color'       => '#ff5c35',
 			'font'               => 'theme',
+			'theme_mode'         => 'light',
+			'modal_title'        => __( 'قبل از خرید، تنت ببین', 'online-fitting-room' ),
+			'modal_subtitle'     => __( 'عکس خودت را بده؛ هوش مصنوعی همین لباس را روی تصویرت شبیه‌سازی می‌کند.', 'online-fitting-room' ),
+			'button_position'    => 'summary',
+			'sticky_mobile'      => 'yes',
+			'loop_badge'         => 'no',
 			'photo_guide'        => 'yes',
+			'remember_photo'     => 'yes',
+			'watermark'          => 'yes',
 			'default_category'   => 'auto',
 			'require_login'      => 'no',
 			'limit_per_user_day' => 5,
+			'limit_guest_day'    => 3,
 			'limit_site_day'     => 200,
 			'ip_source'          => 'auto',
 			'trusted_proxies'    => '',
@@ -101,7 +114,7 @@ final class Online_Fitting_Room {
 	}
 
 	public static function default_privacy_text() {
-		return __( 'عکس من فقط برای ساخت تصویر پرو به سرویس پردازش ارسال می‌شود و روی سایت ذخیره نمی‌شود. تصویر نتیجه به‌صورت خصوصی نگه داشته و حداکثر پس از ۲۴ ساعت حذف می‌شود.', 'online-fitting-room' );
+		return __( 'عکس من فقط برای ساخت تصویر پرو به سرویس پردازش ارسال می‌شود و روی سایت ذخیره نمی‌شود. تصویر نتیجه به‌صورت خصوصی نگه داشته و حداکثر پس از ۲۴ ساعت حذف می‌شود.', 'online-fitting-room' ) . ' {privacy}';
 	}
 
 	public static function settings() {
@@ -175,6 +188,16 @@ final class Online_Fitting_Room {
 				update_option( self::OPTION_KEY, $stored );
 			}
 			wp_schedule_single_event( time() + 30, OFR_Client::REFRESH_HOOK );
+		}
+		if ( version_compare( $version, '5', '<' ) ) {
+			// Guests get their own daily limit; existing stores keep today's behaviour (same as members).
+			$stored = get_option( self::OPTION_KEY );
+			if ( is_array( $stored ) ) {
+				if ( ! isset( $stored['limit_guest_day'] ) ) $stored['limit_guest_day'] = (int) ( $stored['limit_per_user_day'] ?? 5 );
+				$old_default = 'عکس من فقط برای ساخت تصویر پرو به سرویس پردازش ارسال می‌شود و روی سایت ذخیره نمی‌شود. تصویر نتیجه به‌صورت خصوصی نگه داشته و حداکثر پس از ۲۴ ساعت حذف می‌شود.';
+				if ( ( $stored['privacy_text'] ?? '' ) === $old_default ) $stored['privacy_text'] = self::default_privacy_text();
+				update_option( self::OPTION_KEY, $stored );
+			}
 		}
 		OFR_Storage::schedule();
 		OFR_Client::schedule();
@@ -262,6 +285,8 @@ final class Online_Fitting_Room {
 			// Formats the browser cannot decode are sent as-is when the server can convert them.
 			'serverFormats' => OFR_Image::server_formats(),
 			'heicDecoder'   => plugins_url( 'assets/js/vendor/heic2any.min.js', OFR_FILE ),
+			'rememberPhoto' => 'yes' === $s['remember_photo'],
+			'watermark'     => 'yes' === $s['watermark'] ? array( 'name' => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), 'logo' => self::brand_logo() ) : false,
 			'i18n'          => array(
 				'network'      => __( 'ارتباط با سرور برقرار نشد. اتصال اینترنت را بررسی و دوباره تلاش کنید.', 'online-fitting-room' ),
 				'timeout'      => __( 'پردازش بیش از حد معمول طول کشید. دوباره تلاش کنید.', 'online-fitting-room' ),
@@ -300,6 +325,17 @@ final class Online_Fitting_Room {
 				'bgFailed'     => __( 'ساخت تصویر پرو انجام نشد.', 'online-fitting-room' ),
 				'view'         => __( 'مشاهده', 'online-fitting-room' ),
 				'retry'        => __( 'تلاش دوباره', 'online-fitting-room' ),
+				/* translators: %s: seconds. */
+				'eta'          => __( 'حدود %s ثانیه دیگر…', 'online-fitting-room' ),
+				'etaLong'      => __( 'کمی بیشتر از معمول طول کشید؛ تقریباً تمام است…', 'online-fitting-room' ),
+				/* translators: %s: number of try-ons. */
+				'compare'      => __( 'مقایسه پروها (%s)', 'online-fitting-room' ),
+				'viewProductShort' => __( 'مشاهده', 'online-fitting-room' ),
+				'shareText'    => __( 'این لباس را در اتاق پُرُو آنلاین روی خودم امتحان کردم:', 'online-fitting-room' ),
+				'shareFailed'  => __( 'اشتراک‌گذاری انجام نشد؛ تصویر دانلود شد.', 'online-fitting-room' ),
+				'outOfStock'   => __( 'ناموجود', 'online-fitting-room' ),
+				'savedPhoto'   => __( 'عکس ذخیره‌شده روی این دستگاه', 'online-fitting-room' ),
+				'forgotten'    => __( 'عکس از این دستگاه حذف شد.', 'online-fitting-room' ),
 			),
 		) );
 		$css = ':root{--ofr-primary:' . esc_attr( $s['primary_color'] ) . ';--ofr-accent:' . esc_attr( $s['accent_color'] ) . ';}';
@@ -320,7 +356,28 @@ final class Online_Fitting_Room {
 		$product_page = function_exists( 'is_product' ) && is_product() && 'yes' === self::settings()['auto_display'] && $this->is_supported_product( get_queried_object_id() );
 		if ( $product_page || $this->content_has_shortcode() ) {
 			$this->enqueue_frontend();
+		} elseif ( 'yes' === self::settings()['loop_badge'] && $this->shows_product_grid() ) {
+			// Badges load the script while rendering; the style goes in <head> so cards never flash unstyled.
+			$this->register_assets();
+			wp_enqueue_style( 'online-fitting-room' );
 		}
+	}
+
+	private function shows_product_grid() {
+		if ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) return true;
+		$post = get_post( get_queried_object_id() );
+		if ( ! $post ) return false;
+		foreach ( array( 'woocommerce/product-collection', 'woocommerce/handpicked-products', 'woocommerce/product-new', 'woocommerce/product-on-sale', 'woocommerce/product-best-sellers', 'woocommerce/product-category' ) as $block ) {
+			if ( has_block( $block, $post ) ) return true;
+		}
+		return has_shortcode( $post->post_content, 'products' );
+	}
+
+	/** Store logo for the watermark on shared images: the custom logo, else the site icon. */
+	public static function brand_logo() {
+		$logo = get_theme_mod( 'custom_logo' );
+		$url  = $logo ? wp_get_attachment_image_url( $logo, 'medium' ) : '';
+		return $url ?: (string) get_site_icon_url( 192 );
 	}
 
 	/**
@@ -375,10 +432,26 @@ final class Online_Fitting_Room {
 	}
 
 	public function render_button() {
-		if ( 'no' === self::settings()['auto_display'] ) return;
+		$this->render_at( 'summary' );
+	}
+
+	public function render_button_after_cart() {
+		$this->render_at( 'after_cart' );
+	}
+
+	public function render_button_gallery() {
+		$this->render_at( 'gallery' );
+	}
+
+	/** Automatic button at the position chosen in the settings (summary, under the add-to-cart form, or on the gallery). */
+	private function render_at( $position ) {
+		$s = self::settings();
+		if ( 'no' === $s['auto_display'] || $s['button_position'] !== $position ) return;
 		$product_id = get_the_ID();
 		if ( ! $this->is_supported_product( $product_id ) ) return;
-		echo $this->button_html( $product_id ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in button_html().
+		$html = $this->button_html( $product_id, array( 'class' => 'ofr-open--' . $position ) );
+		// On the gallery the script moves the button over the main image; without a gallery it simply stays here.
+		echo 'gallery' === $position ? '<div class="ofr-gallery-slot" data-ofr-gallery>' . $html . '</div>' : $html; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in button_html().
 	}
 
 	/**
@@ -414,40 +487,138 @@ final class Online_Fitting_Room {
 		return $this->button_html( $id, array( 'text' => sanitize_text_field( $atts['text'] ) ) );
 	}
 
-	/** Simple line drawings for the photo guide (no image files, inherit the theme colours). */
-	private static function guide_figure( $kind ) {
-		$person = '<circle cx="30" cy="15" r="6.5"/><path d="M21 26c0-3 2.5-5 5-5h8c2.5 0 5 2 5 5v18c0 1.5-1 2.5-2.5 2.5H23.5C22 46.5 21 45.5 21 44z"/><path d="M21 27l-5 15M39 27l5 15" fill="none" stroke-width="3.2" stroke-linecap="round"/><path d="M24 46h5l-1 26h-4zM31 46h5l0 26h-4z"/>';
-		$frame  = '<rect x="1" y="1" width="58" height="78" rx="7" class="ofr-g-bg"/>';
-		switch ( $kind ) {
-			case 'crop':
-				// A nested <svg> clips the enlarged figure to the frame.
-				$body = '<svg x="1" y="1" width="58" height="78" viewBox="1 1 58 78"><g transform="translate(-30 -6) scale(2)" class="ofr-g-person">' . $person . '</g></svg><path d="M1 62h58" class="ofr-g-cut"/>';
-				break;
-			case 'dark':
-				$body = '<g class="ofr-g-person">' . $person . '</g><rect x="1" y="1" width="58" height="78" rx="7" class="ofr-g-dark"/>';
-				break;
-			default:
-				$body = '<g class="ofr-g-person">' . $person . '</g>';
+	/* ---------- «قابل پرو» badge on product cards ---------- */
+
+	/** The badge opens the try-on right from the shop page, without visiting the product. */
+	private function badge_html( $product_id ) {
+		if ( 'yes' !== self::settings()['loop_badge'] || ! $this->is_supported_product( $product_id ) ) return '';
+		$this->enqueue_frontend();
+		/* translators: %s: product name. */
+		$label = sprintf( __( 'پرو مجازی %s', 'online-fitting-room' ), get_the_title( $product_id ) );
+		return '<span class="ofr-badge" role="button" tabindex="0" aria-haspopup="dialog" aria-label="' . esc_attr( $label ) . '" data-ofr-open data-product="' . esc_attr( wp_json_encode( $this->product_payload( $product_id ) ) ) . '"><span aria-hidden="true">✦</span> ' . esc_html__( 'قابل پرو', 'online-fitting-room' ) . '</span>';
+	}
+
+	/** Classic shop loops (shortcodes, archive templates). */
+	public function loop_badge() {
+		// Block themes run classic loop hooks from inside render_block for compatibility; block_badge() covers those cards.
+		if ( doing_filter( 'render_block' ) ) return;
+		global $product;
+		echo $this->badge_html( is_object( $product ) && is_a( $product, 'WC_Product' ) ? $product->get_id() : 0 ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in badge_html().
+	}
+
+	/** Block-based product grids (Product Collection and friends): added to the product image block. */
+	public function block_badge( $content, $block, $instance = null ) {
+		if ( 'woocommerce/product-image' !== ( $block['blockName'] ?? '' ) || 'yes' !== self::settings()['loop_badge'] ) return $content;
+		$id    = ( $instance instanceof WP_Block && isset( $instance->context['postId'] ) ) ? (int) $instance->context['postId'] : 0;
+		$badge = $id ? $this->badge_html( $id ) : '';
+		if ( '' === $badge ) return $content;
+		$pos = strrpos( $content, '</div>' );
+		return false === $pos ? $content . $badge : substr_replace( $content, $badge, $pos, 0 );
+	}
+
+	/* ---------- Colour swatches inside the modal ---------- */
+
+	/**
+	 * One swatch per distinct variation image (usually one per colour), so the
+	 * shopper can try other colours with the same photo. The label is made of
+	 * the attributes all variations sharing that image have in common
+	 * (e.g. «مشکی» rather than «مشکی / Large»).
+	 *
+	 * @return array[] { id, thumb, image, label, attrs, price, regular, inStock }
+	 */
+	public static function swatches( $product_id ) {
+		$product = wc_get_product( $product_id );
+		if ( ! $product || ! $product->is_type( 'variable' ) ) return array();
+		$groups = array();
+		foreach ( $product->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			if ( ! $variation || 'publish' !== $variation->get_status() || ! $variation->get_image_id() ) continue;
+			$groups[ $variation->get_image_id() ][] = $variation;
+			if ( count( $groups ) > 24 ) break;
 		}
-		return '<svg viewBox="0 0 60 80" aria-hidden="true" focusable="false">' . $frame . $body . '</svg>';
+		if ( count( $groups ) < 2 ) return array();
+		$out = array();
+		foreach ( $groups as $image_id => $variations ) {
+			$common = $variations[0]->get_attributes();
+			foreach ( $variations as $variation ) {
+				$common = array_intersect_assoc( $common, $variation->get_attributes() );
+			}
+			$common = array_filter( $common, 'strlen' );
+			$names  = array();
+			foreach ( $common as $taxonomy => $value ) {
+				$term    = taxonomy_exists( $taxonomy ) ? get_term_by( 'slug', $value, $taxonomy ) : null;
+				$names[] = $term ? $term->name : $value;
+			}
+			// Prefer a variation that is in stock as the representative.
+			$pick = $variations[0];
+			foreach ( $variations as $variation ) {
+				if ( $variation->is_in_stock() ) {
+					$pick = $variation;
+					break;
+				}
+			}
+			$price = self::price_parts( $pick );
+			$attrs = array();
+			foreach ( $common as $taxonomy => $value ) {
+				$attrs[ 'attribute_' . $taxonomy ] = $value;
+			}
+			$out[] = array(
+				'id'      => $pick->get_id(),
+				'thumb'   => wp_get_attachment_image_url( $image_id, 'thumbnail' ),
+				'image'   => wp_get_attachment_image_url( $image_id, 'large' ),
+				'label'   => $names ? implode( ' / ', $names ) : $pick->get_name(),
+				'attrs'   => (object) $attrs,
+				'price'   => $price['price'],
+				'regular' => $price['regular'],
+				'inStock' => $pick->is_in_stock(),
+			);
+		}
+		return $out;
+	}
+
+	/* ---------- Modal ---------- */
+
+	/** Consent text with optional links; {privacy} becomes a link to the privacy policy page. */
+	public static function consent_html( $text ) {
+		$text   = str_replace( '{hours}', number_format_i18n( OFR_Storage::TTL_HOURS ), (string) $text );
+		$policy = function_exists( 'get_privacy_policy_url' ) ? get_privacy_policy_url() : '';
+		$link   = $policy ? '<a href="' . esc_url( $policy ) . '">' . esc_html__( 'سیاست حریم خصوصی', 'online-fitting-room' ) . '</a>' : '';
+		$html   = wp_kses( str_replace( '{privacy}', $link, $text ), self::consent_tags() );
+		// Links open in a new tab so the photo picked in the modal is not lost.
+		return preg_replace( '/<a\s(?![^>]*\btarget=)/i', '<a target="_blank" rel="noopener" ', $html );
+	}
+
+	public static function consent_tags() {
+		return array( 'a' => array( 'href' => true, 'target' => true, 'rel' => true ), 'strong' => array(), 'b' => array(), 'em' => array(), 'br' => array() );
+	}
+
+	/** Mobile bar that keeps the button at hand once the page has scrolled past it. */
+	private function sticky_html() {
+		$s  = self::settings();
+		$id = function_exists( 'is_product' ) && is_product() ? get_queried_object_id() : 0;
+		if ( 'yes' !== $s['sticky_mobile'] || ! $id || ! $this->is_supported_product( $id ) ) return '';
+		$payload = $this->product_payload( $id );
+		$thumb   = get_the_post_thumbnail_url( $id, 'thumbnail' );
+		return '<div class="ofr-sticky" data-ofr-sticky hidden dir="rtl" data-theme="' . esc_attr( $s['theme_mode'] ) . '">'
+			. ( $thumb ? '<img src="' . esc_url( $thumb ) . '" alt="" width="44" height="44">' : '' )
+			. '<span class="ofr-sticky__text"><strong>' . esc_html( $payload['title'] ) . '</strong><small>' . esc_html( $payload['price'] ) . '</small></span>'
+			. $this->button_html( $id, array( 'class' => 'ofr-open--sticky' ) )
+			. '</div>';
 	}
 
 	public function render_modal() {
 		if ( $this->rendered || ! wp_script_is( 'online-fitting-room', 'enqueued' ) ) return;
 		$this->rendered = true;
-		$s       = self::settings();
-		$privacy = str_replace( '{hours}', number_format_i18n( OFR_Storage::TTL_HOURS ), $s['privacy_text'] );
-		$guide   = array(
-			'ok'   => array( true, __( 'تمام‌قد و روبه‌رو', 'online-fitting-room' ) ),
-			'crop' => array( false, __( 'نیم‌تنه نباشد', 'online-fitting-room' ) ),
-			'dark' => array( false, __( 'نور کافی', 'online-fitting-room' ) ),
-		);
+		$s      = self::settings();
+		$theme  = esc_attr( $s['theme_mode'] );
+		$guide  = 'yes' === $s['photo_guide'];
+		$sticky = $this->sticky_html();
 		?>
-		<div class="ofr" hidden dir="rtl">
+		<div class="ofr" hidden dir="rtl" data-theme="<?php echo $theme; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped above. ?>">
 			<div class="ofr__backdrop" data-ofr-close></div>
 			<section class="ofr__dialog" role="dialog" aria-modal="true" aria-labelledby="ofr-title" tabindex="-1">
 				<button type="button" class="ofr__close" data-ofr-close aria-label="<?php esc_attr_e( 'بستن', 'online-fitting-room' ); ?>">×</button>
-				<header class="ofr__header"><span class="ofr__eyebrow"><?php esc_html_e( 'اتاق پُرُو آنلاین', 'online-fitting-room' ); ?></span><h2 id="ofr-title"><?php esc_html_e( 'قبل از خرید، تنت ببین', 'online-fitting-room' ); ?></h2><p><?php esc_html_e( 'عکس خودت را بده؛ هوش مصنوعی همین لباس را روی تصویرت شبیه‌سازی می‌کند.', 'online-fitting-room' ); ?></p></header>
+				<header class="ofr__header"><span class="ofr__eyebrow"><?php esc_html_e( 'اتاق پُرُو آنلاین', 'online-fitting-room' ); ?></span><h2 id="ofr-title"><?php echo esc_html( $s['modal_title'] ); ?></h2><?php if ( '' !== trim( $s['modal_subtitle'] ) ) : ?><p><?php echo esc_html( $s['modal_subtitle'] ); ?></p><?php endif; ?></header>
 				<ol class="ofr__progress" aria-label="<?php esc_attr_e( 'مراحل پرو', 'online-fitting-room' ); ?>"><li class="is-active" aria-current="step"><i>۱</i><span class="ofr__sr"><?php esc_html_e( 'انتخاب عکس', 'online-fitting-room' ); ?></span></li><li><i>۲</i><span class="ofr__sr"><?php esc_html_e( 'پردازش', 'online-fitting-room' ); ?></span></li><li><i>۳</i><span class="ofr__sr"><?php esc_html_e( 'نتیجه', 'online-fitting-room' ); ?></span></li></ol>
 				<div class="ofr__body">
 					<div class="ofr__stage ofr__login" data-stage="login">
@@ -455,37 +626,94 @@ final class Online_Fitting_Room {
 						<p><?php esc_html_e( 'پرو مجازی فقط برای کاربران عضو فعال است.', 'online-fitting-room' ); ?></p>
 						<a class="ofr__primary" data-login href="#"><?php esc_html_e( 'ورود / ثبت‌نام', 'online-fitting-room' ); ?></a>
 					</div>
+
 					<div class="ofr__stage is-active" data-stage="upload">
 						<div class="ofr__product"><img data-product-image alt=""><div><small><?php esc_html_e( 'لباس انتخابی', 'online-fitting-room' ); ?></small><strong data-product-title></strong><span class="ofr__price"><del data-product-regular hidden></del> <span data-product-price></span></span></div></div>
-						<?php if ( 'yes' === $s['photo_guide'] ) : ?>
-							<div class="ofr__guide" data-guide>
-								<p class="ofr__guide-title"><?php esc_html_e( 'چه عکسی بهترین نتیجه را می‌دهد؟', 'online-fitting-room' ); ?></p>
-								<ul>
-									<?php foreach ( $guide as $kind => $item ) : ?>
-										<li class="ofr__guide-item <?php echo $item[0] ? 'is-ok' : 'is-bad'; ?>" data-guide-item="<?php echo esc_attr( $kind ); ?>">
-											<span class="ofr__guide-art"><?php echo self::guide_figure( $kind ); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup. ?><b class="ofr__guide-badge" aria-hidden="true"><?php echo $item[0] ? '✓' : '✕'; ?></b></span>
-											<span class="ofr__guide-text"><span class="ofr__sr"><?php echo $item[0] ? esc_html__( 'مناسب:', 'online-fitting-room' ) : esc_html__( 'نامناسب:', 'online-fitting-room' ); ?></span> <?php echo esc_html( $item[1] ); ?></span>
-										</li>
-									<?php endforeach; ?>
-								</ul>
+						<div class="ofr__swatches" data-swatches hidden><span class="ofr__swatches-label"><?php esc_html_e( 'رنگ برای پرو:', 'online-fitting-room' ); ?></span><div class="ofr__swatch-list" role="radiogroup" aria-label="<?php esc_attr_e( 'رنگ برای پرو', 'online-fitting-room' ); ?>"></div></div>
+						<div class="ofr__pick<?php echo $guide ? ' has-guide' : ''; ?>">
+							<?php if ( $guide ) : ?>
+								<figure class="ofr__guide" data-guide>
+									<button type="button" class="ofr__guide-zoom" data-zoom-guide aria-label="<?php esc_attr_e( 'نمایش بزرگ راهنمای عکس', 'online-fitting-room' ); ?>">
+										<img src="<?php echo esc_url( plugins_url( 'assets/img/photo-guide-small.webp', OFR_FILE ) ); ?>" data-full="<?php echo esc_url( plugins_url( 'assets/img/photo-guide.webp', OFR_FILE ) ); ?>" width="420" height="560" loading="lazy" decoding="async" alt="<?php esc_attr_e( 'راهنمای عکس مناسب: روبه‌دوربین بایستید، نور کافی و یکنواخت، دست‌ها کمی از بدن فاصله داشته باشد، پس‌زمینه ساده، تمام بدن داخل کادر.', 'online-fitting-room' ); ?>">
+										<span class="ofr__guide-zoom-icon" aria-hidden="true">⤢</span>
+									</button>
+									<figcaption><?php esc_html_e( 'نمونه عکس مناسب', 'online-fitting-room' ); ?></figcaption>
+								</figure>
+							<?php endif; ?>
+							<div class="ofr__pick-main">
+								<label class="ofr__drop" data-drop><input type="file" accept="image/*" data-avatar><span class="ofr__drop-icon" aria-hidden="true">＋</span><strong><?php esc_html_e( 'عکس تمام‌قد خودت را انتخاب کن', 'online-fitting-room' ); ?></strong><em><?php esc_html_e( 'هر فرمت عکسی (JPG، HEIC آیفون، PNG، WEBP، AVIF و…)', 'online-fitting-room' ); ?></em><em class="ofr__drop-hint"><?php esc_html_e( 'یا عکس را اینجا بکشید و رها کنید (Ctrl+V هم کار می‌کند)', 'online-fitting-room' ); ?></em></label>
+								<div class="ofr__preview" hidden><img data-preview alt="<?php esc_attr_e( 'پیش‌نمایش تصویر', 'online-fitting-room' ); ?>"><span class="ofr__saved-badge" data-saved-badge hidden><?php esc_html_e( 'عکس ذخیره‌شده روی این دستگاه', 'online-fitting-room' ); ?></span><p class="ofr__preview-note" data-preview-note hidden></p><div class="ofr__preview-actions"><button type="button" data-change><?php esc_html_e( 'تغییر عکس', 'online-fitting-room' ); ?></button><button type="button" data-forget hidden><?php esc_html_e( 'حذف از این دستگاه', 'online-fitting-room' ); ?></button></div></div>
 							</div>
+						</div>
+						<?php if ( 'yes' === $s['remember_photo'] ) : ?>
+							<label class="ofr__check"><input type="checkbox" data-remember><span><?php esc_html_e( 'عکسم را روی همین دستگاه نگه دار تا برای لباس‌های دیگر دوباره آپلود نکنم (فقط در مرورگر خودم ذخیره می‌شود).', 'online-fitting-room' ); ?></span></label>
 						<?php endif; ?>
-						<label class="ofr__drop" data-drop><input type="file" accept="image/*" data-avatar><span class="ofr__drop-icon" aria-hidden="true">＋</span><strong><?php esc_html_e( 'عکس تمام‌قد خودت را انتخاب کن', 'online-fitting-room' ); ?></strong><em><?php esc_html_e( 'هر فرمت عکسی (JPG، HEIC آیفون، PNG، WEBP، AVIF و…) — روبه‌دوربین و با نور کافی', 'online-fitting-room' ); ?></em><em class="ofr__drop-hint"><?php esc_html_e( 'یا عکس را اینجا بکشید و رها کنید (Ctrl+V هم کار می‌کند)', 'online-fitting-room' ); ?></em></label>
-						<div class="ofr__preview" hidden><img data-preview alt="<?php esc_attr_e( 'پیش‌نمایش تصویر', 'online-fitting-room' ); ?>"><p class="ofr__preview-note" data-preview-note hidden></p><button type="button" data-change><?php esc_html_e( 'تغییر عکس', 'online-fitting-room' ); ?></button><?php if ( 'yes' === $s['photo_guide'] ) : ?><button type="button" class="ofr__guide-toggle" data-guide-toggle aria-expanded="false"><?php esc_html_e( 'راهنمای عکس', 'online-fitting-room' ); ?></button><?php endif; ?></div>
-						<label class="ofr__consent"><input type="checkbox" data-consent><span><?php echo esc_html( $privacy ); ?></span></label>
+						<label class="ofr__check ofr__consent"><input type="checkbox" data-consent><span><?php echo self::consent_html( $s['privacy_text'] ); // phpcs:ignore WordPress.Security.EscapeOutput -- wp_kses() in consent_html(). ?></span></label>
 						<div class="ofr__captcha" data-captcha hidden></div>
-						<p class="ofr__error" role="alert" hidden></p>
+						<div class="ofr__error" role="alert" hidden><span data-error-text></span><a class="ofr__upsell" data-upsell href="#" hidden></a></div>
 						<p class="ofr__remaining" data-remaining hidden></p>
 						<button type="button" class="ofr__primary" data-start disabled><?php esc_html_e( 'ساخت تصویر پرو', 'online-fitting-room' ); ?> <b aria-hidden="true">←</b></button>
 					</div>
-					<div class="ofr__stage ofr__working" data-stage="working"><div class="ofr__orb" aria-hidden="true"><span></span></div><h3 tabindex="-1"><?php esc_html_e( 'داریم استایل جدیدت را می‌سازیم', 'online-fitting-room' ); ?></h3><p data-status-text role="status" aria-live="polite"></p><div class="ofr__meter" aria-hidden="true"><span></span></div><small><?php esc_html_e( 'این مرحله معمولاً چند ثانیه زمان می‌برد.', 'online-fitting-room' ); ?></small><button type="button" class="ofr__background" data-background><?php esc_html_e( 'بستن و ادامه خرید — وقتی آماده شد خبرتان می‌کنیم', 'online-fitting-room' ); ?></button></div>
-					<div class="ofr__stage ofr__result" data-stage="result"><div class="ofr__result-image"><img data-result alt="<?php esc_attr_e( 'نتیجه پرو مجازی', 'online-fitting-room' ); ?>"></div><div><span class="ofr__success"><?php esc_html_e( '✓ آماده شد', 'online-fitting-room' ); ?></span><h3 tabindex="-1"><?php esc_html_e( 'این استایل چطور شد؟', 'online-fitting-room' ); ?></h3><p data-result-product></p><a class="ofr__primary" data-cart href="#"></a><p class="ofr__cart-note" data-cart-note role="status" hidden></p><a class="ofr__secondary" data-download href="#"><?php esc_html_e( 'دانلود تصویر', 'online-fitting-room' ); ?></a><button type="button" class="ofr__again" data-again><?php esc_html_e( 'پرو با عکس دیگر', 'online-fitting-room' ); ?></button></div></div>
+
+					<div class="ofr__stage ofr__working" data-stage="working">
+						<div class="ofr__scan" data-scan>
+							<div class="ofr__scan-photo"><img data-scan-photo alt=""><span class="ofr__scan-line" aria-hidden="true"></span><span class="ofr__scan-grid" aria-hidden="true"></span></div>
+							<span class="ofr__scan-plus" aria-hidden="true">+</span>
+							<div class="ofr__scan-garment"><img data-scan-garment alt=""></div>
+						</div>
+						<div class="ofr__orb" data-orb aria-hidden="true" hidden><span></span></div>
+						<h3 tabindex="-1"><?php esc_html_e( 'داریم استایل جدیدت را می‌سازیم', 'online-fitting-room' ); ?></h3>
+						<p data-status-text role="status" aria-live="polite"></p>
+						<div class="ofr__meter" data-meter role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="<?php esc_attr_e( 'پیشرفت تخمینی', 'online-fitting-room' ); ?>"><span></span></div>
+						<small data-eta><?php esc_html_e( 'این مرحله معمولاً چند ثانیه زمان می‌برد.', 'online-fitting-room' ); ?></small>
+						<button type="button" class="ofr__background" data-background><?php esc_html_e( 'بستن و ادامه خرید — وقتی آماده شد خبرتان می‌کنیم', 'online-fitting-room' ); ?></button>
+					</div>
+
+					<div class="ofr__stage ofr__result" data-stage="result">
+						<div class="ofr__compare" data-compare-view>
+							<img class="ofr__compare-after" data-result alt="<?php esc_attr_e( 'نتیجه پرو مجازی', 'online-fitting-room' ); ?>">
+							<div class="ofr__compare-before" data-before-wrap hidden><img data-before alt="<?php esc_attr_e( 'عکس شما پیش از پرو', 'online-fitting-room' ); ?>"></div>
+							<span class="ofr__compare-handle" data-handle hidden aria-hidden="true"><i>‹ ›</i></span>
+							<input type="range" class="ofr__compare-range" data-compare min="0" max="100" value="50" dir="ltr" hidden aria-label="<?php esc_attr_e( 'مقایسه قبل و بعد', 'online-fitting-room' ); ?>">
+							<span class="ofr__compare-tag is-before" data-tag-before hidden><?php esc_html_e( 'قبل', 'online-fitting-room' ); ?></span><span class="ofr__compare-tag is-after" data-tag-after hidden><?php esc_html_e( 'بعد', 'online-fitting-room' ); ?></span>
+							<button type="button" class="ofr__fullscreen" data-zoom-result aria-label="<?php esc_attr_e( 'نمایش تمام‌صفحه و بزرگ‌نمایی', 'online-fitting-room' ); ?>">⤢</button>
+						</div>
+						<div class="ofr__result-side">
+							<span class="ofr__success"><?php esc_html_e( '✓ آماده شد', 'online-fitting-room' ); ?></span>
+							<h3 tabindex="-1"><?php esc_html_e( 'این استایل چطور شد؟', 'online-fitting-room' ); ?></h3>
+							<p data-result-product></p>
+							<div class="ofr__swatches is-compact" data-result-swatches hidden><span class="ofr__swatches-label"><?php esc_html_e( 'امتحان با رنگ دیگر:', 'online-fitting-room' ); ?></span><div class="ofr__swatch-list"></div></div>
+							<a class="ofr__primary" data-cart href="#"></a>
+							<p class="ofr__cart-note" data-cart-note role="status" hidden></p>
+							<div class="ofr__row">
+								<a class="ofr__secondary" data-download href="#"><?php esc_html_e( 'دانلود', 'online-fitting-room' ); ?></a>
+								<button type="button" class="ofr__secondary" data-share hidden><?php esc_html_e( 'اشتراک‌گذاری', 'online-fitting-room' ); ?></button>
+							</div>
+							<div class="ofr__links">
+								<button type="button" data-retry><?php esc_html_e( 'امتحان دوباره با همین عکس', 'online-fitting-room' ); ?></button>
+								<button type="button" data-again><?php esc_html_e( 'پرو با عکس دیگر', 'online-fitting-room' ); ?></button>
+								<button type="button" data-open-compare hidden></button>
+							</div>
+						</div>
+					</div>
+
+					<div class="ofr__stage ofr__gallery" data-stage="compare">
+						<h3 tabindex="-1"><?php esc_html_e( 'مقایسه پروهای شما', 'online-fitting-room' ); ?></h3>
+						<div class="ofr__gallery-grid" data-gallery></div>
+						<button type="button" class="ofr__secondary" data-back-result><?php esc_html_e( 'بازگشت به نتیجه', 'online-fitting-room' ); ?></button>
+					</div>
 				</div>
 				<div class="ofr__dropzone" data-dropzone hidden aria-hidden="true"><span></span></div>
 			</section>
+			<div class="ofr__viewer" data-viewer hidden role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'نمایش بزرگ', 'online-fitting-room' ); ?>" tabindex="-1">
+				<img data-viewer-img alt="">
+				<button type="button" class="ofr__viewer-close" data-viewer-close aria-label="<?php esc_attr_e( 'بستن', 'online-fitting-room' ); ?>">×</button>
+				<p class="ofr__viewer-hint"><?php esc_html_e( 'برای بزرگ‌نمایی دو انگشت را باز کنید یا دوبار بزنید', 'online-fitting-room' ); ?></p>
+			</div>
 		</div>
-		<div class="ofr-toast" data-ofr-toast hidden dir="rtl" role="status" aria-live="polite"><span class="ofr-toast__icon" aria-hidden="true"></span><span class="ofr-toast__text" data-toast-text></span><button type="button" class="ofr-toast__action" data-toast-action hidden></button><button type="button" class="ofr-toast__close" data-toast-close aria-label="<?php esc_attr_e( 'بستن', 'online-fitting-room' ); ?>">×</button></div>
+		<div class="ofr-toast" data-ofr-toast hidden dir="rtl" role="status" aria-live="polite" data-theme="<?php echo $theme; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped above. ?>"><span class="ofr-toast__icon" aria-hidden="true"></span><span class="ofr-toast__text" data-toast-text></span><button type="button" class="ofr-toast__action" data-toast-action hidden></button><button type="button" class="ofr-toast__close" data-toast-close aria-label="<?php esc_attr_e( 'بستن', 'online-fitting-room' ); ?>">×</button></div>
 		<?php
+		echo $sticky; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in sticky_html().
 	}
 
 	/* ---------- Usage limits ---------- */
@@ -501,7 +729,7 @@ final class Online_Fitting_Room {
 		$keys    = OFR_Client::keys();
 		$times   = OFR_Client::shared_multiplier();
 		$day     = wp_date( 'Ymd' );
-		$per_day = (int) $s['limit_per_user_day'];
+		$per_day = (int) ( is_user_logged_in() ? $s['limit_per_user_day'] : $s['limit_guest_day'] );
 		$burst   = max( 1, (int) apply_filters( 'ofr_burst_limit', self::BURST_LIMIT ) );
 		$window  = (int) floor( time() / self::BURST_WINDOW );
 		$out     = array(
@@ -545,6 +773,33 @@ final class Online_Fitting_Room {
 		return __( 'تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کنید.', 'online-fitting-room' );
 	}
 
+	/**
+	 * When a guest has used up the guest allowance and members get more, say so
+	 * (with a login link) instead of a dead end.
+	 */
+	private function upsell( $scope ) {
+		$s = self::settings();
+		if ( 'user' !== $scope || is_user_logged_in() ) return array();
+		$member = (int) $s['limit_per_user_day'];
+		if ( 0 !== $member && $member <= (int) $s['limit_guest_day'] ) return array();
+		return array(
+			'upsell'  => 0 === $member ? __( 'ورود / ثبت‌نام برای پرو بیشتر', 'online-fitting-room' )
+				/* translators: %s: number of try-ons. */
+				: sprintf( __( 'ورود / ثبت‌نام و دریافت %s پرو در روز', 'online-fitting-room' ), number_format_i18n( $member ) ),
+			'message' => __( 'سهم پرو امروز مهمان‌ها تمام شده است، ولی اعضای فروشگاه پرو بیشتری دارند.', 'online-fitting-room' ),
+		);
+	}
+
+	/** Shown to guests under the remaining count when members get more try-ons. */
+	private function member_hint() {
+		$s = self::settings();
+		if ( is_user_logged_in() || (int) $s['limit_guest_day'] === 0 ) return '';
+		$member = (int) $s['limit_per_user_day'];
+		if ( 0 === $member ) return __( 'با ورود به حساب، پرو بیشتری در اختیار دارید.', 'online-fitting-room' );
+		/* translators: %s: number of daily try-ons for members. */
+		return $member > (int) $s['limit_guest_day'] ? sprintf( __( 'با ورود به حساب، %s پرو در روز.', 'online-fitting-room' ), number_format_i18n( $member ) ) : '';
+	}
+
 	/** JSON error that also hands the browser its next security challenge. */
 	private function fail( $message, $status, $extra = array() ) {
 		wp_send_json_error( array_merge( array( 'message' => $message, 'captcha' => OFR_Captcha::client_config() ), $extra ), $status );
@@ -564,7 +819,8 @@ final class Online_Fitting_Room {
 		OFR_Client::ensure_guest_cookie();
 		OFR_Client::observe();
 		OFR_Storage::maybe_cleanup();
-		$return = wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['return'] ?? '' ) ), home_url( '/' ) ); // phpcs:ignore WordPress.Security.NonceVerification -- this endpoint issues the nonce.
+		$return     = wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['return'] ?? '' ) ), home_url( '/' ) ); // phpcs:ignore WordPress.Security.NonceVerification -- this endpoint issues the nonce.
+		$product_id = absint( $_POST['product_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification -- read-only data.
 		$login  = function_exists( 'wc_get_page_permalink' ) && wc_get_page_id( 'myaccount' ) > 0 ? add_query_arg( 'redirect_to', rawurlencode( $return ), wc_get_page_permalink( 'myaccount' ) ) : wp_login_url( $return );
 		wp_send_json_success( array(
 			'nonce'         => wp_create_nonce( self::NONCE_ACTION ),
@@ -572,6 +828,8 @@ final class Online_Fitting_Room {
 			'loginUrl'      => $login,
 			'remaining'     => $this->remaining_today(),
 			'captcha'       => OFR_Captcha::client_config(),
+			'memberHint'    => $this->member_hint(),
+			'swatches'      => $product_id && $this->is_supported_product( $product_id ) ? self::swatches( $product_id ) : array(),
 		) );
 	}
 
@@ -645,7 +903,7 @@ final class Online_Fitting_Room {
 		$day = OFR_Quota::reserve( $buckets['day'] );
 		if ( ! $day['ok'] ) {
 			if ( $garment['temp'] ) wp_delete_file( $garment['path'] );
-			$this->fail( $this->limit_message( $day['scope'] ), 429 );
+			$this->fail( $this->limit_message( $day['scope'] ), 429, $this->upsell( $day['scope'] ) );
 		}
 
 		$category = get_post_meta( $product_id, self::META_CATEGORY, true ) ?: $s['default_category'];
