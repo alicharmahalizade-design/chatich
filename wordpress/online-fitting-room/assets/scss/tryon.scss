@@ -1,0 +1,17 @@
+/*! Online Fitting Room — front end. Built from assets/scss (npm run build:css); edit the SCSS, not the CSS. */
+// Font: the theme's own by default; the bundled Vazirmatn (OFL) is opted into from the settings (--ofr-font).
+@use 'front/palette';
+@use 'front/base';
+@use 'front/button';
+@use 'front/badge';
+@use 'front/sticky';
+@use 'front/modal';
+@use 'front/product';
+@use 'front/photo';
+@use 'front/controls';
+@use 'front/working';
+@use 'front/result';
+@use 'front/viewer';
+@use 'front/toast';
+@use 'front/responsive';
+@use 'front/extras';

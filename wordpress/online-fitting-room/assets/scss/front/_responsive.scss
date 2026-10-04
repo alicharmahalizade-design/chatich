@@ -1,0 +1,21 @@
+/* Phones */
+@media (max-width:650px){
+	.ofr{padding:0;align-items:end}
+	.ofr__dialog{max-height:94vh;max-height:94dvh;border-radius:25px 25px 0 0}
+	.ofr__header{padding:26px 48px 16px}.ofr__header p{font-size:12px}
+	.ofr__progress{padding:11px 20px}
+	.ofr__body{padding:18px 16px 26px}
+	.ofr__pick.has-guide{grid-template-columns:96px 1fr;gap:10px}
+	.ofr__guide-zoom img{max-height:none}
+	.ofr__guide figcaption{font-size:10.5px}
+	.ofr__drop,.ofr__preview{min-height:190px}
+	.ofr__drop{padding:16px 12px}.ofr__drop strong{font-size:15px}
+	.ofr__result{grid-template-columns:1fr;gap:16px}
+	.ofr__compare{height:auto;aspect-ratio:3/4;max-height:68vh;max-height:68dvh}
+	.ofr__result h3{font-size:21px}
+	.ofr__close{top:12px;left:12px}
+	.ofr-toast{right:12px;left:12px;bottom:12px;max-width:none}
+	.ofr-sticky:not([hidden])~.ofr-toast,.ofr-toast:has(~.ofr-sticky.is-visible){bottom:80px}
+}
+@media (prefers-reduced-motion:reduce){.ofr *,.ofr-toast,.ofr-sticky{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.ofr-lock .ofr-sticky{display:none!important}

@@ -1,0 +1,24 @@
+/* Result with before/after slider */
+.ofr__result{display:grid!important;grid-template-columns:1.15fr .85fr;gap:26px;align-items:center}
+.ofr__compare{--pos:50%;position:relative;height:min(62vh,560px);height:min(62dvh,560px);overflow:hidden;border-radius:22px;background:var(--ofr-soft);touch-action:pan-y;user-select:none}
+.ofr__compare-after,.ofr__compare-before img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.ofr__compare-before{position:absolute;inset:0;clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.ofr__compare-handle{position:absolute;top:0;bottom:0;left:var(--pos);width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 12px #0006;pointer-events:none}
+.ofr__compare-handle i{position:absolute;top:50%;left:50%;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#fff;color:#111827;font-style:normal;font-size:14px;font-weight:900;letter-spacing:-2px;box-shadow:0 4px 14px #0005;transform:translate(-50%,-50%)}
+.ofr__compare-range{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize;-webkit-appearance:none;appearance:none}
+.ofr__compare-range:focus-visible+.ofr__compare-tag,.ofr__compare:focus-within .ofr__compare-handle i{outline:3px solid var(--ofr-a)}
+.ofr__compare-tag{position:absolute;top:12px;padding:4px 10px;border-radius:999px;background:#111827b3;color:#fff;font-size:11px;font-weight:800;pointer-events:none}
+.ofr__compare-tag.is-before{left:12px}.ofr__compare-tag.is-after{right:12px}
+.ofr__fullscreen{position:absolute;z-index:2;bottom:12px;left:12px;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:#111827cc;color:#fff;font-size:18px;cursor:zoom-in}
+.ofr__success{display:inline-flex;padding:6px 10px;border-radius:99px;background:var(--ofr-ok-bg);color:var(--ofr-ok);font-size:12px;font-weight:800}
+.ofr__result h3{margin:12px 0 4px;font-size:25px}
+.ofr__result-side>p{margin:0 0 16px;color:var(--ofr-muted)}
+
+/* Side-by-side comparison */
+.ofr__gallery h3{margin:0 0 16px;font-size:22px;text-align:center}
+.ofr__gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.ofr__tile{display:grid;gap:8px;margin:0}
+.ofr__tile button{padding:0;overflow:hidden;border:1px solid var(--ofr-line);border-radius:18px;background:var(--ofr-soft);cursor:zoom-in}
+.ofr__tile img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
+.ofr__tile figcaption{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700}
+.ofr__tile figcaption a{flex:none;color:var(--ofr-a);font-size:12px}

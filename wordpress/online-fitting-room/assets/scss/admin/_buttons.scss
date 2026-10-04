@@ -1,0 +1,8 @@
+/* Buttons */
+.ofr-btn{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 18px;border:1px solid transparent;border-radius:12px;font-size:13px;font-weight:800;line-height:1;text-decoration:none;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s}
+.ofr-btn:focus-visible{outline:3px solid rgba(255,106,43,.45);outline-offset:2px}
+.ofr-btn--primary{background:linear-gradient(135deg,var(--ofr-orange),var(--ofr-orange-2));color:#fff;box-shadow:0 10px 24px rgba(242,80,26,.32)}
+.ofr-btn--primary:hover{color:#fff;transform:translateY(-1px);box-shadow:0 14px 28px rgba(242,80,26,.4)}
+.ofr-btn--primary[disabled]{opacity:.65;cursor:wait;transform:none}
+.ofr-btn--ghost{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e8eaee}
+.ofr-btn--ghost:hover{background:rgba(255,255,255,.12);color:#fff}

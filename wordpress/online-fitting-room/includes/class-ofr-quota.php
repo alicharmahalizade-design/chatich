@@ -27,13 +27,15 @@ final class OFR_Quota {
 		global $wpdb;
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$table = self::table();
-		dbDelta( "CREATE TABLE {$table} (
+		dbDelta(
+			"CREATE TABLE {$table} (
 			k char(40) NOT NULL,
 			n int(10) unsigned NOT NULL DEFAULT 0,
 			expires bigint(20) unsigned NOT NULL DEFAULT 0,
 			PRIMARY KEY  (k),
 			KEY expires (expires)
-		) {$wpdb->get_charset_collate()};" );
+		) {$wpdb->get_charset_collate()};"
+		);
 	}
 
 	public static function uninstall() {
@@ -51,13 +53,17 @@ final class OFR_Quota {
 	 */
 	private static function write( $sql ) {
 		global $wpdb;
-		if ( self::$broken ) return false;
+		if ( self::$broken ) {
+			return false;
+		}
 		$suppress = $wpdb->suppress_errors( true );
 		$result   = $wpdb->query( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared -- prepared by the callers.
 		$wpdb->suppress_errors( $suppress );
 		if ( false === $result ) {
 			self::$broken = true;
-			if ( class_exists( 'OFR_Api' ) ) OFR_Api::log_error( 'counters table', 0, $wpdb->last_error ?: 'Query failed.' );
+			if ( class_exists( 'OFR_Api' ) ) {
+				OFR_Api::log_error( 'counters table', 0, $wpdb->last_error ?: 'Query failed.' );
+			}
 		}
 		return $result;
 	}
@@ -69,7 +75,9 @@ final class OFR_Quota {
 	/** Current value of a counter (0 when missing or expired). */
 	public static function get( $name ) {
 		global $wpdb;
-		if ( self::$broken ) return (int) get_transient( 'ofr_c_' . self::key( $name ) );
+		if ( self::$broken ) {
+			return (int) get_transient( 'ofr_c_' . self::key( $name ) );
+		}
 		$suppress = $wpdb->suppress_errors( true );
 		$value    = $wpdb->get_var( $wpdb->prepare( 'SELECT n FROM ' . self::table() . ' WHERE k = %s AND expires > %d', self::key( $name ), time() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
 		$wpdb->suppress_errors( $suppress );
@@ -87,9 +95,13 @@ final class OFR_Quota {
 		$now = time();
 		// Create the row, or restart it when its window has passed (n is assigned before expires, so it sees the old expiry).
 		$ensure = self::write( $wpdb->prepare( 'INSERT INTO ' . self::table() . ' (k, n, expires) VALUES (%s, 0, %d) ON DUPLICATE KEY UPDATE n = IF(expires <= %d, 0, n), expires = IF(expires <= %d, VALUES(expires), expires)', $k, $now + $ttl, $now, $now ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( false === $ensure ) return self::legacy_take( $k, $limit, $ttl );
+		if ( false === $ensure ) {
+			return self::legacy_take( $k, $limit, $ttl );
+		}
 		$taken = self::write( $wpdb->prepare( 'UPDATE ' . self::table() . ' SET n = n + 1 WHERE k = %s AND n < %d', $k, $limit ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( false === $taken ) return self::legacy_take( $k, $limit, $ttl );
+		if ( false === $taken ) {
+			return self::legacy_take( $k, $limit, $ttl );
+		}
 		return 1 === (int) $taken;
 	}
 
@@ -99,7 +111,9 @@ final class OFR_Quota {
 		$k = self::key( $name );
 		if ( self::$broken ) {
 			$value = (int) get_transient( 'ofr_c_' . $k );
-			if ( $value > 0 ) set_transient( 'ofr_c_' . $k, $value - 1, DAY_IN_SECONDS );
+			if ( $value > 0 ) {
+				set_transient( 'ofr_c_' . $k, $value - 1, DAY_IN_SECONDS );
+			}
 			return;
 		}
 		self::write( $wpdb->prepare( 'UPDATE ' . self::table() . ' SET n = n - 1 WHERE k = %s AND n > 0', $k ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
@@ -115,14 +129,24 @@ final class OFR_Quota {
 	public static function reserve( array $buckets ) {
 		$taken = array();
 		foreach ( $buckets as $bucket ) {
-			if ( (int) $bucket['limit'] <= 0 ) continue;
+			if ( (int) $bucket['limit'] <= 0 ) {
+				continue;
+			}
 			if ( ! self::take( $bucket['name'], (int) $bucket['limit'], (int) $bucket['ttl'] ) ) {
 				self::release( $taken );
-				return array( 'ok' => false, 'taken' => array(), 'scope' => $bucket['scope'] ?? '' );
+				return array(
+					'ok'    => false,
+					'taken' => array(),
+					'scope' => $bucket['scope'] ?? '',
+				);
 			}
 			$taken[] = $bucket['name'];
 		}
-		return array( 'ok' => true, 'taken' => $taken, 'scope' => '' );
+		return array(
+			'ok'    => true,
+			'taken' => $taken,
+			'scope' => '',
+		);
 	}
 
 	public static function release( array $names ) {
@@ -142,7 +166,9 @@ final class OFR_Quota {
 			return self::legacy_lock( $k, $ttl );
 		}
 		$inserted = self::write( $wpdb->prepare( 'INSERT IGNORE INTO ' . self::table() . ' (k, n, expires) VALUES (%s, 1, %d)', $k, time() + $ttl ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( false === $inserted ) return self::legacy_lock( $k, $ttl );
+		if ( false === $inserted ) {
+			return self::legacy_lock( $k, $ttl );
+		}
 		return 1 === (int) $inserted;
 	}
 
@@ -168,13 +194,17 @@ final class OFR_Quota {
 
 	private static function legacy_take( $k, $limit, $ttl ) {
 		$value = (int) get_transient( 'ofr_c_' . $k );
-		if ( $value >= $limit ) return false;
+		if ( $value >= $limit ) {
+			return false;
+		}
 		set_transient( 'ofr_c_' . $k, $value + 1, $ttl );
 		return true;
 	}
 
 	private static function legacy_lock( $k, $ttl ) {
-		if ( get_transient( 'ofr_l_' . $k ) ) return false;
+		if ( get_transient( 'ofr_l_' . $k ) ) {
+			return false;
+		}
 		set_transient( 'ofr_l_' . $k, 1, $ttl );
 		return true;
 	}

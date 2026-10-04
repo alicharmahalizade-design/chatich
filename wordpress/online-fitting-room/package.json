@@ -1,0 +1,20 @@
+{
+  "name": "online-fitting-room",
+  "version": "1.8.0",
+  "private": true,
+  "description": "Build and test tooling for the Online Fitting Room WooCommerce plugin.",
+  "license": "GPL-2.0-or-later",
+  "scripts": {
+    "build:css": "sass --no-source-map --style=compressed assets/scss/tryon.scss assets/css/tryon.css && sass --no-source-map --style=compressed assets/scss/admin.scss assets/css/admin.css",
+    "watch:css": "sass --no-source-map --watch assets/scss/tryon.scss:assets/css/tryon.css assets/scss/admin.scss:assets/css/admin.css",
+    "lint:php": "vendor/bin/phpcs",
+    "lint:js": "node --check assets/js/tryon.js && node --check assets/js/admin.js",
+    "test:php": "vendor/bin/phpunit",
+    "test:e2e": "node tests/e2e/run-all.js",
+    "zip": "bash bin/build-zip.sh"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0",
+    "sass": "^1.93.0"
+  }
+}

@@ -43,31 +43,61 @@ final class OFR_Image {
 	 * @return string Format key, 'svg', or '' when unknown.
 	 */
 	public static function sniff( $path, $filename = '' ) {
-		$h = (string) file_get_contents( $path, false, null, 0, 64 ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		$h   = (string) file_get_contents( $path, false, null, 0, 64 ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		$ext = strtolower( pathinfo( (string) $filename, PATHINFO_EXTENSION ) );
-		if ( 0 === strncmp( $h, "\xFF\xD8\xFF", 3 ) ) return 'jpeg';
-		if ( 0 === strncmp( $h, "\x89PNG", 4 ) ) return 'png';
-		if ( 0 === strncmp( $h, 'GIF8', 4 ) ) return 'gif';
-		if ( 0 === strncmp( $h, 'RIFF', 4 ) && 'WEBP' === substr( $h, 8, 4 ) ) return 'webp';
-		if ( 0 === strncmp( $h, 'BM', 2 ) ) return 'bmp';
+		if ( 0 === strncmp( $h, "\xFF\xD8\xFF", 3 ) ) {
+			return 'jpeg';
+		}
+		if ( 0 === strncmp( $h, "\x89PNG", 4 ) ) {
+			return 'png';
+		}
+		if ( 0 === strncmp( $h, 'GIF8', 4 ) ) {
+			return 'gif';
+		}
+		if ( 0 === strncmp( $h, 'RIFF', 4 ) && 'WEBP' === substr( $h, 8, 4 ) ) {
+			return 'webp';
+		}
+		if ( 0 === strncmp( $h, 'BM', 2 ) ) {
+			return 'bmp';
+		}
 		if ( 'ftyp' === substr( $h, 4, 4 ) ) {
 			$brands = substr( $h, 8, 56 );
-			if ( preg_match( '/avi[fs]/', $brands ) ) return 'avif';
-			if ( false !== strpos( $brands, 'crx ' ) ) return 'raw'; // Canon CR3.
-			if ( preg_match( '/hei[cxms]|hev[cxms]|mif1|msf1/', $brands ) ) return 'heic';
+			if ( preg_match( '/avi[fs]/', $brands ) ) {
+				return 'avif';
+			}
+			if ( false !== strpos( $brands, 'crx ' ) ) {
+				return 'raw'; // Canon CR3.
+			}
+			if ( preg_match( '/hei[cxms]|hev[cxms]|mif1|msf1/', $brands ) ) {
+				return 'heic';
+			}
 		}
-		if ( 0 === strncmp( $h, "\xFF\x0A", 2 ) || 'JXL ' === substr( $h, 4, 4 ) ) return 'jxl';
-		if ( 0 === strncmp( $h, '8BPS', 4 ) ) return 'psd';
-		if ( 0 === strncmp( $h, 'FUJIFILMCCD-RAW', 15 ) || 0 === strncmp( $h, 'IIRO', 4 ) || 0 === strncmp( $h, "IIU\0", 4 ) ) return 'raw';
-		if ( 0 === strncmp( $h, "II*\0", 4 ) || 0 === strncmp( $h, "MM\0*", 4 ) ) return in_array( $ext, self::RAW_EXTENSIONS, true ) ? 'raw' : 'tiff';
-		if ( 0 === strncmp( $h, "\0\0\1\0", 4 ) ) return 'ico';
-		if ( preg_match( '/^\s*(<\?xml|<svg)/i', $h ) ) return 'svg';
+		if ( 0 === strncmp( $h, "\xFF\x0A", 2 ) || 'JXL ' === substr( $h, 4, 4 ) ) {
+			return 'jxl';
+		}
+		if ( 0 === strncmp( $h, '8BPS', 4 ) ) {
+			return 'psd';
+		}
+		if ( 0 === strncmp( $h, 'FUJIFILMCCD-RAW', 15 ) || 0 === strncmp( $h, 'IIRO', 4 ) || 0 === strncmp( $h, "IIU\0", 4 ) ) {
+			return 'raw';
+		}
+		if ( 0 === strncmp( $h, "II*\0", 4 ) || 0 === strncmp( $h, "MM\0*", 4 ) ) {
+			return in_array( $ext, self::RAW_EXTENSIONS, true ) ? 'raw' : 'tiff';
+		}
+		if ( 0 === strncmp( $h, "\0\0\1\0", 4 ) ) {
+			return 'ico';
+		}
+		if ( preg_match( '/^\s*(<\?xml|<svg)/i', $h ) ) {
+			return 'svg';
+		}
 		return '';
 	}
 
 	private static function imagick_can( $coder ) {
 		static $cache = array();
-		if ( ! class_exists( 'Imagick' ) || ! apply_filters( 'ofr_use_imagick', true ) ) return false;
+		if ( ! class_exists( 'Imagick' ) || ! apply_filters( 'ofr_use_imagick', true ) ) {
+			return false;
+		}
 		if ( ! isset( $cache[ $coder ] ) ) {
 			try {
 				$cache[ $coder ] = (bool) Imagick::queryFormats( strtoupper( $coder ) );
@@ -80,9 +110,18 @@ final class OFR_Image {
 
 	private static function gd_can( $format ) {
 		$loader = self::formats()[ $format ][2] ?? '';
-		if ( ! $loader || ! function_exists( $loader ) ) return false;
+		if ( ! $loader || ! function_exists( $loader ) ) {
+			return false;
+		}
 		$types = function_exists( 'imagetypes' ) ? imagetypes() : 0;
-		$flags = array( 'jpeg' => 'IMG_JPG', 'png' => 'IMG_PNG', 'webp' => 'IMG_WEBP', 'gif' => 'IMG_GIF', 'bmp' => 'IMG_BMP', 'avif' => 'IMG_AVIF' );
+		$flags = array(
+			'jpeg' => 'IMG_JPG',
+			'png'  => 'IMG_PNG',
+			'webp' => 'IMG_WEBP',
+			'gif'  => 'IMG_GIF',
+			'bmp'  => 'IMG_BMP',
+			'avif' => 'IMG_AVIF',
+		);
 		return isset( $flags[ $format ] ) && defined( $flags[ $format ] ) && ( $types & constant( $flags[ $format ] ) );
 	}
 
@@ -112,12 +151,20 @@ final class OFR_Image {
 		// are re-encoded so transparent areas become white instead of reaching the API as alpha.
 		if ( 'jpeg' === $format ) {
 			$info = @getimagesize( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-			if ( ! $info ) return new WP_Error( 'ofr_convert_failed', 'Corrupt image.', array( 'format' => $format ) );
+			if ( ! $info ) {
+				return new WP_Error( 'ofr_convert_failed', 'Corrupt image.', array( 'format' => $format ) );
+			}
 			$rotated = self::exif_orientation( $path ) > 1;
 			if ( ! $rotated && max( $info[0], $info[1] ) <= $max_dim && filesize( $path ) <= $max_bytes ) {
 				// Lossless, but without EXIF/XMP/IPTC: no GPS position, camera serial or name leaves the site.
 				$clean = self::strip_jpeg_metadata( (string) file_get_contents( $path ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-				if ( false !== $clean ) return array( 'bytes' => $clean, 'mime' => 'image/jpeg', 'format' => $format );
+				if ( false !== $clean ) {
+					return array(
+						'bytes'  => $clean,
+						'mime'   => 'image/jpeg',
+						'format' => $format,
+					);
+				}
 			}
 		}
 		if ( ! self::server_can( $format ) ) {
@@ -125,23 +172,37 @@ final class OFR_Image {
 		}
 		$coder = self::formats()[ $format ][1];
 		$ext   = strtolower( pathinfo( (string) $filename, PATHINFO_EXTENSION ) );
-		if ( 'raw' === $format && in_array( $ext, self::RAW_EXTENSIONS, true ) && self::imagick_can( $ext ) ) $coder = $ext; // e.g. cr2:, nef:
+		if ( 'raw' === $format && in_array( $ext, self::RAW_EXTENSIONS, true ) && self::imagick_can( $ext ) ) {
+			$coder = $ext; // e.g. cr2:, nef:
+		}
 		$bytes = self::imagick_can( $coder ) ? self::with_imagick( $path, $coder, $max_dim ) : self::with_gd( $path, $format, $max_dim );
 		if ( is_wp_error( $bytes ) ) {
 			$bytes->add_data( array( 'format' => $format ) );
 			return $bytes;
 		}
-		return array( 'bytes' => $bytes, 'mime' => 'image/jpeg', 'format' => $format );
+		return array(
+			'bytes'  => $bytes,
+			'mime'   => 'image/jpeg',
+			'format' => $format,
+		);
 	}
 
 	private static function with_imagick( $path, $coder, $max_dim ) {
 		wp_raise_memory_limit( 'image' );
 		try {
-			foreach ( array( 'RESOURCETYPE_MEMORY' => 256 * MB_IN_BYTES, 'RESOURCETYPE_MAP' => 512 * MB_IN_BYTES, 'RESOURCETYPE_AREA' => 200000000 ) as $type => $limit ) {
-				if ( defined( 'Imagick::' . $type ) ) Imagick::setResourceLimit( constant( 'Imagick::' . $type ), $limit );
+			foreach ( array(
+				'RESOURCETYPE_MEMORY' => 256 * MB_IN_BYTES,
+				'RESOURCETYPE_MAP'    => 512 * MB_IN_BYTES,
+				'RESOURCETYPE_AREA'   => 200000000,
+			) as $type => $limit ) {
+				if ( defined( 'Imagick::' . $type ) ) {
+					Imagick::setResourceLimit( constant( 'Imagick::' . $type ), $limit );
+				}
 			}
 			$image = new Imagick();
-			if ( 'jpeg' === $coder ) $image->setOption( 'jpeg:size', ( $max_dim * 2 ) . 'x' . ( $max_dim * 2 ) );
+			if ( 'jpeg' === $coder ) {
+				$image->setOption( 'jpeg:size', ( $max_dim * 2 ) . 'x' . ( $max_dim * 2 ) );
+			}
 			$image->readImage( $coder . ':' . $path ); // Explicit coder: the file cannot choose another one.
 			$image->setFirstIterator(); // Animated GIF, multi-page TIFF, PSD: the first frame / composite.
 			$frame = $image->getImage();
@@ -149,14 +210,24 @@ final class OFR_Image {
 			if ( method_exists( $frame, 'autoOrient' ) ) {
 				$frame->autoOrient();
 			} else {
-				$turns = array( Imagick::ORIENTATION_BOTTOMRIGHT => 180, Imagick::ORIENTATION_RIGHTTOP => 90, Imagick::ORIENTATION_LEFTBOTTOM => -90 );
+				$turns = array(
+					Imagick::ORIENTATION_BOTTOMRIGHT => 180,
+					Imagick::ORIENTATION_RIGHTTOP    => 90,
+					Imagick::ORIENTATION_LEFTBOTTOM  => -90,
+				);
 				$o     = $frame->getImageOrientation();
-				if ( isset( $turns[ $o ] ) ) $frame->rotateImage( 'white', $turns[ $o ] );
+				if ( isset( $turns[ $o ] ) ) {
+					$frame->rotateImage( 'white', $turns[ $o ] );
+				}
 				$frame->setImageOrientation( Imagick::ORIENTATION_TOPLEFT );
 			}
-			if ( Imagick::COLORSPACE_CMYK === $frame->getImageColorspace() ) $frame->transformImageColorspace( Imagick::COLORSPACE_SRGB );
+			if ( Imagick::COLORSPACE_CMYK === $frame->getImageColorspace() ) {
+				$frame->transformImageColorspace( Imagick::COLORSPACE_SRGB );
+			}
 			$frame->setImageBackgroundColor( 'white' );
-			if ( defined( 'Imagick::ALPHACHANNEL_REMOVE' ) ) $frame->setImageAlphaChannel( Imagick::ALPHACHANNEL_REMOVE );
+			if ( defined( 'Imagick::ALPHACHANNEL_REMOVE' ) ) {
+				$frame->setImageAlphaChannel( Imagick::ALPHACHANNEL_REMOVE );
+			}
 			$frame = $frame->mergeImageLayers( Imagick::LAYERMETHOD_FLATTEN );
 			if ( max( $frame->getImageWidth(), $frame->getImageHeight() ) > $max_dim ) {
 				$frame->thumbnailImage( $max_dim, $max_dim, true );
@@ -175,14 +246,24 @@ final class OFR_Image {
 	private static function with_gd( $path, $format, $max_dim ) {
 		wp_raise_memory_limit( 'image' );
 		$size = @getimagesize( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-		if ( $size && $size[0] * $size[1] > 60000000 ) return new WP_Error( 'ofr_convert_failed', 'GD: image too large to decode safely.' );
+		if ( $size && $size[0] * $size[1] > 60000000 ) {
+			return new WP_Error( 'ofr_convert_failed', 'GD: image too large to decode safely.' );
+		}
 		$loader = self::formats()[ $format ][2];
 		$source = @$loader( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-		if ( ! $source ) return new WP_Error( 'ofr_convert_failed', 'GD could not decode the image.' );
+		if ( ! $source ) {
+			return new WP_Error( 'ofr_convert_failed', 'GD could not decode the image.' );
+		}
 		if ( 'jpeg' === $format ) {
-			$turns = array( 3 => 180, 6 => -90, 8 => 90 );
+			$turns = array(
+				3 => 180,
+				6 => -90,
+				8 => 90,
+			);
 			$o     = self::exif_orientation( $path );
-			if ( isset( $turns[ $o ] ) ) $source = imagerotate( $source, $turns[ $o ], 0 );
+			if ( isset( $turns[ $o ] ) ) {
+				$source = imagerotate( $source, $turns[ $o ], 0 );
+			}
 		}
 		$w     = imagesx( $source );
 		$h     = imagesy( $source );
@@ -208,36 +289,54 @@ final class OFR_Image {
 	 */
 	public static function strip_jpeg_metadata( $data ) {
 		$len = strlen( $data );
-		if ( $len < 4 || "\xFF\xD8" !== substr( $data, 0, 2 ) ) return false;
+		if ( $len < 4 || "\xFF\xD8" !== substr( $data, 0, 2 ) ) {
+			return false;
+		}
 		$out = "\xFF\xD8";
 		$pos = 2;
 		while ( $pos < $len ) {
-			if ( "\xFF" !== $data[ $pos ] ) return false;
-			while ( $pos < $len && "\xFF" === $data[ $pos ] ) $pos++; // Fill bytes.
-			if ( $pos >= $len ) return false;
+			if ( "\xFF" !== $data[ $pos ] ) {
+				return false;
+			}
+			while ( $pos < $len && "\xFF" === $data[ $pos ] ) {
+				++$pos; // Fill bytes.
+			}
+			if ( $pos >= $len ) {
+				return false;
+			}
 			$marker = ord( $data[ $pos ] );
-			$pos++;
-			if ( 0xD9 === $marker ) return $out . "\xFF\xD9";
+			++$pos;
+			if ( 0xD9 === $marker ) {
+				return $out . "\xFF\xD9";
+			}
 			if ( ( $marker >= 0xD0 && $marker <= 0xD7 ) || 0x01 === $marker ) { // No length field.
 				$out .= "\xFF" . chr( $marker );
 				continue;
 			}
-			if ( $pos + 2 > $len ) return false;
+			if ( $pos + 2 > $len ) {
+				return false;
+			}
 			$size = ( ord( $data[ $pos ] ) << 8 ) | ord( $data[ $pos + 1 ] );
-			if ( $size < 2 || $pos + $size > $len ) return false;
+			if ( $size < 2 || $pos + $size > $len ) {
+				return false;
+			}
 			$segment = substr( $data, $pos, $size );
 			$pos    += $size;
 			if ( 0xDA === $marker ) {
 				// Start of scan: entropy-coded data follows. The first EOI ends the main image; anything after it is dropped.
 				$end = self::find_eoi( $data, $pos );
-				if ( false === $end ) return false;
+				if ( false === $end ) {
+					return false;
+				}
 				return $out . "\xFF\xDA" . $segment . substr( $data, $pos, $end - $pos ) . "\xFF\xD9";
 			}
 			$keep = 0xE0 === $marker // APP0 JFIF.
 				|| ( 0xE2 === $marker && 0 === strncmp( substr( $segment, 2 ), "ICC_PROFILE\0", 12 ) )
 				|| 0xEE === $marker // APP14 Adobe.
 				|| ( $marker < 0xE0 || ( $marker > 0xEF && 0xFE !== $marker ) ); // Tables, frame headers… (not APPn, not COM).
-			if ( $keep ) $out .= "\xFF" . chr( $marker ) . $segment;
+			if ( $keep ) {
+				$out .= "\xFF" . chr( $marker ) . $segment;
+			}
 		}
 		return false;
 	}
@@ -245,23 +344,29 @@ final class OFR_Image {
 	/** Offset of the EOI marker that ends entropy-coded data starting at $pos (FF00 stuffing and RSTn skipped; DHT/SOS of progressive scans pass through). */
 	private static function find_eoi( $data, $pos ) {
 		$len = strlen( $data );
-		while ( false !== ( $pos = strpos( $data, "\xFF", $pos ) ) ) {
-			if ( $pos + 1 >= $len ) return false;
+		for ( $pos = strpos( $data, "\xFF", $pos ); false !== $pos; $pos = strpos( $data, "\xFF", $pos ) ) {
+			if ( $pos + 1 >= $len ) {
+				return false;
+			}
 			$next = ord( $data[ $pos + 1 ] );
-			if ( 0xD9 === $next ) return $pos;
+			if ( 0xD9 === $next ) {
+				return $pos;
+			}
 			$pos += 2;
 			// Progressive JPEGs: segments between scans (DHT, SOS, DRI…) have lengths; skip their headers so their bytes are not misread.
 			if ( 0x00 !== $next && 0xFF !== $next && ! ( $next >= 0xD0 && $next <= 0xD7 ) && $pos + 2 <= $len ) {
 				$pos += ( ord( $data[ $pos ] ) << 8 ) | ord( $data[ $pos + 1 ] );
 			} elseif ( 0xFF === $next ) {
-				$pos--; // Fill byte: look at it again.
+				--$pos; // Fill byte: look at it again.
 			}
 		}
 		return false;
 	}
 
 	private static function exif_orientation( $path ) {
-		if ( ! function_exists( 'exif_read_data' ) ) return 1;
+		if ( ! function_exists( 'exif_read_data' ) ) {
+			return 1;
+		}
 		$exif = @exif_read_data( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 		return (int) ( $exif['Orientation'] ?? 1 );
 	}

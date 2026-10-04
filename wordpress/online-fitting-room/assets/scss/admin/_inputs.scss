@@ -1,0 +1,11 @@
+/* Inputs */
+.ofr-app .ofr-input{width:100%;max-width:none;min-height:44px;margin:0;padding:8px 14px;border:1px solid #dfe2e8;border-radius:12px;background:#fff;color:var(--ofr-text);font-size:13px;line-height:1.8;box-shadow:none;transition:border-color .15s,box-shadow .15s}
+.ofr-app textarea.ofr-input{min-height:88px;resize:vertical}
+.ofr-app select.ofr-input{padding-inline-end:32px;background-position:left 12px top 55%}
+.ofr-app .ofr-input:focus{border-color:var(--ofr-orange);box-shadow:0 0 0 3px rgba(255,106,43,.18);outline:none}
+.ofr-keyrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;color:var(--ofr-muted);font-size:12px}
+.ofr-app code{padding:3px 8px;border-radius:8px;background:#f1f2f5;color:var(--ofr-ink);font-size:12px}
+.ofr-check{display:inline-flex;align-items:center;gap:6px;color:var(--ofr-text)}
+.ofr-colors{display:flex;gap:16px;align-items:center;min-height:44px}
+.ofr-colors label{display:inline-flex;align-items:center;gap:8px;font-size:13px}
+.ofr-app input[type=color]{width:44px;height:36px;padding:3px;border:1px solid #dfe2e8;border-radius:10px;background:#fff;cursor:pointer}

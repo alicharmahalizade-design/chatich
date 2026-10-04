@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<ruleset name="Online Fitting Room">
+	<description>WordPress coding standards, security sniffs and PHP 7.4+ compatibility.</description>
+
+	<file>.</file>
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>node_modules/*</exclude-pattern>
+	<exclude-pattern>tests/*</exclude-pattern>
+	<exclude-pattern>assets/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<config name="minimum_wp_version" value="6.2"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress-Extra">
+		<!-- Readable short ternaries ($a ?: $b) are used on purpose. -->
+		<exclude name="Universal.Operators.DisallowShortTernary"/>
+	</rule>
+	<rule ref="WordPress-Docs">
+		<!-- Every class and method is documented where it is not self-explanatory; parameter tags are not required. -->
+		<exclude name="Squiz.Commenting"/>
+		<exclude name="Generic.Commenting.DocComment"/>
+	</rule>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array"><element value="online-fitting-room"/></property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array"><element value="manage_woocommerce"/></property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="ofr_"/>
+				<element value="online_fitting_room"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<!-- The main plugin file keeps its conventional name. -->
+		<exclude-pattern>online-fitting-room.php</exclude-pattern>
+	</rule>
+	<rule ref="PHPCompatibilityWP"/>
+</ruleset>

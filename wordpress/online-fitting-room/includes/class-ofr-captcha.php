@@ -31,7 +31,9 @@ final class OFR_Captcha {
 	public static function mode() {
 		$s    = Online_Fitting_Room::settings();
 		$mode = $s['captcha'] ?? 'pow';
-		if ( 'turnstile' === $mode && ( '' === trim( $s['turnstile_site'] ) || '' === trim( $s['turnstile_secret'] ) ) ) return 'pow'; // Keys missing: keep protection on.
+		if ( 'turnstile' === $mode && ( '' === trim( $s['turnstile_site'] ) || '' === trim( $s['turnstile_secret'] ) ) ) {
+			return 'pow'; // Keys missing: keep protection on.
+		}
 		return array_key_exists( $mode, self::modes() ) ? $mode : 'pow';
 	}
 
@@ -63,7 +65,7 @@ final class OFR_Captcha {
 				continue;
 			}
 			while ( 0 === ( $byte & 0x80 ) ) {
-				$bits++;
+				++$bits;
 				$byte <<= 1;
 			}
 			break;
@@ -73,10 +75,18 @@ final class OFR_Captcha {
 
 	/** Checks a solved challenge without touching storage (signature, expiry, work). */
 	public static function check_pow( $challenge, $nonce ) {
-		if ( ! is_string( $challenge ) || ! preg_match( '/^(v1\.(\d{10,})\.(\d{1,2})\.([a-f0-9]{24}))\.([a-f0-9]{32})$/', $challenge, $m ) ) return false;
-		if ( ! hash_equals( self::sign( $m[1] ), $m[5] ) ) return false;
-		if ( (int) $m[2] < time() ) return false;
-		if ( ! is_string( $nonce ) || ! preg_match( '/^\d{1,12}$/', $nonce ) ) return false;
+		if ( ! is_string( $challenge ) || ! preg_match( '/^(v1\.(\d{10,})\.(\d{1,2})\.([a-f0-9]{24}))\.([a-f0-9]{32})$/', $challenge, $m ) ) {
+			return false;
+		}
+		if ( ! hash_equals( self::sign( $m[1] ), $m[5] ) ) {
+			return false;
+		}
+		if ( (int) $m[2] < time() ) {
+			return false;
+		}
+		if ( ! is_string( $nonce ) || ! preg_match( '/^\d{1,12}$/', $nonce ) ) {
+			return false;
+		}
 		return self::leading_zero_bits( hash( 'sha256', $challenge . ':' . $nonce, true ) ) >= (int) $m[3] ? $m[4] : false;
 	}
 
@@ -86,21 +96,28 @@ final class OFR_Captcha {
 	}
 
 	public static function verify_turnstile( $token ) {
-		if ( ! is_string( $token ) || '' === $token || strlen( $token ) > 2048 ) return false;
-		$response = wp_remote_post( 'https://challenges.cloudflare.com/turnstile/v0/siteverify', array(
-			'timeout' => 10,
-			'body'    => array(
-				'secret'   => trim( Online_Fitting_Room::settings()['turnstile_secret'] ),
-				'response' => $token,
-				'remoteip' => OFR_Client::ip(),
-			),
-		) );
+		if ( ! is_string( $token ) || '' === $token || strlen( $token ) > 2048 ) {
+			return false;
+		}
+		$response = wp_remote_post(
+			'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+			array(
+				'timeout' => 10,
+				'body'    => array(
+					'secret'   => trim( Online_Fitting_Room::settings()['turnstile_secret'] ),
+					'response' => $token,
+					'remoteip' => OFR_Client::ip(),
+				),
+			)
+		);
 		if ( is_wp_error( $response ) ) {
 			OFR_Api::log_error( 'turnstile', 0, $response->get_error_message() );
 			return false;
 		}
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( empty( $data['success'] ) ) OFR_Api::log_error( 'turnstile', (int) wp_remote_retrieve_response_code( $response ), $data['error-codes'] ?? 'rejected' );
+		if ( empty( $data['success'] ) ) {
+			OFR_Api::log_error( 'turnstile', (int) wp_remote_retrieve_response_code( $response ), $data['error-codes'] ?? 'rejected' );
+		}
 		return ! empty( $data['success'] );
 	}
 
@@ -109,7 +126,9 @@ final class OFR_Captcha {
 	 * @return true|WP_Error
 	 */
 	public static function verify( array $request ) {
-		if ( ! self::required() ) return true;
+		if ( ! self::required() ) {
+			return true;
+		}
 		$mode = self::mode();
 		if ( 'pow' === $mode ) {
 			$ok = self::verify_pow( sanitize_text_field( $request['pow'] ?? '' ), sanitize_text_field( $request['pow_nonce'] ?? '' ) );
@@ -124,10 +143,22 @@ final class OFR_Captcha {
 
 	/** What the browser needs; a fresh challenge with every response. */
 	public static function client_config() {
-		if ( ! self::required() ) return array( 'mode' => 'off' );
+		if ( ! self::required() ) {
+			return array( 'mode' => 'off' );
+		}
 		$mode = self::mode();
-		if ( 'pow' === $mode ) return array( 'mode' => 'pow', 'challenge' => self::challenge() );
-		if ( 'turnstile' === $mode ) return array( 'mode' => 'turnstile', 'siteKey' => trim( Online_Fitting_Room::settings()['turnstile_site'] ) );
+		if ( 'pow' === $mode ) {
+			return array(
+				'mode'      => 'pow',
+				'challenge' => self::challenge(),
+			);
+		}
+		if ( 'turnstile' === $mode ) {
+			return array(
+				'mode'    => 'turnstile',
+				'siteKey' => trim( Online_Fitting_Room::settings()['turnstile_site'] ),
+			);
+		}
 		return array( 'mode' => $mode );
 	}
 }

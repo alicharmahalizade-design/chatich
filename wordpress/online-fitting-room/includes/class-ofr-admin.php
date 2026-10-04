@@ -70,16 +70,25 @@ final class OFR_Admin {
 
 	/** Styles and script for the settings screen only. */
 	public static function assets( $hook ) {
-		if ( ! self::$hook || $hook !== self::$hook ) return;
+		if ( ! self::$hook || $hook !== self::$hook ) {
+			return;
+		}
 		wp_enqueue_style( 'ofr-admin', plugins_url( 'assets/css/admin.css', OFR_FILE ), array(), Online_Fitting_Room::VERSION );
 		wp_add_inline_style( 'ofr-admin', Online_Fitting_Room::font_face_css() );
 		wp_enqueue_script( 'ofr-admin', plugins_url( 'assets/js/admin.js', OFR_FILE ), array(), Online_Fitting_Room::VERSION, true );
-		wp_localize_script( 'ofr-admin', 'OFRAdmin', array(
-			'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-			'nonce'    => wp_create_nonce( 'ofr_test_connection' ),
-			'checking' => __( 'در حال بررسی اتصال…', 'online-fitting-room' ),
-			'invalid'  => __( 'پاسخ نامعتبر از سرور سایت دریافت شد.', 'online-fitting-room' ),
-		) );
+		wp_localize_script(
+			'ofr-admin',
+			'OFRAdmin',
+			array(
+				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'ofr_test_connection' ),
+				'adminNonce'   => wp_create_nonce( 'ofr_admin' ),
+				'working'      => __( 'در حال انجام…', 'online-fitting-room' ),
+				'confirmClear' => __( 'همه گزارش‌های خطا پاک شود؟', 'online-fitting-room' ),
+				'checking'     => __( 'در حال بررسی اتصال…', 'online-fitting-room' ),
+				'invalid'      => __( 'پاسخ نامعتبر از سرور سایت دریافت شد.', 'online-fitting-room' ),
+			)
+		);
 	}
 
 	public static function action_links( $links ) {
@@ -97,19 +106,30 @@ final class OFR_Admin {
 		}
 	}
 
+	/** Each tab posts only its own fields; everything else keeps its saved value. */
 	public static function sanitize( $input ) {
 		$input = is_array( $input ) ? $input : array(); // options.php has already unslashed it.
 		$old   = Online_Fitting_Room::settings();
+		$new   = 'alerts' === ( $input['_tab'] ?? '' ) ? OFR_Admin_Pages::sanitize_alerts( $input, $old ) : self::sanitize_settings( $input, $old );
+		return array_merge( $old, $new );
+	}
+
+	private static function sanitize_settings( $input, $old ) {
+		if ( isset( $input['api_base'] ) && '' !== trim( $input['api_base'] ) && ! OFR_Api::valid_base( trim( $input['api_base'] ) ) ) {
+			add_settings_error( Online_Fitting_Room::OPTION_KEY, 'ofr_api_base', __( 'آدرس relay باید با https:// شروع شود و پارامتر نداشته باشد؛ ذخیره نشد.', 'online-fitting-room' ) );
+		}
 		$api_key = $old['api_key'];
 		if ( ! empty( $input['api_key_clear'] ) ) {
 			$api_key = '';
+		} elseif ( isset( $input['api_key'] ) && 0 === strpos( (string) $input['api_key'], OFR_Api::KEY_PREFIX ) ) {
+			$api_key = $input['api_key']; // update_option() from code with the stored (already encrypted) value.
 		} elseif ( isset( $input['api_key'] ) && '' !== trim( $input['api_key'] ) ) {
 			$entered = OFR_Api::clean_key( $input['api_key'] );
 			if ( OFR_Api::is_key_id( $entered ) ) {
 				// The key ID from the API dashboard is not a credential; keep the previous key.
 				add_settings_error( Online_Fitting_Room::OPTION_KEY, 'ofr_key_id', __( 'مقداری که وارد کردید شناسه کلید است (با key_ شروع می‌شود) و ذخیره نشد. کلید خام را وارد کنید؛ با vton_live_ یا vton_test_ شروع می‌شود.', 'online-fitting-room' ) );
 			} else {
-				$api_key = $entered;
+				$api_key = OFR_Api::encrypt_key( $entered );
 			}
 		}
 		// Checkboxes post "1"; stored settings (migrations) carry "yes"/"no".
@@ -120,10 +140,16 @@ final class OFR_Admin {
 			'enabled'            => $on( 'enabled' ),
 			'auto_display'       => $on( 'auto_display' ),
 			'api_key'            => $api_key,
+			'api_base'           => isset( $input['api_base'] ) ? ( OFR_Api::valid_base( trim( $input['api_base'] ) ) ? esc_url_raw( untrailingslashit( trim( $input['api_base'] ) ) ) : '' ) : $old['api_base'],
 			'button_text'        => isset( $input['button_text'] ) ? sanitize_text_field( $input['button_text'] ) : $old['button_text'],
 			'primary_color'      => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: $old['primary_color'],
 			'font'               => array_key_exists( $input['font'] ?? '', self::fonts() ) ? $input['font'] : $old['font'],
 			'photo_guide'        => $on( 'photo_guide' ),
+			'webhook'            => $on( 'webhook' ),
+			'refund_failed'      => $on( 'refund_failed' ),
+			'social_proof'       => $on( 'social_proof' ),
+			'social_min'         => max( 1, min( 100000, absint( $input['social_min'] ?? $old['social_min'] ) ) ),
+			'pose_check'         => in_array( $input['pose_check'] ?? '', array( 'off', 'warn', 'block' ), true ) ? $input['pose_check'] : $old['pose_check'],
 			'remember_photo'     => $on( 'remember_photo' ),
 			'watermark'          => $on( 'watermark' ),
 			'sticky_mobile'      => $on( 'sticky_mobile' ),
@@ -147,11 +173,11 @@ final class OFR_Admin {
 		);
 	}
 
-	private static function name( $field ) {
+	public static function name( $field ) {
 		return esc_attr( Online_Fitting_Room::OPTION_KEY . '[' . $field . ']' );
 	}
 
-	private static function select( $field, $options, $value ) {
+	public static function select( $field, $options, $value ) {
 		echo '<select class="ofr-input" id="ofr-' . esc_attr( $field ) . '" name="' . self::name( $field ) . '">'; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in name().
 		foreach ( $options as $key => $label ) {
 			echo '<option value="' . esc_attr( $key ) . '"' . selected( $value, $key, false ) . '>' . esc_html( $label ) . '</option>';
@@ -160,23 +186,30 @@ final class OFR_Admin {
 	}
 
 	/** On/off switch backed by a real checkbox. */
-	private static function toggle( $field, $checked, $label, $help = '' ) {
+	public static function toggle( $field, $checked, $label, $help = '' ) {
 		echo '<label class="ofr-switch"><input type="checkbox" name="' . self::name( $field ) . '" value="1"' . checked( $checked, 'yes', false ) . '><span class="ofr-switch__track" aria-hidden="true"></span><span class="ofr-switch__text"><strong>' . esc_html( $label ) . '</strong>'; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in name().
-		if ( $help ) echo '<small>' . esc_html( $help ) . '</small>';
+		if ( $help ) {
+			echo '<small>' . esc_html( $help ) . '</small>';
+		}
 		echo '</span></label>';
 	}
 
 	/** Small inline icons (stroke follows currentColor). */
-	private static function icon( $name ) {
+	public static function icon( $name ) {
 		$paths = array(
-			'logo'   => '<path d="M12 3c-1.7 0-3 1.3-3 3h2a1 1 0 1 1 1.5.9c-.9.5-1.5 1.4-1.5 2.4V10L3.6 15.2A2 2 0 0 0 4.7 19h14.6a2 2 0 0 0 1.1-3.8L13 10v-.7"/>',
-			'plug'   => '<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/>',
-			'eye'    => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-			'shield' => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
-			'alert'  => '<path d="M12 3l10 18H2zM12 10v5M12 18h.01"/>',
-			'test'   => '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
-			'lock'   => '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
-			'health' => '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+			'logo'    => '<path d="M12 3c-1.7 0-3 1.3-3 3h2a1 1 0 1 1 1.5.9c-.9.5-1.5 1.4-1.5 2.4V10L3.6 15.2A2 2 0 0 0 4.7 19h14.6a2 2 0 0 0 1.1-3.8L13 10v-.7"/>',
+			'plug'    => '<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/>',
+			'eye'     => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+			'shield'  => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+			'alert'   => '<path d="M12 3l10 18H2zM12 10v5M12 18h.01"/>',
+			'test'    => '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+			'lock'    => '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
+			'health'  => '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+			'spark'   => '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+			'chart'   => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+			'check'   => '<path d="M4 12l5 5L20 6"/>',
+			'bell'    => '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/>',
+			'list'    => '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
 			'support' => '<path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v3a2 2 0 0 0 2 2h1v-6H6a2 2 0 0 0-2 2M20 13v3a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2"/><path d="M17 18c0 1.7-2.2 3-5 3"/>',
 		);
 		return '<svg class="ofr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ( $paths[ $name ] ?? '' ) . '</svg>';
@@ -185,7 +218,9 @@ final class OFR_Admin {
 	/** Settings-page warning when shoppers would all count as one CDN address (or the header can be forged). */
 	public static function proxy_hint() {
 		$seen = get_option( 'ofr_client_seen' );
-		if ( ! is_array( $seen ) || $seen['time'] < time() - 7 * DAY_IN_SECONDS ) return '';
+		if ( ! is_array( $seen ) || $seen['time'] < time() - 7 * DAY_IN_SECONDS ) {
+			return '';
+		}
 		switch ( $seen['hint'] ) {
 			case 'unresolved':
 				return __( 'سایت پشت CDN است ولی IP واقعی مشتری‌ها پیدا نمی‌شود؛ سقف روزانه هر کاربر بین همه مشتری‌ها مشترک شده است.', 'online-fitting-room' );
@@ -200,9 +235,18 @@ final class OFR_Admin {
 	/** One line under the IP setting: what the latest visit looked like. */
 	private static function ip_status() {
 		$seen  = get_option( 'ofr_client_seen' );
-		$names = array( 'cloudflare' => 'Cloudflare', 'arvan' => __( 'آروان‌کلاد', 'online-fitting-room' ), 'custom' => __( 'پروکسی مورد اعتماد', 'online-fitting-room' ), 'private' => __( 'پروکسی داخلی', 'online-fitting-room' ), 'x_forwarded' => 'X-Forwarded-For', 'x_real_ip' => 'X-Real-IP' );
+		$names = array(
+			'cloudflare'  => 'Cloudflare',
+			'arvan'       => __( 'آروان‌کلاد', 'online-fitting-room' ),
+			'custom'      => __( 'پروکسی مورد اعتماد', 'online-fitting-room' ),
+			'private'     => __( 'پروکسی داخلی', 'online-fitting-room' ),
+			'x_forwarded' => 'X-Forwarded-For',
+			'x_real_ip'   => 'X-Real-IP',
+		);
 		$base  = __( 'حالت خودکار هدر IP را فقط وقتی می‌پذیرد که درخواست واقعاً از CDN آمده باشد؛ برای همه سایت‌ها امن است.', 'online-fitting-room' );
-		if ( ! is_array( $seen ) ) return $base;
+		if ( ! is_array( $seen ) ) {
+			return $base;
+		}
 		if ( $seen['via'] ) {
 			/* translators: 1: CDN name, 2: time span. */
 			return $base . ' ' . sprintf( __( 'آخرین بازدید: از طریق %1$s، %2$s پیش ✓', 'online-fitting-room' ), $names[ $seen['via'] ] ?? $seen['via'], human_time_diff( $seen['time'] ) );
@@ -212,7 +256,9 @@ final class OFR_Admin {
 	}
 
 	public static function page() {
-		if ( ! current_user_can( 'manage_woocommerce' ) ) return;
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
 		$s          = Online_Fitting_Room::settings();
 		$source     = OFR_Api::key_source();
 		$last_error = get_option( 'ofr_last_error' );
@@ -220,6 +266,9 @@ final class OFR_Admin {
 		$warning    = OFR_Api::key_warning();
 		$has_key    = '' !== OFR_Api::key();
 		$recent_err = is_array( $last_error ) && $last_error['time'] > time() - DAY_IN_SECONDS;
+		$tab        = sanitize_key( wp_unslash( $_GET['tab'] ?? 'settings' ) ); // phpcs:ignore WordPress.Security.NonceVerification -- navigation only.
+		$tab        = array_key_exists( $tab, OFR_Admin_Pages::tabs() ) ? $tab : 'settings';
+		$balance    = OFR_Alerts::balance();
 		// phpcs:disable WordPress.Security.EscapeOutput -- icon() and name() return escaped/static markup.
 		?>
 		<div class="wrap ofr-app" dir="rtl">
@@ -234,6 +283,13 @@ final class OFR_Admin {
 					<button type="button" class="ofr-btn ofr-btn--primary" id="ofr-test"><?php echo self::icon( 'test' ); ?><?php esc_html_e( 'تست اتصال', 'online-fitting-room' ); ?></button>
 				</nav>
 			</header>
+			<?php OFR_Admin_Pages::nav( $tab ); ?>
+			<?php if ( 'settings' !== $tab ) : ?>
+				<div class="ofr-main"><div class="ofr-alert ofr-alert--info" id="ofr-test-result" role="status" hidden></div><?php OFR_Admin_Pages::render( $tab ); ?></div></div>
+				<?php
+				return;
+			endif;
+			?>
 
 			<div class="ofr-main">
 				<span class="ofr-eyebrow"><?php esc_html_e( 'مرکز مدیریت', 'online-fitting-room' ); ?></span>
@@ -247,6 +303,12 @@ final class OFR_Admin {
 					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( $warning ); ?></span><a href="#ofr-api-key"><?php esc_html_e( 'اصلاح کلید', 'online-fitting-room' ); ?></a></div>
 				<?php elseif ( ! $has_key ) : ?>
 					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( __( 'هنوز کلید API ثبت نشده است؛ تا آن زمان پرو برای مشتری‌ها کار نمی‌کند.', 'online-fitting-room' ) . ' ' . OFR_Api::support_text() ); ?></span><a href="#ofr-api-key"><?php esc_html_e( 'ثبت کلید', 'online-fitting-room' ); ?></a></div>
+				<?php endif; ?>
+				<?php if ( OFR_Api::key_unreadable() ) : ?>
+					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php esc_html_e( 'کلید API ذخیره‌شده قابل خواندن نیست (کلیدهای امنیتی wp-config.php تغییر کرده‌اند). کلید را دوباره وارد کنید.', 'online-fitting-room' ); ?></span><a href="#ofr-api-key"><?php esc_html_e( 'ثبت کلید', 'online-fitting-room' ); ?></a></div>
+				<?php endif; ?>
+				<?php if ( null !== $balance['value'] && $balance['value'] <= (int) $s['credits_threshold'] ) : ?>
+					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( sprintf( /* translators: %s: credits. */ __( 'اعتبار سرویس رو به پایان است: %s پرو باقی مانده.', 'online-fitting-room' ), number_format_i18n( $balance['value'] ) ) ); ?></span><a href="<?php echo esc_url( admin_url( 'admin.php?page=online-fitting-room&tab=alerts' ) ); ?>"><?php esc_html_e( 'اعلان‌ها', 'online-fitting-room' ); ?></a></div>
 				<?php endif; ?>
 				<?php $proxy_hint = self::proxy_hint(); if ( $proxy_hint ) : ?>
 					<div class="ofr-alert"><?php echo self::icon( 'alert' ); ?><span><?php echo esc_html( $proxy_hint ); ?></span><a href="#ofr-limits"><?php esc_html_e( 'بررسی تنظیم', 'online-fitting-room' ); ?></a></div>
@@ -267,6 +329,11 @@ final class OFR_Admin {
 						<span class="ofr-stat__label"><?php esc_html_e( 'پروهای امروز', 'online-fitting-room' ); ?></span>
 						<strong class="ofr-stat__value"><?php echo esc_html( number_format_i18n( $used ) ); ?></strong>
 						<span class="ofr-stat__note is-ok"><?php echo $s['limit_site_day'] > 0 ? esc_html( sprintf( /* translators: %s: daily site limit. */ __( 'از سقف %s', 'online-fitting-room' ), number_format_i18n( $s['limit_site_day'] ) ) ) : esc_html__( 'بدون سقف روزانه', 'online-fitting-room' ); ?></span>
+					</div>
+					<div class="ofr-stat">
+						<span class="ofr-stat__label"><?php esc_html_e( 'اعتبار باقی‌مانده', 'online-fitting-room' ); ?></span>
+						<strong class="ofr-stat__value" data-ofr-balance><?php echo null === $balance['value'] ? '—' : esc_html( number_format_i18n( $balance['value'] ) ); ?></strong>
+						<span class="ofr-stat__note <?php echo null !== $balance['value'] && $balance['value'] > (int) $s['credits_threshold'] ? 'is-ok' : 'is-warn'; ?>"><?php echo null === $balance['value'] ? esc_html__( 'نامشخص — اعلان‌ها را ببینید', 'online-fitting-room' ) : ( 'manual' === $balance['source'] ? esc_html__( 'تخمین بر اساس اعتبار خریداری‌شده', 'online-fitting-room' ) : esc_html__( 'از سرویس', 'online-fitting-room' ) ); ?></span>
 					</div>
 					<div class="ofr-stat">
 						<span class="ofr-stat__label"><?php esc_html_e( 'آخرین خطای سرویس', 'online-fitting-room' ); ?></span>
@@ -291,7 +358,19 @@ final class OFR_Admin {
 									<?php endif; ?>
 								<?php endif; ?>
 								<p class="ofr-hint"><?php echo self::icon( 'support' ); ?><span><?php echo esc_html( OFR_Api::support_text() ); ?></span></p>
+								<p class="ofr-help"><?php esc_html_e( 'کلیدی که این‌جا ذخیره می‌شود با کلیدهای امنیتی wp-config.php رمزنگاری می‌شود.', 'online-fitting-room' ); ?></p>
 							</div>
+							<details class="ofr-details ofr-advanced"<?php echo ( $s['api_base'] || 'yes' === $s['webhook'] ) ? ' open' : ''; ?>><summary><?php esc_html_e( 'پیشرفته: relay و وب‌هوک', 'online-fitting-room' ); ?></summary>
+								<div class="ofr-field"><label class="ofr-label" for="ofr-api-base"><?php esc_html_e( 'آدرس relay (اختیاری)', 'online-fitting-room' ); ?></label>
+								<?php if ( defined( 'OFR_API_BASE' ) ) : ?>
+									<p class="ofr-help"><?php esc_html_e( 'در wp-config.php تعریف شده است:', 'online-fitting-room' ); ?> <code dir="ltr"><?php echo esc_html( OFR_Api::base() ); ?></code></p>
+								<?php else : ?>
+									<input id="ofr-api-base" class="ofr-input" dir="ltr" placeholder="<?php echo esc_attr( OFR_Api::BASE ); ?>" name="<?php echo self::name( 'api_base' ); ?>" value="<?php echo esc_attr( $s['api_base'] ); ?>">
+								<?php endif; ?>
+								<p class="ofr-help"><?php esc_html_e( 'اگر هاست داخل ایران است و اتصال مستقیم به سرویس قطع می‌شود (خطای cURL 56)، آدرس یک reverse proxy (مثلاً روی یک سرور خارج) را وارد کنید که درخواست‌ها را بدون تغییر به سرویس برساند. خالی یعنی اتصال مستقیم.', 'online-fitting-room' ); ?></p></div>
+								<div class="ofr-field"><?php self::toggle( 'webhook', $s['webhook'], __( 'ارسال آدرس وب‌هوک به سرویس', 'online-fitting-room' ), __( 'فقط اگر سرویس از callback پشتیبانی کند: با اعلام آماده شدن، وضعیت بلافاصله بررسی می‌شود و درخواست‌های پیگیری کمتری به سرویس می‌رود.', 'online-fitting-room' ) ); ?>
+								<p class="ofr-help"><?php esc_html_e( 'آدرس وب‌هوک:', 'online-fitting-room' ); ?> <code dir="ltr"><?php echo esc_html( OFR_Rest::webhook_url() ); ?></code></p></div>
+							</details>
 							<?php if ( is_array( $last_error ) ) : ?>
 								<details class="ofr-details"><summary><?php esc_html_e( 'جزئیات آخرین خطای سرویس', 'online-fitting-room' ); ?></summary><code dir="ltr"><?php echo esc_html( wp_date( 'Y-m-d H:i', $last_error['time'] ) . ' — ' . $last_error['context'] . ' — HTTP ' . $last_error['code'] . "\n" . $last_error['detail'] ); ?></code></details>
 							<?php endif; ?>
@@ -318,6 +397,33 @@ final class OFR_Admin {
 							</div>
 							<p class="ofr-help" data-ofr-turnstile><?php esc_html_e( 'کلیدها را از داشبورد Cloudflare ← Turnstile بگیرید. اگر هاست داخل ایران است و به Cloudflare دسترسی ندارد، چالش داخلی را انتخاب کنید؛ بدون کلید، چالش داخلی استفاده می‌شود.', 'online-fitting-room' ); ?></p>
 							<p class="ofr-hint"><?php echo self::icon( 'shield' ); ?><span><?php esc_html_e( 'سقف‌های روزانه به‌صورت اتمیک در پایگاه داده شمرده می‌شوند؛ حتی صدها درخواست هم‌زمان نمی‌توانند از آن‌ها عبور کنند. پروی ناموفق از سهم مشتری کم نمی‌شود.', 'online-fitting-room' ); ?></span></p>
+						</section>
+
+						<section class="ofr-card ofr-card--wide" id="ofr-experience">
+							<header class="ofr-card__head"><span class="ofr-card__icon"><?php echo self::icon( 'spark' ); ?></span><div><h2><?php esc_html_e( 'تجربه و فروش', 'online-fitting-room' ); ?></h2><p><?php esc_html_e( 'بررسی عکس پیش از مصرف اعتبار، اثبات اجتماعی و انصاف در سهمیه.', 'online-fitting-room' ); ?></p></div></header>
+							<div class="ofr-row">
+								<div class="ofr-field"><label class="ofr-label" for="ofr-pose_check"><?php esc_html_e( 'بررسی عکس در مرورگر (تمام‌قد بودن)', 'online-fitting-room' ); ?></label>
+								<?php
+								self::select(
+									'pose_check',
+									array(
+										'warn'  => __( 'هشدار بده، ولی اجازه ادامه بده (پیشنهادی)', 'online-fitting-room' ),
+										'block' => __( 'عکس نامناسب را نپذیر', 'online-fitting-room' ),
+										'off'   => __( 'خاموش', 'online-fitting-room' ),
+									),
+									$s['pose_check']
+								);
+								?>
+									<p class="ofr-help"><?php echo OFR_Pose::is_local() ? esc_html__( 'فایل‌های مدل روی سرور سایت هستند ✓', 'online-fitting-room' ) : esc_html__( 'فایل‌های مدل (حدود ۱۷ مگابایت) از CDN بارگذاری می‌شوند؛ برای مشتریان داخل ایران بهتر است روی سرور خود سایت باشند.', 'online-fitting-room' ); ?></p>
+									<?php
+									if ( ! OFR_Pose::is_local() ) :
+										?>
+										<button type="button" class="ofr-btn ofr-btn--soft" data-ofr-action="ofr_pose_download"><?php esc_html_e( 'دانلود فایل‌ها روی سرور سایت', 'online-fitting-room' ); ?></button><?php endif; ?>
+								</div>
+								<div class="ofr-field"><?php self::toggle( 'social_proof', $s['social_proof'], __( 'اثبات اجتماعی', 'online-fitting-room' ), __( '«۱۲۰ نفر این لباس را پرو کردند» زیر دکمه و در پنجره پرو.', 'online-fitting-room' ) ); ?>
+									<label class="ofr-label" for="ofr-social-min" style="margin-top:12px"><?php esc_html_e( 'حداقل تعداد برای نمایش', 'online-fitting-room' ); ?></label><input id="ofr-social-min" class="ofr-input" type="number" min="1" name="<?php echo self::name( 'social_min' ); ?>" value="<?php echo esc_attr( $s['social_min'] ); ?>"></div>
+								<div class="ofr-field"><?php self::toggle( 'refund_failed', $s['refund_failed'], __( 'پروی ناموفق از سهم مشتری کم نشود', 'online-fitting-room' ), __( 'اگر عکس رد شود یا پردازش شکست بخورد، سهم روزانه همان مشتری برمی‌گردد (سقف کل سایت برنمی‌گردد).', 'online-fitting-room' ) ); ?></div>
+							</div>
 						</section>
 
 						<section class="ofr-card ofr-card--wide">
@@ -367,8 +473,22 @@ final class OFR_Admin {
 	}
 
 	public static function product_fields() {
-		woocommerce_wp_checkbox( array( 'id' => Online_Fitting_Room::META_ENABLED, 'label' => __( 'اتاق پُرُو آنلاین', 'online-fitting-room' ), 'description' => __( 'نمایش دکمه پرو برای این محصول', 'online-fitting-room' ), 'desc_tip' => true, 'value' => get_post_meta( get_the_ID(), Online_Fitting_Room::META_ENABLED, true ) ?: 'yes' ) );
-		woocommerce_wp_select( array( 'id' => Online_Fitting_Room::META_CATEGORY, 'label' => __( 'نوع لباس پرو مجازی', 'online-fitting-room' ), 'options' => array( '' => __( 'تنظیم عمومی', 'online-fitting-room' ) ) + self::categories() ) );
+		woocommerce_wp_checkbox(
+			array(
+				'id'          => Online_Fitting_Room::META_ENABLED,
+				'label'       => __( 'اتاق پُرُو آنلاین', 'online-fitting-room' ),
+				'description' => __( 'نمایش دکمه پرو برای این محصول', 'online-fitting-room' ),
+				'desc_tip'    => true,
+				'value'       => get_post_meta( get_the_ID(), Online_Fitting_Room::META_ENABLED, true ) ?: 'yes',
+			)
+		);
+		woocommerce_wp_select(
+			array(
+				'id'      => Online_Fitting_Room::META_CATEGORY,
+				'label'   => __( 'نوع لباس پرو مجازی', 'online-fitting-room' ),
+				'options' => array( '' => __( 'تنظیم عمومی', 'online-fitting-room' ) ) + self::categories(),
+			)
+		);
 	}
 
 	public static function save_product_fields( $product_id ) {

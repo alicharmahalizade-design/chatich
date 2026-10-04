@@ -1,0 +1,8 @@
+/* Page heading */
+.ofr-main{padding:28px 12px 40px}
+.ofr-eyebrow{display:inline-flex;align-items:center;gap:6px;color:var(--ofr-orange-2);font-size:12px;font-weight:800}
+.ofr-eyebrow:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.ofr-app .ofr-title{margin:6px 0 6px;padding:0;color:var(--ofr-ink);font-size:30px;font-weight:900;line-height:1.35}
+.ofr-subtitle{margin:0 0 22px;color:var(--ofr-muted);font-size:13px}
+.ofr-app .wp-header-end{display:none}
+.ofr-app .notice{margin:0 0 16px;border-radius:12px}

@@ -1,0 +1,15 @@
+/.git
+/.gitignore
+/.distignore
+/node_modules
+/vendor
+/tests
+/bin
+/assets/scss
+/composer.json
+/composer.lock
+/package.json
+/package-lock.json
+/phpcs.xml.dist
+/phpunit.xml.dist
+/.phpunit.result.cache

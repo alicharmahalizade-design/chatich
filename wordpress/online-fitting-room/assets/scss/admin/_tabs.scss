@@ -1,0 +1,8 @@
+/* Tabs */
+.ofr-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 -20px;padding:10px 24px;background:#1c1f26;border-top:1px solid rgba(255,255,255,.06)}
+.ofr-tab{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;color:#c7ccd6;font-size:13px;font-weight:700;text-decoration:none}
+.ofr-tab .ofr-icon{width:16px;height:16px}
+.ofr-tab:hover{background:rgba(255,255,255,.08);color:#fff}
+.ofr-tab.is-active{background:#fff;color:var(--ofr-ink)}
+.ofr-tab:focus-visible{outline:3px solid rgba(255,106,43,.6);outline-offset:2px}
+@media (max-width:782px){.ofr-tabs{margin:0 -10px;padding:8px 12px}}

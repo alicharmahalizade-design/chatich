@@ -28,20 +28,84 @@ final class OFR_Storage {
 		return self::TTL_HOURS * HOUR_IN_SECONDS;
 	}
 
-	/* ---------- Jobs ---------- */
+	/* ---------- Jobs (ofr_jobs table, looked up by the token's hash) ---------- */
+
+	private static function row_to_job( $row ) {
+		return array(
+			'prediction' => $row['prediction'],
+			'product'    => (int) $row['product_id'],
+			'variation'  => (int) $row['variation_id'],
+			'visitor'    => $row['visitor'],
+			'status'     => $row['status'],
+			'polls'      => (int) $row['polls'],
+			'file'       => $row['file'],
+			'mime'       => $row['mime'],
+			'refund'     => json_decode( (string) $row['refund'], true ) ?: array(),
+			'refunded'   => (bool) $row['refunded'],
+			'checked'    => (int) $row['checked_at'],
+			'wake'       => (bool) $row['wake'],
+			'created'    => (int) $row['created'],
+		);
+	}
+
+	private static function job_to_row( array $job ) {
+		return array(
+			'prediction'   => (string) ( $job['prediction'] ?? '' ),
+			'product_id'   => (int) ( $job['product'] ?? 0 ),
+			'variation_id' => (int) ( $job['variation'] ?? 0 ),
+			'visitor'      => (string) ( $job['visitor'] ?? '' ),
+			'status'       => (string) ( $job['status'] ?? 'working' ),
+			'polls'        => (int) ( $job['polls'] ?? 0 ),
+			'file'         => (string) ( $job['file'] ?? '' ),
+			'mime'         => (string) ( $job['mime'] ?? '' ),
+			'refund'       => wp_json_encode( array_values( (array) ( $job['refund'] ?? array() ) ) ),
+			'refunded'     => empty( $job['refunded'] ) ? 0 : 1,
+			'checked_at'   => (int) ( $job['checked'] ?? 0 ),
+			'wake'         => empty( $job['wake'] ) ? 0 : 1,
+			'created'      => (int) ( $job['created'] ?? time() ),
+		);
+	}
 
 	public static function create_job( array $job ) {
+		global $wpdb;
 		$token = wp_generate_password( 32, false, false );
-		$job  += array( 'created' => time(), 'polls' => 0, 'file' => '', 'mime' => '', 'refund' => array(), 'refunded' => false );
-		set_transient( self::job_key( $token ), $job, self::ttl() );
+		$job  += array(
+			'created'  => time(),
+			'polls'    => 0,
+			'file'     => '',
+			'mime'     => '',
+			'refund'   => array(),
+			'refunded' => false,
+			'status'   => 'working',
+		);
+		$row   = array( 'token_hash' => hash( 'sha256', $token ) ) + self::job_to_row( $job );
+		if ( ! $wpdb->insert( OFR_DB::table( 'jobs' ), $row ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			set_transient( self::job_key( $token ), $job, self::ttl() ); // Table unavailable: keep working the old way.
+		}
 		return $token;
 	}
 
 	public static function get_job( $token ) {
-		if ( ! is_string( $token ) || ! preg_match( self::TOKEN_PATTERN, $token ) ) return null;
-		$job = get_transient( self::job_key( $token ) );
-		if ( ! is_array( $job ) ) return null;
-		// Never trust a cache that outlives its expiry: a job is dead after 24 hours.
+		global $wpdb;
+		if ( ! is_string( $token ) || ! preg_match( self::TOKEN_PATTERN, $token ) ) {
+			return null;
+		}
+		$suppress = $wpdb->suppress_errors( true );
+		$row      = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . OFR_DB::table( 'jobs' ) . ' WHERE token_hash = %s', hash( 'sha256', $token ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->suppress_errors( $suppress );
+		$job = $row ? self::row_to_job( $row ) : get_transient( self::job_key( $token ) ); // Transients: jobs started before 1.8 or without the table.
+		if ( ! is_array( $job ) ) {
+			return null;
+		}
+		$job += array(
+			'status'   => 'working',
+			'checked'  => 0,
+			'wake'     => false,
+			'visitor'  => '',
+			'refund'   => array(),
+			'refunded' => false,
+		);
+		// Never trust storage that outlives its expiry: a job is dead after 24 hours.
 		if ( (int) ( $job['created'] ?? 0 ) < time() - self::ttl() ) {
 			self::delete_job( $token, $job );
 			return null;
@@ -50,16 +114,29 @@ final class OFR_Storage {
 	}
 
 	public static function save_job( $token, array $job ) {
-		$left = max( 60, (int) $job['created'] + self::ttl() - time() );
-		set_transient( self::job_key( $token ), $job, $left );
+		global $wpdb;
+		$updated = $wpdb->update( OFR_DB::table( 'jobs' ), self::job_to_row( $job ), array( 'token_hash' => hash( 'sha256', $token ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( ! $updated && get_transient( self::job_key( $token ) ) ) {
+			set_transient( self::job_key( $token ), $job, max( 60, (int) $job['created'] + self::ttl() - time() ) );
+		}
 	}
 
 	public static function delete_job( $token, $job = null ) {
+		global $wpdb;
 		if ( is_array( $job ) && ! empty( $job['file'] ) ) {
 			$path = self::raw_path( $job['file'] );
-			if ( $path ) wp_delete_file( $path );
+			if ( $path ) {
+				wp_delete_file( $path );
+			}
 		}
+		$wpdb->delete( OFR_DB::table( 'jobs' ), array( 'token_hash' => hash( 'sha256', $token ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		delete_transient( self::job_key( $token ) );
+	}
+
+	/** Marks every job of a prediction for an immediate status check (webhook). */
+	public static function wake( $prediction ) {
+		global $wpdb;
+		return (int) $wpdb->update( OFR_DB::table( 'jobs' ), array( 'wake' => 1 ), array( 'prediction' => (string) $prediction ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/** Prevents two concurrent polls from downloading the same result twice (atomic, see OFR_Quota). */
@@ -78,8 +155,12 @@ final class OFR_Storage {
 	/* ---------- Encryption ---------- */
 
 	public static function encryption() {
-		if ( function_exists( 'sodium_crypto_secretbox' ) ) return 'sodium';
-		if ( function_exists( 'openssl_encrypt' ) && in_array( 'aes-256-gcm', array_map( 'strtolower', (array) openssl_get_cipher_methods() ), true ) ) return 'openssl';
+		if ( function_exists( 'sodium_crypto_secretbox' ) ) {
+			return 'sodium';
+		}
+		if ( function_exists( 'openssl_encrypt' ) && in_array( 'aes-256-gcm', array_map( 'strtolower', (array) openssl_get_cipher_methods() ), true ) ) {
+			return 'openssl';
+		}
 		return '';
 	}
 
@@ -105,7 +186,9 @@ final class OFR_Storage {
 
 	/** @return string|false Plain bytes; false when the token is wrong or the file was altered. */
 	public static function open( $data, $token ) {
-		if ( 0 !== strncmp( $data, self::MAGIC, 4 ) ) return false;
+		if ( 0 !== strncmp( $data, self::MAGIC, 4 ) ) {
+			return false;
+		}
 		$key = self::file_key( $token );
 		$alg = substr( $data, 4, 1 );
 		if ( 'S' === $alg && function_exists( 'sodium_crypto_secretbox_open' ) ) {
@@ -136,14 +219,18 @@ final class OFR_Storage {
 
 	/** Public URL of the folder when it lives under uploads (used by the Site Health check). */
 	public static function url() {
-		if ( self::is_custom_dir() ) return '';
+		if ( self::is_custom_dir() ) {
+			return '';
+		}
 		$uploads = wp_upload_dir( null, false );
 		return empty( $uploads['error'] ) ? trailingslashit( $uploads['baseurl'] ) . self::DIR : '';
 	}
 
 	public static function ensure_dir() {
 		$dir = self::dir();
-		if ( '' === $dir || ! wp_mkdir_p( $dir ) ) return '';
+		if ( '' === $dir || ! wp_mkdir_p( $dir ) ) {
+			return '';
+		}
 		// Belt and braces for each web server; the encryption does not depend on them.
 		$guards = array(
 			'index.php'  => "<?php\n// Silence is golden.\n",
@@ -152,7 +239,9 @@ final class OFR_Storage {
 			'web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n",
 		);
 		foreach ( $guards as $file => $content ) {
-			if ( ! file_exists( $dir . '/' . $file ) ) file_put_contents( $dir . '/' . $file, $content ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			if ( ! file_exists( $dir . '/' . $file ) ) {
+				file_put_contents( $dir . '/' . $file, $content ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			}
 		}
 		return $dir;
 	}
@@ -164,7 +253,9 @@ final class OFR_Storage {
 	 */
 	public static function save( $bytes, $mime, $token ) {
 		$dir = self::ensure_dir();
-		if ( '' === $dir ) return false;
+		if ( '' === $dir ) {
+			return false;
+		}
 		$sealed = self::seal( $bytes, $token );
 		$name   = bin2hex( random_bytes( 16 ) );
 		if ( false !== $sealed ) {
@@ -173,13 +264,16 @@ final class OFR_Storage {
 		} else {
 			$name .= 'image/jpeg' === $mime ? '.jpg' : '.png'; // No cipher on this server: random name only.
 		}
-		if ( false === file_put_contents( $dir . '/' . $name, $bytes, LOCK_EX ) ) return false; // phpcs:ignore WordPress.WP.AlternativeFunctions
-		self::maybe_cleanup();
+		if ( false === file_put_contents( $dir . '/' . $name, $bytes, LOCK_EX ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions -- written during front-end requests, where WP_Filesystem may need FTP credentials.
+			return false; // phpcs:ignore WordPress.WP.AlternativeFunctions
+		}       self::maybe_cleanup();
 		return $name;
 	}
 
 	private static function raw_path( $name ) {
-		if ( ! is_string( $name ) || ! preg_match( '/^[a-f0-9]{32}\.(jpg|png|ofr)$/', $name ) ) return '';
+		if ( ! is_string( $name ) || ! preg_match( '/^[a-f0-9]{32}\.(jpg|png|ofr)$/', $name ) ) {
+			return '';
+		}
 		$path = self::dir() . '/' . $name;
 		return is_file( $path ) ? $path : '';
 	}
@@ -187,7 +281,9 @@ final class OFR_Storage {
 	/** Path of a live result; files past their 24 hours are deleted on sight. */
 	public static function path( $name ) {
 		$path = self::raw_path( $name );
-		if ( $path ) clearstatcache( true, $path );
+		if ( $path ) {
+			clearstatcache( true, $path );
+		}
 		if ( $path && filemtime( $path ) < time() - self::ttl() ) {
 			wp_delete_file( $path );
 			return '';
@@ -198,9 +294,13 @@ final class OFR_Storage {
 	/** @return string|false Decrypted result bytes. */
 	public static function read( $name, $token ) {
 		$path = self::path( $name );
-		if ( ! $path ) return false;
+		if ( ! $path ) {
+			return false;
+		}
 		$data = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-		if ( false === $data ) return false;
+		if ( false === $data ) {
+			return false;
+		}
 		return '.ofr' === substr( $name, -4 ) ? self::open( $data, $token ) : $data;
 	}
 
@@ -211,20 +311,29 @@ final class OFR_Storage {
 	public static function cleanup() {
 		update_option( 'ofr_last_cleanup', time(), false );
 		OFR_Quota::cleanup();
+		OFR_DB::cleanup();
 		$dir = self::dir();
-		if ( '' === $dir || ! is_dir( $dir ) ) return;
+		if ( '' === $dir || ! is_dir( $dir ) ) {
+			return;
+		}
 		$expired = time() - self::ttl();
 		foreach ( self::files( $dir ) as $file ) {
-			if ( preg_match( '/\.(jpg|png|ofr)$/', $file ) && filemtime( $file ) < $expired ) wp_delete_file( $file );
+			if ( preg_match( '/\.(jpg|png|ofr)$/', $file ) && filemtime( $file ) < $expired ) {
+				wp_delete_file( $file );
+			}
 		}
 	}
 
 	public static function maybe_cleanup() {
-		if ( (int) get_option( 'ofr_last_cleanup', 0 ) < time() - HOUR_IN_SECONDS ) self::cleanup();
+		if ( (int) get_option( 'ofr_last_cleanup', 0 ) < time() - HOUR_IN_SECONDS ) {
+			self::cleanup();
+		}
 	}
 
 	public static function schedule() {
-		if ( ! wp_next_scheduled( self::CLEANUP_HOOK ) ) wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', self::CLEANUP_HOOK );
+		if ( ! wp_next_scheduled( self::CLEANUP_HOOK ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', self::CLEANUP_HOOK );
+		}
 	}
 
 	public static function unschedule() {
@@ -245,7 +354,9 @@ final class OFR_Storage {
 	private static function files( $dir ) {
 		$files = array();
 		foreach ( (array) scandir( $dir ) as $entry ) {
-			if ( is_string( $entry ) && is_file( $dir . '/' . $entry ) ) $files[] = $dir . '/' . $entry;
+			if ( is_string( $entry ) && is_file( $dir . '/' . $entry ) ) {
+				$files[] = $dir . '/' . $entry;
+			}
 		}
 		return $files;
 	}
@@ -258,10 +369,13 @@ final class OFR_Storage {
 			foreach ( self::files( $dir ) as $file ) {
 				wp_delete_file( $file );
 			}
-			@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors, WordPress.WP.AlternativeFunctions -- empty plugin folder; failure is harmless.
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_ofr\\_job\\_%' OR option_name LIKE '\\_transient\\_timeout\\_ofr\\_job\\_%'" );
+		$suppress = $wpdb->suppress_errors( true );
+		$wpdb->query( 'DELETE FROM ' . OFR_DB::table( 'jobs' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->suppress_errors( $suppress );
 		// Jobs kept in a persistent object cache point at files that no longer exist, so they can serve nothing.
 	}
 }

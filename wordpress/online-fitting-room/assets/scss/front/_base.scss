@@ -1,0 +1,9 @@
+/* Base */
+.ofr,.ofr *,.ofr-open,.ofr-toast,.ofr-toast *,.ofr-sticky,.ofr-sticky *,.ofr-badge{box-sizing:border-box}
+.ofr,.ofr-toast,.ofr-sticky,.ofr-open,.ofr-badge{font-family:var(--ofr-font,inherit)}
+.ofr button,.ofr input,.ofr select,.ofr textarea,.ofr-toast button{font-family:inherit}
+.ofr[hidden],.ofr [hidden],.ofr__stage:not(.is-active){display:none!important}
+.ofr__sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.ofr :focus-visible,.ofr-open:focus-visible,.ofr-badge:focus-visible{outline:3px solid var(--ofr-a);outline-offset:2px}
+.ofr__dialog:focus,.ofr h3:focus,.ofr__viewer:focus{outline:none}
+.ofr-lock{overflow:hidden}

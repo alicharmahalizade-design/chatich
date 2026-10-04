@@ -1,0 +1,8 @@
+/* Mobile sticky bar */
+.ofr-sticky{position:fixed;z-index:99990;right:0;bottom:0;left:0;display:none;align-items:center;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--ofr-card);color:var(--ofr-text);box-shadow:0 -8px 30px #0000002e;transform:translateY(110%);transition:transform .3s cubic-bezier(.2,.8,.3,1)}
+.ofr-sticky img{flex:none;width:44px;height:44px;object-fit:cover;border-radius:10px;background:var(--ofr-soft)}
+.ofr-sticky__text{display:grid;flex:1;min-width:0}
+.ofr-sticky__text strong,.ofr-sticky__text small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ofr-sticky__text strong{font-size:13px}.ofr-sticky__text small{color:var(--ofr-muted);font-size:11px}
+.ofr-sticky .ofr-open{flex:none;margin:0;padding:11px 14px;font-size:13px}
+@media (max-width:768px){.ofr-sticky:not([hidden]){display:flex}.ofr-sticky.is-visible{transform:none}}

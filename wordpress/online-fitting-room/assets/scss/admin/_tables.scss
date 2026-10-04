@@ -1,0 +1,19 @@
+/* Tables */
+.ofr-table-wrap{overflow-x:auto}
+.ofr-table{width:100%;border-collapse:collapse;font-size:13px}
+.ofr-table th{padding:10px 12px;border-bottom:1px solid var(--ofr-line);color:var(--ofr-muted);font-size:12px;font-weight:800;text-align:start;white-space:nowrap}
+.ofr-table td{padding:10px 12px;border-bottom:1px solid #f1f2f4;vertical-align:top}
+.ofr-table tr:last-child td{border-bottom:0}
+.ofr-table code{display:block;max-width:560px;white-space:pre-wrap;word-break:break-word;background:none;padding:0}
+.ofr-logs tr.is-info td{color:var(--ofr-muted)}
+.ofr-meter{display:inline-block;width:60px;height:6px;margin-inline-end:6px;border-radius:99px;background:linear-gradient(90deg,var(--ofr-orange-2) var(--v),#eceef1 var(--v));vertical-align:middle}
+.ofr-product-cell{display:flex;align-items:center;gap:10px;color:var(--ofr-ink);font-weight:700;text-decoration:none}
+.ofr-product-cell img,.ofr-noimg{width:40px;height:40px;flex:none;border-radius:8px;object-fit:cover;background:#f1f2f5}
+.ofr-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:800;white-space:nowrap}
+.ofr-badge i{font-style:normal}
+.ofr-badge--ready{background:#e7f6ee;color:#0b6b3c}.ofr-badge--warning{background:#fff4e0;color:#8a5300}.ofr-badge--blocked{background:#fdecec;color:#a11d1d}.ofr-badge--off{background:#f1f2f5;color:#4b5563}
+.ofr-issues{margin:0;padding:0;list-style:none}
+.ofr-issues li{position:relative;margin:0 0 4px;padding-inline-start:14px;font-size:12.5px;line-height:1.8}
+.ofr-issues li:before{content:'';position:absolute;top:.75em;inset-inline-start:0;width:6px;height:6px;border-radius:50%;background:#9ca3af}
+.ofr-issues li.is-blocked:before{background:#dc2626}.ofr-issues li.is-warning:before{background:#d97706}.ofr-issues li.is-ok:before{background:#16a34a}
+.ofr-pager{margin-top:14px}.ofr-pager .page-numbers{display:inline-block;margin:0 2px;padding:5px 10px;border-radius:8px;text-decoration:none}.ofr-pager .current{background:var(--ofr-ink);color:#fff}

@@ -1,0 +1,24 @@
+/* Checkboxes, errors, buttons */
+.ofr__check{display:flex;align-items:flex-start;gap:9px;margin:14px 2px 0;color:var(--ofr-muted);font-size:12px;line-height:1.8;cursor:pointer}
+.ofr__check+.ofr__check{margin-top:8px}
+.ofr__check input{flex:none;margin-top:5px;accent-color:var(--ofr-a)}
+.ofr__check a{color:var(--ofr-a);font-weight:700}
+.ofr__consent{margin-bottom:14px}
+.ofr__captcha{display:flex;justify-content:center;margin:0 0 12px}.ofr__captcha:empty{display:none}
+.ofr__error{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:12px 0;padding:10px 13px;border-radius:11px;background:var(--ofr-err-bg);color:var(--ofr-err);font-size:13px}
+.ofr__upsell{display:inline-flex;padding:7px 12px;border-radius:10px;background:var(--ofr-btn);color:var(--ofr-btn-text)!important;font-size:12px;font-weight:800;text-decoration:none!important}
+.ofr__remaining{margin:0 0 12px;color:var(--ofr-muted);font-size:12px;text-align:center}
+.ofr__primary,.ofr__secondary{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;padding:12px 18px;border:0;border-radius:14px;text-decoration:none!important;font-size:14px;font-weight:800;cursor:pointer}
+.ofr__primary{gap:8px;background:var(--ofr-btn);color:var(--ofr-btn-text)!important}
+.ofr__primary:disabled{opacity:.4;cursor:not-allowed}
+.ofr__primary[aria-busy=true]{opacity:.6;pointer-events:none}
+.ofr__secondary{background:var(--ofr-chip);color:var(--ofr-chip-text)!important}
+.ofr__row{display:flex;gap:10px;margin-top:10px}.ofr__row>*{flex:1}
+.ofr__links{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:14px}
+.ofr__links button{padding:2px 0;border:0;background:transparent;color:var(--ofr-muted);font-size:13px;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.ofr__links button:hover{color:var(--ofr-text)}
+.ofr__links [data-open-compare]{color:var(--ofr-a);font-weight:800}
+.ofr__cart-note{margin:10px 0 0;color:var(--ofr-ok);font-size:13px;text-align:center}.ofr__cart-note a{color:inherit;font-weight:800}
+
+/* Login step */
+.ofr__login{padding:40px 10px;text-align:center}.ofr__login h3{margin:0 0 8px;font-size:22px}.ofr__login p{margin:0 0 24px;color:var(--ofr-muted)}

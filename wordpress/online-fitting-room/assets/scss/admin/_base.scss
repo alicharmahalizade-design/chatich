@@ -1,0 +1,8 @@
+/* Online Fitting Room — settings screen. Font: Vazirmatn (SIL OFL, bundled; @font-face is added inline by PHP). */
+
+.ofr-app{
+	--ofr-orange:#ff6a2b;--ofr-orange-2:#f2501a;--ofr-orange-soft:#fff2ea;--ofr-ink:#151821;--ofr-text:#1f2430;
+	--ofr-muted:#6b7280;--ofr-line:#e8eaee;--ofr-bg:#f6f7f9;--ofr-ok:#0f9d58;--ofr-warn:#c2410c;--ofr-radius:18px;
+	margin:0 0 0 20px;font-family:'OFR Vazirmatn',Tahoma,sans-serif;color:var(--ofr-text);
+}
+.rtl .ofr-app{margin:0 0 0 20px}

@@ -1,0 +1,70 @@
+// Colour palettes. Light is the default; dark is used for data-theme="dark" and,
+// with data-theme="auto", when the shopper's device is in dark mode.
+$ofr-light: (
+	surface: #f8f8f6,
+	card: #fff,
+	head-a: #fff,
+	head-b: #f1f2ed,
+	text: #172033,
+	muted: #687083,
+	faint: #818795,
+	line: #e7e8e5,
+	line-2: #dfe2e7,
+	soft: #e8e9e6,
+	chip: #eceef1,
+	chip-text: #222b3b,
+	err-bg: #fff0ef,
+	err: #a92b25,
+	ok-bg: #e6f7ec,
+	ok: #198343,
+	drop-hover: #fffaf8,
+	backdrop: #0b1020b8,
+	btn: var(--ofr-primary,#111827),
+	btn-text: #fff,
+	a: var(--ofr-accent,#ff5c35),
+);
+
+$ofr-dark: (
+	surface: #14161c,
+	card: #1c1f27,
+	head-a: #1d2029,
+	head-b: #171a21,
+	text: #eef0f4,
+	muted: #a3a9b6,
+	faint: #8a909c,
+	line: #2a2e38,
+	line-2: #363b48,
+	soft: #232731,
+	chip: #262a34,
+	chip-text: #e6e8ee,
+	err-bg: #3a1f1f,
+	err: #ff9e97,
+	ok-bg: #15301f,
+	ok: #5fd38d,
+	drop-hover: #231e1c,
+	backdrop: #000000c9,
+	btn: var(--ofr-a),
+	btn-text: #fff,
+);
+
+$ofr-themed: '.ofr, .ofr-toast, .ofr-sticky';
+
+@mixin ofr-palette($palette) {
+	@each $name, $value in $palette {
+		--ofr-#{$name}: #{$value};
+	}
+}
+
+#{$ofr-themed} {
+	@include ofr-palette($ofr-light);
+}
+
+.ofr[data-theme=dark], .ofr-toast[data-theme=dark], .ofr-sticky[data-theme=dark] {
+	@include ofr-palette($ofr-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+	.ofr[data-theme=auto], .ofr-toast[data-theme=auto], .ofr-sticky[data-theme=auto] {
+		@include ofr-palette($ofr-dark);
+	}
+}

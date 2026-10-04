@@ -1,0 +1,5 @@
+/* «قابل پرو» badge on product cards */
+.woocommerce ul.products li.product,.wc-block-components-product-image,.wc-block-grid__product-image{position:relative}
+.ofr-badge{position:absolute;z-index:5;top:10px;inset-inline-start:10px;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;background:#111827e0;color:#fff;font-size:12px;font-weight:800;line-height:1.2;cursor:pointer;box-shadow:0 6px 18px #0003;backdrop-filter:blur(6px);transition:transform .2s,background .2s}
+.ofr-badge span{color:var(--ofr-accent,#ff5c35)}
+.ofr-badge:hover{transform:translateY(-1px);background:#111827}

@@ -1,0 +1,12 @@
+/* Cards */
+.ofr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.ofr-card{padding:22px;border:1px solid var(--ofr-line);border-radius:var(--ofr-radius);background:#fff}
+.ofr-card--wide{grid-column:1/-1}
+.ofr-card__head{display:flex;align-items:flex-start;gap:12px;margin:0 0 18px}
+.ofr-card__head h2{margin:2px 0 4px;padding:0;color:var(--ofr-ink);font-size:16px;font-weight:900}
+.ofr-card__head p{margin:0;color:var(--ofr-muted);font-size:12px}
+.ofr-card__icon{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:12px;background:var(--ofr-orange-soft);color:var(--ofr-orange-2)}
+.ofr-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.ofr-field{margin:0 0 16px}
+.ofr-label{display:block;margin:0 0 8px;color:var(--ofr-ink);font-size:13px;font-weight:800}
+.ofr-help{margin:6px 0 0;color:var(--ofr-muted);font-size:12px;line-height:1.8}

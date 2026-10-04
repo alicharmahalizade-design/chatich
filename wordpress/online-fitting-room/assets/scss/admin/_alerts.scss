@@ -1,0 +1,11 @@
+/* Alerts */
+.ofr-alert{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:14px 18px;border:1px solid #ffd9c7;border-radius:14px;background:var(--ofr-orange-soft);color:#7c2d12;font-size:13px;line-height:1.9}
+.ofr-alert[hidden]{display:none}
+.ofr-alert .ofr-icon{color:var(--ofr-orange-2)}
+.ofr-alert span{flex:1}
+.ofr-alert a{color:var(--ofr-orange-2);font-weight:800;text-decoration:underline;text-underline-offset:4px}
+.ofr-alert--info{border-color:var(--ofr-line);background:#fff;color:var(--ofr-text)}
+.ofr-alert--ok{border-color:#bfe8cf;background:#effaf3;color:#0b6b3c}
+.ofr-btn--ghost .ofr-icon{width:16px;height:16px}
+.ofr-app [data-ofr-turnstile][hidden]{display:none}
+.ofr-alert--error{border-color:#ffd9c7;background:var(--ofr-orange-soft);color:#7c2d12}

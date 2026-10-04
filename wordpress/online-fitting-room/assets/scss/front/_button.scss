@@ -1,0 +1,12 @@
+/* Button on the product page */
+.ofr-open{display:inline-flex;align-items:center;justify-content:center;gap:9px;margin:12px 0;padding:13px 22px;border:0;border-radius:14px;background:var(--ofr-primary,#111827);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px #11182724;transition:.2s}
+.ofr-open:hover{color:#fff;transform:translateY(-2px);box-shadow:0 12px 28px #11182735}
+.ofr-open__icon{display:inline-flex;align-items:center;color:var(--ofr-accent,#ff5c35);font-size:20px;line-height:1}
+.ofr-open__icon svg{width:1em;height:1em;fill:currentColor}
+.ofr-widget .ofr-open--widget{width:var(--ofr-widget-width,auto);margin:0}.ofr-open--widget:hover{transform:none}
+.ofr-widget__notice{margin:8px 0 0;padding:8px 12px;border:1px dashed #f0b429;border-radius:10px;background:#fffbeb;color:#7c5a00;font-size:12px;line-height:1.8;font-family:var(--ofr-font,inherit);text-align:right;direction:rtl}
+.ofr-open--after_cart{margin-top:4px}
+/* On the gallery: moved over the main image by the script. */
+.ofr-gallery-slot{margin:8px 0}
+.ofr-gallery-slot.is-overlay{position:absolute;z-index:9;bottom:16px;left:50%;margin:0;transform:translateX(-50%)}
+.ofr-gallery-slot.is-overlay .ofr-open{margin:0;white-space:nowrap;background:#111827e6;backdrop-filter:blur(6px)}

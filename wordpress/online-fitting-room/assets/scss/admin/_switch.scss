@@ -1,0 +1,10 @@
+/* Switch */
+.ofr-switch{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.ofr-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.ofr-switch__track{position:relative;width:44px;height:24px;flex:none;margin-top:2px;border-radius:99px;background:#d6d9df;transition:background .2s}
+.ofr-switch__track:after{content:'';position:absolute;top:3px;inset-inline-start:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:inset-inline-start .2s}
+.ofr-switch input:checked+.ofr-switch__track{background:linear-gradient(135deg,var(--ofr-orange),var(--ofr-orange-2))}
+.ofr-switch input:checked+.ofr-switch__track:after{inset-inline-start:23px}
+.ofr-switch input:focus-visible+.ofr-switch__track{outline:3px solid rgba(255,106,43,.45);outline-offset:2px}
+.ofr-switch__text strong{display:block;color:var(--ofr-ink);font-size:13px;font-weight:800}
+.ofr-switch__text small{display:block;margin-top:3px;color:var(--ofr-muted);font-size:12px;line-height:1.8}

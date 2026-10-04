@@ -70,11 +70,18 @@
     if (status >= 500) return t.serverError;
     return t.network;
   };
-  const post = async (data, signal) => {
+  // REST (wp-json) first; a site that disables or blocks it is detected on the first call and admin-ajax is used instead.
+  let transport = cfg.restUrl ? 'rest' : 'ajax';
+  const post = async (data, signal, rest, action) => {
     let response, json = null;
-    try { response = await fetch(cfg.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin', signal }); }
-    catch (e) { if (e.name === 'AbortError') throw e; throw new Error(t.network); }
+    const headers = rest && cfg.restNonce ? { 'X-WP-Nonce': cfg.restNonce } : {};
+    try { response = await fetch(rest ? cfg.restUrl + action : cfg.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin', signal, headers }); }
+    catch (e) { if (e.name === 'AbortError') throw e; throw Object.assign(new Error(t.network), { fallback: rest }); }
     try { json = await response.json(); } catch (_) { /* not JSON */ }
+    // Not our { success, data } envelope: REST is disabled, blocked or answered by something else.
+    // (Too large, rate limited and server errors are real answers about this request, not about the transport.)
+    const envelope = json && typeof json === 'object' && typeof json.success === 'boolean';
+    if (rest && !envelope && ![413, 429, 500, 502, 503, 504].includes(response.status)) throw Object.assign(new Error(t.network), { fallback: true });
     if (!json || typeof json !== 'object') throw Object.assign(new Error(httpMessage(response.status)), { status: response.status, raw: true });
     const payload = json.data && typeof json.data === 'object' ? json.data : {};
     if (payload.captcha) applyCaptcha(payload.captcha);
@@ -82,14 +89,21 @@
     return payload;
   };
   const form = (action, fields) => {
-    const body = new FormData(); body.append('action', action);
+    const body = new FormData(); if (action) body.append('action', action);
     if (session) body.append('nonce', session.nonce);
     Object.entries(fields || {}).forEach(([k, v]) => { if (v !== undefined && v !== null) body.append(k, v); });
     return body;
   };
   // The page may come from a full-page cache, so the nonce is fetched live (with this product's colour swatches).
+  const send = async (action, fields, signal) => {
+    if (transport === 'rest') {
+      try { return await post(form(null, fields), signal, true, action); }
+      catch (e) { if (!e.fallback) throw e; transport = 'ajax'; }
+    }
+    return post(form('ofr_' + action, fields), signal, false);
+  };
   const loadSession = async () => {
-    session = await post(form('ofr_session', { return: location.href, product_id: product ? product.id : null }));
+    session = await send('session', { return: location.href, product_id: product ? product.id : null });
     if (ui.login) ui.login.href = session.loginUrl;
     if (product && Array.isArray(session.swatches)) swatchCache[product.id] = session.swatches;
     showRemaining(session.remaining);
@@ -97,11 +111,11 @@
   };
   const call = async (action, fields, signal) => {
     if (!session) await loadSession();
-    try { return await post(form(action, fields), signal); }
+    try { return await send(action, fields, signal); }
     catch (e) {
       if (!e.nonce) throw e;
       await loadSession(); // Nonce expired while the modal was open: renew once.
-      return post(form(action, fields), signal);
+      return send(action, fields, signal);
     }
   };
 
@@ -227,8 +241,21 @@
 
   // Native decoding first (createImageBitmap applies EXIF rotation), then <img>,
   // which also covers SVG and, in Safari, HEIC and TIFF.
+  // Pixel size without decoding the whole picture.
+  const dimensions = (blob) => new Promise((resolve) => {
+    const img = new Image(), url = URL.createObjectURL(blob);
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ w: img.naturalWidth, h: img.naturalHeight }); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
   const decode = async (blob) => {
     if (window.createImageBitmap) {
+      // A 48 MP iPhone photo decoded at full size can exhaust Safari's memory: let the decoder scale it down directly.
+      const size = await dimensions(blob);
+      if (size && (size.w * size.h > 16e6 || Math.max(size.w, size.h) > cfg.maxDimension * 2)) {
+        const width = Math.round(size.w * Math.min(1, (cfg.maxDimension * 1.5) / Math.max(size.w, size.h)));
+        try { return await createImageBitmap(blob, { imageOrientation: 'from-image', resizeWidth: width, resizeQuality: 'high' }); } catch (_) { /* full decode below */ }
+      }
       try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch (_) { /* try <img> */ }
     }
     return new Promise((resolve) => {
@@ -241,9 +268,8 @@
   // iPhone HEIC photos in browsers that cannot open them: the bundled decoder is downloaded only when needed.
   const heicToJpeg = async (file) => {
     try {
-      if (!window.heic2any) await loadScript(cfg.heicDecoder);
-      const out = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
-      return Array.isArray(out) ? out[0] : out;
+      if (!window.HeicTo) await loadScript(cfg.heicDecoder);
+      return await window.HeicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
     } catch (_) { return null; }
   };
 
@@ -304,6 +330,51 @@
     return { error: t.unsupported.replace('%s', LABELS[format] || format.toUpperCase()) };
   };
 
+  /* ---------- Photo check in the browser (MediaPipe Pose): is a whole person in the picture? ---------- */
+
+  let poseTask = null;
+  const withTimeout = (promise, ms) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+  // Loaded once, on the first photo; if it cannot be loaded (blocked CDN, old browser) the check is skipped for the visit.
+  const loadPose = () => poseTask || (poseTask = (async () => {
+    const vision = await import(cfg.pose.module);
+    return vision.PoseLandmarker.createFromOptions({ wasmLoaderPath: cfg.pose.loader, wasmBinaryPath: cfg.pose.binary }, {
+      baseOptions: { modelAssetPath: cfg.pose.model, delegate: 'CPU' }, runningMode: 'IMAGE', numPoses: 2
+    });
+  })());
+  /** @return {Promise<'ok'|'none'|'many'|'partial'|null>} null when the check could not run. */
+  const checkPose = async (source) => {
+    if (!cfg.pose || !source) return null;
+    try {
+      const landmarker = await withTimeout(loadPose(), 20000);
+      const poses = (landmarker.detect(source).landmarks || []);
+      if (!poses.length) return 'none';
+      if (poses.length > 1) return 'many';
+      const seen = (i) => { const p = poses[0][i]; return p && (p.visibility === undefined || p.visibility > 0.5) && p.y > -0.02 && p.y < 1.02 && p.x > -0.02 && p.x < 1.02; };
+      // Nose, shoulders, hips and ankles: head to feet inside the frame.
+      return [0, 11, 12, 23, 24, 27, 28].every(seen) ? 'ok' : 'partial';
+    } catch (_) { return null; }
+  };
+  const showCheck = (text, kind) => {
+    const box = $('[data-photo-check]'); if (!box) return;
+    box.textContent = text || ''; box.hidden = !text; box.dataset.kind = kind || '';
+  };
+  const runCheck = async (photo) => {
+    if (!cfg.pose || !photo.canvas) { showCheck(''); return; }
+    const token = pick;
+    photo.check = 'running'; showCheck(t.poseChecking, 'info'); valid();
+    const verdict = await checkPose(photo.canvas);
+    if (token !== pick || prepared !== photo) return;
+    photo.check = verdict || 'skipped';
+    if (verdict === 'ok') showCheck(t.poseOk, 'ok');
+    else if (verdict === null) showCheck('');
+    else {
+      const text = verdict === 'none' ? t.poseNone : verdict === 'many' ? t.poseMany : t.posePartial;
+      showCheck(cfg.pose.mode === 'block' ? text + ' ' + t.poseBlocked : text, cfg.pose.mode === 'block' ? 'error' : 'warn');
+      highlightGuide();
+    }
+    valid();
+  };
+
   /* ---------- "Keep my photo on this device" (IndexedDB, never sent anywhere else) ---------- */
 
   const idb = (mode, fn) => new Promise((resolve, reject) => {
@@ -350,6 +421,8 @@
     ui.price.textContent = price.price || '';
     ui.regular.textContent = price.regular || '';
     ui.regular.hidden = !price.regular;
+    const proof = $('[data-product-proof]');
+    if (proof) { proof.textContent = p.proof ? '✦ ' + p.proof : ''; proof.hidden = !p.proof; }
   };
   const cartForm = () => [...document.querySelectorAll('form.cart')].find((f) =>
     String(f.dataset.product_id) === String(product.id) || f.querySelector(`[name="add-to-cart"][value="${product.id}"]`));
@@ -465,7 +538,9 @@
     const scope = ui.viewer.hidden ? ui.dialog : ui.viewer;
     return [...scope.querySelectorAll('button, [href], input, select, textarea, iframe, [tabindex]:not([tabindex="-1"])')].filter((el) => !el.disabled && el.offsetParent !== null);
   };
-  const valid = () => { ui.start.disabled = !(prepared && ui.consent.checked && (captcha.mode !== 'turnstile' || tsToken)); };
+  // In "block" mode a photo the check rejected (or is still checking) cannot be sent.
+  const photoBlocked = () => !!(prepared && cfg.pose && cfg.pose.mode === 'block' && ['running', 'none', 'many', 'partial'].includes(prepared.check));
+  const valid = () => { ui.start.disabled = !(prepared && ui.consent.checked && !photoBlocked() && (captcha.mode !== 'turnstile' || tsToken)); };
   const showPhoto = (photo) => {
     prepared = photo;
     if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = '';
@@ -473,9 +548,10 @@
     if (photo.preview) { objectUrl = URL.createObjectURL(photo.blob); ui.preview.src = objectUrl; note(''); } else { ui.preview.removeAttribute('src'); note(t.noPreview); }
     ui.savedBadge.hidden = !photo.saved; ui.forget.hidden = !photo.saved;
     valid();
+    if (photo.canvas && !photo.check) runCheck(photo);
   };
   const clearPhoto = () => {
-    pick++; prepared = null; ui.file.value = '';
+    pick++; prepared = null; ui.file.value = ''; showCheck('');
     ui.drop.hidden = false; ui.previewWrap.hidden = true;
     if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = '';
     valid();
@@ -681,7 +757,7 @@
     if (job.state !== 'working') return;
     if (++job.attempts > MAX_POLLS) return finish(job, new Error(t.timeout));
     try {
-      const data = await call('ofr_status', { job: job.token });
+      const data = await call('status', { job: job.token });
       if (data.status === 'succeeded' && data.output) { job.output = data.output; job.download = data.download; return finish(job); }
       job.status = data.status === 'queued' ? t.queued : t.processing; render(job);
       job.timer = setTimeout(() => poll(job), Math.max(2, Number(data.retryAfter) || 2) * 1000);
@@ -693,7 +769,7 @@
     }
   };
   const begin = async (force) => {
-    if (!prepared || (!force && ui.start.disabled)) return;
+    if (!prepared || (!force && ui.start.disabled) || photoBlocked()) return;
     if (!ui.consent.checked) { stage('upload'); showError(''); ui.consent.focus(); return; }
     if (captcha.mode === 'turnstile' && !tsToken) { stage('upload'); showError(t.captcha); return; }
     const photo = prepared, variation = variations[product.id];
@@ -711,7 +787,7 @@
     const send = async (blob) => {
       const fields = Object.assign({ product_id: product.id, avatar: asFile(blob), variation_id: variation ? variation.id : null }, await captchaFields(job));
       job.status = t.uploading; render(job);
-      return call('ofr_start', fields);
+      return call('start', fields);
     };
     try {
       let data;
@@ -794,7 +870,7 @@
     if (!file) return;
     const token = ++pick; showError(''); prepared = null; valid();
     if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = '';
-    ui.preview.removeAttribute('src'); ui.drop.hidden = true; ui.previewWrap.hidden = false; ui.savedBadge.hidden = true; ui.forget.hidden = true; note(t.reading);
+    ui.preview.removeAttribute('src'); ui.drop.hidden = true; ui.previewWrap.hidden = false; ui.savedBadge.hidden = true; ui.forget.hidden = true; note(t.reading); showCheck('');
     const result = await prepare(file);
     if (token !== pick) return; // Another photo was picked meanwhile.
     if (result.error) { ui.file.value = ''; ui.previewWrap.hidden = true; ui.drop.hidden = false; showError(result.error); highlightGuide(); return; }
